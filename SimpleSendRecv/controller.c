@@ -1,0 +1,262 @@
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+
+#define CONTROLLER_PATH "./controller_socket"
+#define MAXMSG 256
+
+// Controller that spawns processes, intercepts communications between
+// the processes, and explore the execution state
+
+// Message struct
+// contains the data
+// the file descriptor of the socket used to receive the message
+// When this is a recv message that came before a send message,
+// this is used to reply to the message later when the send message arrives
+// We might store information about sender/receiver of messages here when 
+// there are more than 2 processes
+typedef struct
+{
+  char msg[MAXMSG];
+  int connfd;
+} Message;
+
+// Spawn processes
+pid_t
+spawn_process (const char *process_name)
+{
+  printf ("[Controller] Create process %s\n", process_name);
+  pid_t pid = fork ();
+
+  if (pid == -1)
+    {
+      perror ("[Controller] fork");
+      exit (EXIT_FAILURE);
+    }
+
+  if (pid == 0)
+    {
+      // Set LD_PRELOAD so that our file intercepts function calls
+      setenv ("LD_PRELOAD", "./redirect.so", 1);
+      execlp (process_name, process_name, (char *) NULL);
+      perror ("[Controller] execlp");
+      exit (EXIT_FAILURE);
+    }
+  return pid;
+}
+
+int
+main ()
+{
+	// Array to store messages
+  Message msgbuffer[5];
+
+  // Array to store processes
+  pid_t processes[2];
+
+  // Create controller socket to intercept processes communication
+  int sockfd;
+  struct sockaddr_un address;
+  printf ("[Controller] Create controller socket\n");
+  if ((sockfd = socket (AF_UNIX, SOCK_STREAM, 0)) == -1)
+    {
+      perror ("[Controller] receive socket");
+      exit (EXIT_FAILURE);
+    }
+  memset (&address, 0, sizeof (address));
+  address.sun_family = AF_UNIX;
+  strncpy (address.sun_path, CONTROLLER_PATH, sizeof (address.sun_path) - 1);
+  unlink (CONTROLLER_PATH);
+
+  if (bind (sockfd, (struct sockaddr *) &address, sizeof (address)) == -1)
+    {
+      perror ("[Controller]  bind");
+      close (sockfd);
+      exit (EXIT_FAILURE);
+    }
+
+  if (listen (sockfd, 5) == -1)
+    {
+      perror ("[Controller] listen");
+      close (sockfd);
+      exit (EXIT_FAILURE);
+    }
+
+  // Spawn processes
+  processes[0] = spawn_process ("process2");
+  // This just insures that the connection between the 2 processes is setup 
+  // correctly : the receiver = server has to create the socket before the
+  // sender tries to connect
+  // Could do this more cleanly but for now it works
+  sleep (3);
+  processes[1] = spawn_process ("process1");
+
+  // Could start the execution of only 1 process to do 1 by 1 execution
+  // Probably deal with that with SIGSTOP / SIGCONT 
+
+  // Events that make the whole thing progress = messages between processes
+  // = messages intercepted by controller
+  // Wait for messages to advance execution
+  // = msg recveived : stop process that sent, exec/continue a process in array
+  char buffer[256];
+  int connfd;
+  int i = 0;
+  printf ("[Controller] Listen for incoming messages\n");
+  while ((connfd = accept (sockfd, NULL, NULL)) != -1)
+    {
+      memset (buffer, 0, sizeof (buffer));
+      ssize_t len = recv (connfd, buffer, sizeof (buffer), 0);
+
+      if (len > 0)
+	{
+	  printf ("[Controller] Something received %s\n", buffer);
+
+	      // Store received message in the message array
+	      // For now I don't remove messages from the array
+	      strcpy (msgbuffer[i].msg, buffer);
+	      if (strncmp (buffer, "rec", 3) == 0)
+		{
+		  // Recv message = a process wants to receive a message from another
+		  printf ("[Controller] This is a recv message\n");
+		  msgbuffer[i].connfd = connfd;
+		  int r = 0;
+		  for (int j = 0; j < i; j++)
+		    {
+		      // Look through the message array if the message it wants is 
+		      // already there
+		      // Right now only 1 choice, but after check the msg info 
+		      // sender -> receiver
+
+		      if (strncmp (msgbuffer[j].msg, "sen", 3) == 0)
+			{
+			  printf ("[Controller] send msg to receiver\n");
+
+			  // Try to send the message
+			  int s1 = send (connfd, msgbuffer[j].msg, 256, 0);
+			  if (s1 == -1)
+			    {
+			      perror ("[Controller] send fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  // Recover the resulting state
+			  char b[256];
+			  ssize_t brec = recv (connfd, b, sizeof (b), 0);
+			  if (brec == -1)
+			    {
+			      perror ("[Controller] recv state");
+			      exit (EXIT_FAILURE);
+			    }
+			  printf ("[Controller] state back ? %s\n", b);
+
+			  // Try to send the message with a delay that triggers the timeout
+			  char *msgto = "15";
+			  ssize_t s3 =
+			    send (connfd, msgto, sizeof (msgto), 0);
+			  if (s3 == -1)
+			    {
+			      perror ("[Controller] send to fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  // Recover the resulting state
+			  char b4[256];
+			  sleep (2);
+			  ssize_t brec4 = recv (connfd, b4, sizeof (b4), 0);
+			  if (brec4 == -1)
+			    {
+			      perror ("[Controller] recv to fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  printf ("[Controller] state back ? %s\n", b4);
+			  close (connfd);
+			}
+		    }
+
+		}
+
+	      if (strncmp (buffer, "sen", 3) == 0)
+		{
+		  // This is a send message : a process sends some data to another
+		  printf ("[Controller] This is a send message\n");
+		  // Go through the message buffer to see if the process waiting for this
+		  // data is already there
+		  for (int j = 0; j < i; j++)
+		    {
+		      char tmp[256];
+		      strcpy (tmp, msgbuffer[j].msg);
+		      printf ("[Controller] going through msg buf : %s\n",
+			      tmp);
+
+		      // Right now only 1 choice but after look for msg info
+		      // sender -> receiver
+		      if (strncmp (tmp, "rec", 3) == 0)
+			{
+			  // Send the message to the process who wants it
+			  // I need to put the code for state exploration here
+			  // I only put it above for the easy case
+			  // This should work (ok for base case no exploration)
+			  printf ("[Controller] send msg to receiver\n");
+
+			// Try to send the message
+			  int sr1 = send (msgbuffer[j].connfd, buffer, 256, 0);
+			  if (sr1 == -1)
+			    {
+			      perror ("[Controller] send fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  // Recover the resulting state
+			  char br[256];
+			  ssize_t brrec = recv (msgbuffer[j].connfd, br, sizeof (br), 0);
+			  if (brrec == -1)
+			    {
+			      perror ("[Controller] recv state");
+			      exit (EXIT_FAILURE);
+			    }
+			  printf ("[Controller] state back ? %s\n", br);
+
+			  // Try to send the message with a delay that triggers the timeout
+			  char *msgtor = "15";
+			  ssize_t sr3 =
+			    send (msgbuffer[j].connfd, msgtor, sizeof (msgtor), 0);
+			  if (sr3 == -1)
+			    {
+			      perror ("[Controller] send to fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  // Recover the resulting state
+			  char br4[256];
+			  sleep (2);
+			  ssize_t brrec4 = recv (msgbuffer[j].connfd, br4, sizeof (br4), 0);
+			  if (brrec4 == -1)
+			    {
+			      perror ("[Controller] recv to fail");
+			      exit (EXIT_FAILURE);
+			    }
+			  printf ("[Controller] state back ? %s\n", br4);
+			  //attention
+			  close(msgbuffer[j].connfd);
+			}
+		    }
+		  close (connfd);
+		}
+	      i++;
+	}
+
+    }
+
+  // accept is blocking so this is never reached 
+
+  close (sockfd);
+  unlink (CONTROLLER_PATH);
+
+  while (wait (NULL) != -1);
+
+  return 0;
+
+}
