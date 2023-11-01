@@ -48,6 +48,7 @@ void BV_broadcast(int value) {
               printf("Process %d commits value %d\n", processId, value);
               committedValues[value] = 1;  // Mark the value as committed
             } 
+            // * 
             continue;
         }
 
@@ -76,54 +77,26 @@ void processMessages(int value, int fromProcess) {
     if (distinctCount > 2 * T && !committedValues[value]) {
         printf("Process %d commits value %d\n", processId, value);
         committedValues[value] = 1;  // Mark the value as committed
+        // *
     }
     if (distinctCount > T && !hasBroadcasted[value]) {
         BV_broadcast(value);
     }
-}
-
-void sendReadySignal() {
-    int sockfd;
-    struct sockaddr_in serverAddr;
-
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT_BASE);  // Sending to process 0
-    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-    if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-            perror ("Connect failure");
-            exit (EXIT_FAILURE);
-    }
-    int readySignal = -1;
-    send(sockfd, &readySignal, sizeof(int), 0);
-
-    printf("Ready signal sent\n");
-
-    close(sockfd);
-}
-
-void waitForBroadcastSignal(int listenfd, struct sockaddr_in clientAddr, socklen_t addrLen) {
-    int broadcastSignal, connfd;
-
-    printf("Wait broadcast authorization\n");
-
-    connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
-    if (connfd == -1) {
-            perror ("Accept failure");
-            exit (EXIT_FAILURE);
-    }
-    recv(connfd, &broadcastSignal, sizeof(int), 0);
-    if (broadcastSignal == -1) {
-            perror ("Recv failure");
-            exit (EXIT_FAILURE);
-    }
-
-    if (broadcastSignal == -2) {
-        printf("Received broadcast authorization\n");
-        close(connfd);
-        return;  // Start broadcasting
-    }
+    // actually this is a problem because might exec after a broadcast
+    // = not the first send after recv
+    // = not what controller waits for (but does)
+    // need replace register state by a function in redirect
+    // then put logic so that first call to this fct after a recv remembers socket
+    // but send create another
+    // if i can't make a shared lib that works just override an existing fct
+    // that i dont use
+    // or need to send state at * and here, be careful not to call twice...
+    int nb = register_state (state); // state = committedValues
+      if (nb == -1)
+	{
+	  perror ("[Receiver] register state");
+	  exit (EXIT_FAILURE);
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -171,61 +144,8 @@ int main(int argc, char *argv[]) {
     sem_wait(sem);
     sem_close(sem);
 
-// This is the other way of synch processes to insure the setup is done before starting broadcast
-// This is used to run each process in a different terminal "manually"
-/*
-    // Send ready signal to process 0
-    sendReadySignal();
-
-    // If this is process 0, wait for all ready signals
-    if (processId == 0) {
-        printf("Process 0\n");
-
-        int readyCount = 0;
-        while (readyCount < N) {
-            connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
-            if (connfd == -1) {
-                perror ("Accept failure");
-                exit (EXIT_FAILURE);
-            }
-            recv(connfd, &receivedValue, sizeof(int), 0);
-            if (receivedValue == -1) {
-                printf("ready : %d\n", readyCount);
-                readyCount++;
-            }
-            close(connfd);
-        }
-
-        // Send broadcast signal to all processes
-        for (int i = 1; i < N; i++) {
-            int sockfd;
-            struct sockaddr_in serverAddr;
-
-            sockfd = socket(AF_INET, SOCK_STREAM, 0);
-            serverAddr.sin_family = AF_INET;
-            serverAddr.sin_port = htons(PORT_BASE + i);
-            inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-
-            if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-                perror ("Connect failure");
-                exit (EXIT_FAILURE);
-            }
-            int broadcastSignal = -2;
-            send(sockfd, &broadcastSignal, sizeof(int), 0);
-            printf("Send ok broadcast to %d\n", i);
-
-            close(sockfd);
-        }
-    } else {
-        // Other processes wait for the broadcast signal from process 0
-        waitForBroadcastSignal(listenfd, clientAddr, addrLen);
-    }
-
-    */
-
     // Now, broadcast the initial value
     BV_broadcast(initialValue);
-
 
     int receivedMessage[2];  // To store both the sender's process ID and the value
 
@@ -236,11 +156,12 @@ int main(int argc, char *argv[]) {
             perror ("Accept failure");
             exit (EXIT_FAILURE);
         }
-        recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
-        if (*receivedMessage == -1) {
+        int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+        if (nbytes == -1) {
             perror ("Recv failure");
             exit (EXIT_FAILURE);
         }
+        sleep(1); // just chill
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         printf("Process %d Value %d received from process %d\n", processId, receivedValue, senderId);
