@@ -388,6 +388,22 @@ int main()
     processes[i] = spawn_process("bv_broadcast", i, 0);
   }
 
+  // Spawn child processes
+  for (int i = 0; i < N; i++)
+  {
+    if ((processes[i] = fork()) == 0)
+    {
+      char processIdStr[10], initialValueStr[10];
+      sprintf(processIdStr, "%d", i);
+      sprintf(initialValueStr, "%d", 0);
+      // Replace child process with BV-broadcast process
+      setenv("LD_PRELOAD", "./redirect.so", 1);
+      execl("./bv_broadcast", "bv_broadcast", processIdStr, initialValueStr, (char *)NULL);
+      perror("execl failed");
+      exit(EXIT_FAILURE); // Exit if execl fails
+    }
+  }
+
   // Wait until all processes have setup their sockets
   sleep(5);
 
@@ -461,7 +477,8 @@ int main()
               continue;
             }
 
-            if (systemStates[s].len == 0) { //init le 1 elem de forkpath devrait etre 0
+            if (systemStates[s].len == 0)
+            { // init le 1 elem de forkpath devrait etre 0
               systemStates[s].len = 1;
             }
             for (int f = 0; f < systemStates[s].len; f++)
@@ -797,7 +814,8 @@ int main()
             {
               continue;
             }
-            if (systemStates[s].len == 0) { //init le 1 elem de forkpath devrait etre 0
+            if (systemStates[s].len == 0)
+            { // init le 1 elem de forkpath devrait etre 0
               systemStates[s].len = 1;
             }
             for (int f = 0; f < systemStates[s].len; f++)
