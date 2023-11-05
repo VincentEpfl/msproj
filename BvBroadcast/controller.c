@@ -383,10 +383,12 @@ int main()
   }
 
   // Spawn processes
+  /*
   for (int i = 0; i < N; i++)
   {
     processes[i] = spawn_process("bv_broadcast", i, 0);
   }
+  */
 
   // Spawn child processes
   for (int i = 0; i < N; i++)
