@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     printf("Process %d with initial value %d listening on port %d...\n", processId, initialValue, PORT_BASE + processId);
 
     sem_wait(sem);
-    printf("Process %d done waiting\n");
+    printf("Process %d done waiting\n", processId);
     sem_close(sem);
 
     // Now, broadcast the initial value

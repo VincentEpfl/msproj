@@ -22,6 +22,7 @@ register_state(const int *state, int len) // no need sockfd just put 0 send redi
 {
   typedef ssize_t (*original_send_t)(int, const void *, size_t, int);
   original_send_t original_send = (original_send_t)dlsym(RTLD_NEXT, "send");
+  // worst case send via redirect but add special bit to msg to use the feedback socket 
 
   // Load the real send
   /*
