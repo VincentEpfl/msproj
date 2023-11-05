@@ -366,7 +366,7 @@ int main()
   memset(&feedback_address, 0, sizeof(feedback_address));
   feedback_address.sun_family = AF_UNIX;
   strncpy(feedback_address.sun_path, CONTROLLER_FEEDBACK_PATH, sizeof(feedback_address.sun_path) - 1);
-  unlink(CONTROLLER_PATH);
+  unlink(CONTROLLER_FEEDBACK_PATH);
 
   if (bind(feedback_sockfd, (struct sockaddr *)&feedback_address, sizeof(feedback_address)) == -1)
   {
