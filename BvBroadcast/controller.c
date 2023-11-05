@@ -302,7 +302,10 @@ int main()
   Message msgbuffer[100];
 
   // Array to store processes
-  pid_t processes[N];
+  pid_t processes[100];
+  int numProcesses = N;
+  pid_t current_process;
+  int current_process_index;
 
   // for now this is the state of the system
   int committedValues[N][2] = {{0, 0}};
@@ -409,10 +412,18 @@ int main()
   // Wait until all processes have setup their sockets
   sleep(15);
 
-  // Signal all children to proceed
+  // Signal all children to proceed, but only allow 1
   for (int i = 0; i < N; i++)
   {
-    sem_post(sem);
+    if (i == 0) {
+      sem_post(sem);
+      current_process = processes[0];
+      current_process_index = 0;
+    } else {
+      sem_post(sem);
+      kill(processes[i], SIGSTOP);
+    }
+    
   }
 
   // Could start the execution of only 1 process to do 1 by 1 execution
@@ -453,6 +464,8 @@ int main()
         msgbuffer[i].delivered[d] = 0;
       }
 
+      bool msg_was_delivered = false;
+
       if (receivedMessage[0] == 1)
       {
         // Recv message = a process wants to receive a message from another
@@ -471,6 +484,10 @@ int main()
           int statesToUpdate[numStates];
           int numStatesToUpdate = 0;
           int posInForkPath = 0;
+          if (numStates == 1) {
+            numStatesToUpdate = 1;
+            statesToUpdate[0] = 0;
+          } else {
           for (int s = 0; s < numStates; s++)
           {
             // Don't want to update a state that was killed
@@ -493,6 +510,7 @@ int main()
               }
             }
           }
+        }
 
           if (numStatesToUpdate == 0)
           {
@@ -523,6 +541,7 @@ int main()
 
           // Check if the send message was already delivered to this state
           bool sendDeliverOk = true;
+          if (numStates > 1) {
           if (msgbuffer[j].numDelivered > 0)
           {
 
@@ -538,6 +557,7 @@ int main()
               }
             }
           }
+        }
 
           // Check if the recv message was already delivered
           bool recvDeliverOk = true;
@@ -549,6 +569,7 @@ int main()
           if (recvDeliverOk && sendDeliverOk && msgbuffer[j].type == 0 && msgbuffer[j].to == msgbuffer[i].to && forkOk)
           {
             printf("[Controller] send msg to receiver\n");
+            msg_was_delivered = true;
 
             // recv msg always need to be delivered only once
             msgbuffer[i].delivered[msgbuffer[i].numDelivered] = msgbuffer[j].forkId;
@@ -598,6 +619,10 @@ int main()
             newProcessState[0] = recmsg[1];
             newProcessState[1] = recmsg[2];
             int forkid0 = recmsg[0];
+            processes[numProcesses] = forkid0;
+            int forkid0_index = numProcesses;
+            numProcesses = numProcesses + 1;
+            kill(forkid0, SIGSTOP);
             printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
 
             // Everything after is if I change value and try to explore
@@ -648,6 +673,10 @@ int main()
             newProcessStateOp[0] = recmsg2[1];
             newProcessStateOp[1] = recmsg2[2];
             int forkid1 = recmsg2[0];
+            processes[numProcesses] = forkid1;
+            int forkid1_index = numProcesses;
+            numProcesses = numProcesses + 1;
+            kill(forkid1, SIGSTOP);
             printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessStateOp[0], newProcessStateOp[1], forkid1);
 
             // I could just do it like normal and kill (everytime) when
@@ -655,6 +684,7 @@ int main()
             if (compareProcessState(newProcessState, newProcessStateOp))
             {
               // Here I consider that I kill forkid1 by default
+              
 
               printf("[Controller] Same result: kill a child\n");
               int killMessage[3] = {2, -1, -1};
@@ -678,38 +708,24 @@ int main()
                 // or recv which one i killed
                 systemStates[statesToUpdate[s]].forkPath[systemStates[statesToUpdate[s]].len] = forkid0;
                 systemStates[statesToUpdate[s]].len = systemStates[statesToUpdate[s]].len + 1;
-
-                // If the new system state is equal to another system state in store, just kill
-                // this thing TODO just send instruction, code instruction in redirect
-                // killStateAlreadyThere()
-                for (int z = 0; z < numStates; z++)
-                {
-                  if (z == statesToUpdate[s] || systemStates[z].killed == 1)
-                  {
-                    continue;
-                  }
-                  if (compareState(systemStates[z].valuesCount, systemStates[statesToUpdate[s]].valuesCount))
-                  {
-
-                    kill(forkid0, SIGKILL);
-                    waitpid(forkid0, NULL, 0);
-                    // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
-                    systemStates[statesToUpdate[s]].killed = 1;
-                    // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
-                    // more or less efficient than doing it after ?
-                  }
-                }
+                
               }
+              // stop the current one ? it loops waiting for controller instructions anyway
+              numProcesses = numProcesses - 1;
+              processes[numProcesses] = -1; // "delete" forkid1
+              kill(current_process, SIGSTOP);
+              current_process = forkid0;
+              current_process_index = forkid0_index;
+              kill(forkid0, SIGCONT);
 
-              printf("[Controller] state\n");
-              // TODO print controller state = different states ...
             }
             else
             {
 
               // Copy sys state to update in 1 new state for each fork (en vrai besoin d'en add
               // 1 seul car le fork 0 peut etre le state original, just update forkpath du 1 aussi
-
+              bool forkid0_killed = false;
+              bool forkid1_killed = false;
               for (int s = 0; s < numStatesToUpdate; s++)
               {
 
@@ -759,9 +775,12 @@ int main()
                   }
                   if (compareState(systemStates[z].valuesCount, systemStates[statesToUpdate[s]].valuesCount))
                   {
-
-                    kill(forkid0, SIGKILL);
-                    waitpid(forkid0, NULL, 0);
+                    if (!forkid0_killed) {
+                      kill(forkid0, SIGKILL);
+                      waitpid(forkid0, NULL, 0);
+                      forkid0_killed = true;
+                    }
+                    
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[statesToUpdate[s]].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -777,9 +796,12 @@ int main()
                   }
                   if (compareState(systemStates[z].valuesCount, systemStates[numStates - 1].valuesCount))
                   {
-
-                    kill(forkid1, SIGKILL);
-                    waitpid(forkid1, NULL, 0);
+                    if (!forkid1_killed) {
+                      kill(forkid1, SIGKILL);
+                      waitpid(forkid1, NULL, 0);
+                      forkid1_killed = true;
+                    }
+                    
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[numStates - 1].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -787,11 +809,44 @@ int main()
                   }
                 }
               }
+              if (forkid0_killed) {
+                numProcesses = numProcesses - 1;
+                processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
+                processes[numProcesses] = -1; // "delete" forkid1 : delete forkid0
+                kill(current_process, SIGSTOP);
+                current_process = forkid1;
+                current_process_index = forkid1_index - 1;
+                kill(forkid1, SIGCONT);
+              } else if (forkid1_killed) { // forkid0 and forkid1 should not both be killed
+                numProcesses = numProcesses - 1;
+                processes[numProcesses] = -1; // "delete" forkid1
+                kill(current_process, SIGSTOP);
+                current_process = forkid0;
+                current_process_index = forkid0_index;
+                kill(forkid0, SIGCONT);
+              } else { // both are alive, just chose 1
+                kill(current_process, SIGSTOP);
+                current_process = forkid0;
+                current_process_index = forkid0_index;
+                kill(forkid0, SIGCONT);
+              }
+
             }
             printControllerState(systemStates, numStates);
             close(connfd);
+            break;
           }
+          
         }
+
+        // if the recv message was not delivered, schedule another process
+        if (!msg_was_delivered) {
+          kill(current_process, SIGSTOP);
+          current_process_index = (current_process_index + 1) % numProcesses;
+          current_process = processes[current_process_index];
+          kill(current_process, SIGCONT);
+        }
+          
       }
 
       if (receivedMessage[0] == 0)
@@ -809,6 +864,10 @@ int main()
           int statesToUpdate[numStates];
           int numStatesToUpdate = 0;
           int posInForkPath = 0;
+          if (numStates == 1) {
+            numStatesToUpdate = 1;
+            statesToUpdate[0] = 0;
+          } else {
           for (int s = 0; s < numStates; s++)
           {
             // Don't want to update a state that was killed
@@ -830,6 +889,7 @@ int main()
               }
             }
           }
+        }
 
           if (numStatesToUpdate == 0)
           {
@@ -858,6 +918,7 @@ int main()
 
           // Check if the send message was already delivered to this state
           bool sendDeliverOk = true;
+          if (numStates > 1) {
           if (msgbuffer[i].numDelivered > 0)
           {
 
@@ -873,6 +934,7 @@ int main()
               }
             }
           }
+        }
 
           // Check if the recv message was already delivered
           bool recvDeliverOk = true;
@@ -885,6 +947,7 @@ int main()
           if (recvDeliverOk && sendDeliverOk && forkOk && msgbuffer[j].type == 1 && msgbuffer[j].to == msgbuffer[i].to)
           {
             printf("[Controller] send msg to receiver\n");
+            msg_was_delivered = true;
 
             // TODO update same as above
 
@@ -933,6 +996,10 @@ int main()
             newProcessState[0] = recmsg[1];
             newProcessState[1] = recmsg[2];
             int forkid0 = recmsg[0];
+            processes[numProcesses] = forkid0;
+            int forkid0_index = numProcesses;
+            numProcesses = numProcesses + 1;
+            kill(forkid0, SIGSTOP);
             printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[i].to, newProcessState[0], newProcessState[1], forkid0);
 
             // Everything after is if I change value and try to explore
@@ -981,6 +1048,10 @@ int main()
             newProcessStateOp[0] = recmsg2[1];
             newProcessStateOp[1] = recmsg2[2];
             int forkid1 = recmsg2[0];
+            processes[numProcesses] = forkid1;
+            int forkid1_index = numProcesses;
+            numProcesses = numProcesses + 1;
+            kill(forkid1, SIGSTOP);
             printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[i].to, newProcessStateOp[0], newProcessStateOp[1], forkid1);
 
             if (compareProcessState(newProcessState, newProcessStateOp))
@@ -1009,37 +1080,22 @@ int main()
                 systemStates[statesToUpdate[s]].forkPath[systemStates[statesToUpdate[s]].len] = forkid0;
                 systemStates[statesToUpdate[s]].len = systemStates[statesToUpdate[s]].len + 1;
 
-                // If the new system state is equal to another system state in store, just kill
-                // this thing TODO just send instruction, code instruction in redirect
-                // killStateAlreadyThere()
-                for (int z = 0; z < numStates; z++)
-                {
-                  if (z == statesToUpdate[s] || systemStates[z].killed == 1)
-                  {
-                    continue;
-                  }
-                  if (compareState(systemStates[z].valuesCount, systemStates[statesToUpdate[s]].valuesCount))
-                  {
-
-                    kill(forkid0, SIGKILL);
-                    waitpid(forkid0, NULL, 0);
-                    // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
-                    systemStates[statesToUpdate[s]].killed = 1;
-                    // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
-                    // more or less efficient than doing it after ?
-                  }
-                }
               }
+              numProcesses = numProcesses - 1;
+              processes[numProcesses] = -1; // "delete" forkid1
+              kill(current_process, SIGSTOP);
+              current_process = forkid0;
+              current_process_index = forkid0_index;
+              kill(forkid0, SIGCONT);
 
-              printf("[Controller] state\n");
-              // TODO print controller state = different states ...
             }
             else
             {
 
               // Copy sys state to update in 1 new state for each fork (en vrai besoin d'en add
               // 1 seul car le fork 0 peut etre le state original, just update forkpath du 1 aussi
-
+              bool forkid0_killed = false;
+              bool forkid1_killed = false;
               for (int s = 0; s < numStatesToUpdate; s++)
               {
 
@@ -1090,8 +1146,11 @@ int main()
                   if (compareState(systemStates[z].valuesCount, systemStates[statesToUpdate[s]].valuesCount))
                   {
 
-                    kill(forkid0, SIGKILL);
-                    waitpid(forkid0, NULL, 0);
+                    if (!forkid0_killed) {
+                      kill(forkid0, SIGKILL);
+                      waitpid(forkid0, NULL, 0);
+                      forkid0_killed = true;
+                    }
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[statesToUpdate[s]].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -1109,8 +1168,11 @@ int main()
                   if (compareState(systemStates[z].valuesCount, systemStates[numStates - 1].valuesCount))
                   {
 
-                    kill(forkid1, SIGKILL);
-                    waitpid(forkid1, NULL, 0);
+                    if (!forkid1_killed) {
+                      kill(forkid1, SIGKILL);
+                      waitpid(forkid1, NULL, 0);
+                      forkid1_killed = true;
+                    }
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[numStates - 1].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -1118,15 +1180,48 @@ int main()
                   }
                 }
               }
+              if (forkid0_killed) {
+                numProcesses = numProcesses - 1;
+                processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
+                processes[numProcesses] = -1; // "delete" forkid1 : delete forkid0
+                kill(current_process, SIGSTOP);
+                current_process = forkid1;
+                current_process_index = forkid1_index - 1;
+                kill(forkid1, SIGCONT);
+              } else if (forkid1_killed) { // forkid0 and forkid1 should not both be killed
+                numProcesses = numProcesses - 1;
+                processes[numProcesses] = -1; // "delete" forkid1
+                kill(current_process, SIGSTOP);
+                current_process = forkid0;
+                current_process_index = forkid0_index;
+                kill(forkid0, SIGCONT);
+              } else { // both are alive, just chose 1
+                kill(current_process, SIGSTOP);
+                current_process = forkid0;
+                current_process_index = forkid0_index;
+                kill(forkid0, SIGCONT);
+              }
+
+
             }
             printControllerState(systemStates, numStates);
             // attention
             close(msgbuffer[j].connfd);
+            // Since this is a send message, there could be other recv messages waiting to be delivered this msg
           }
+        }
+
+        // if the send message was not delivered, schedule another process
+        if (!msg_was_delivered) {
+          kill(current_process, SIGSTOP);
+          current_process_index = (current_process_index + 1) % numProcesses;
+          current_process = processes[current_process_index];
+          kill(current_process, SIGCONT);
         }
         close(connfd);
       }
       i++;
+
     }
   }
 
