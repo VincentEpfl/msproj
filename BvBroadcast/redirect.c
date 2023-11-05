@@ -73,8 +73,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   {
     port = ntohs(peer_addr.sin_port);
     processId = port - 8080;
-    printf("Intercepted message to %s:%d\n",
-           inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
+    printf("Intercepted message to process %d\n", processId);
   }
   else
   {

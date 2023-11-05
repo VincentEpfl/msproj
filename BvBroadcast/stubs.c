@@ -20,11 +20,16 @@ static ssize_t (*real_send)(int sockfd, const void *buf, size_t len,
 ssize_t
 register_state(const int *state, int len) // no need sockfd just put 0 send redirect
 {
+  typedef ssize_t (*original_send_t)(int, const void *, size_t, int);
+  original_send_t original_send = (original_send_t)dlsym(RTLD_NEXT, "send");
+
   // Load the real send
+  /*
   if (!real_send)
   {
     real_send = dlsym(RTLD_NEXT, "send"); // voir si ça casse pas tout... chatgpt says it works...
-  }
+  } 
+  */
 
   struct sockaddr_un address;
   int controller_feedback_socket;
@@ -55,8 +60,10 @@ register_state(const int *state, int len) // no need sockfd just put 0 send redi
   // should be fine because no other connection in parallel if I wait for state
   // one by one
   // and also exec 1 by 1 be we ll see
-  ssize_t bytes_sent = real_send(controller_feedback_socket, state, len, 0);
+  ssize_t bytes_sent = original_send(controller_feedback_socket, state, len, 0);
   printf("[STUB] Sent state\n");
+
+  close(controller_feedback_socket);
 
   return bytes_sent;
 }
