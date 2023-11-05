@@ -407,7 +407,7 @@ int main()
   }
 
   // Wait until all processes have setup their sockets
-  sleep(5);
+  sleep(50);
 
   // Signal all children to proceed
   for (int i = 0; i < N; i++)
