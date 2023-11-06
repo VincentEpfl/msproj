@@ -65,13 +65,13 @@ void BV_broadcast(int value)
         serverAddr.sin_port = htons(PORT_BASE + i);
         inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-        /*
+        
         if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
         {
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
-        */
+        
         send(sockfd, &message, sizeof(message), 0);
 
         printf("Process %d Value %d sent to process %d\n", processId, value, i);
@@ -184,14 +184,14 @@ int main(int argc, char *argv[])
     // Listening loop
     while (1)
     {
-        /*
+        
         connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
         if (connfd == -1)
         {
             perror("[Process] Accept failure");
             exit(EXIT_FAILURE);
         }
-        */
+        
         int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
         if (nbytes == -1)
         {

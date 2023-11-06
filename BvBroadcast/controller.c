@@ -537,13 +537,6 @@ int main()
             break;
           }
 
-          printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
-          printf("[Controller] States to update :");
-          for (int s = 0; s < numStatesToUpdate; s++) {
-            printf("%d,", statesToUpdate[s]);
-          }
-          printf("\n");
-
           // canDeliver(...)
 
           // Need forkPath[0] = 0 or something to make sure msg from base broadcast always ok
@@ -605,6 +598,13 @@ int main()
               }
               printf("]\n");
             }
+
+            printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
+          printf("[Controller] States to update :");
+          for (int s = 0; s < numStatesToUpdate; s++) {
+            printf("%d,", statesToUpdate[s]);
+          }
+          printf("\n");
 
             msg_was_delivered = true;
 
@@ -946,13 +946,6 @@ int main()
             break;
           }
 
-          printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
-          printf("[Controller] States to update :");
-          for (int s = 0; s < numStatesToUpdate; s++) {
-            printf("%d,", statesToUpdate[s]);
-          }
-          printf("\n");
-
           // canDeliver()
 
           // Check that the receiver is not in a parallel execution
@@ -1016,6 +1009,13 @@ int main()
             printf("to recv msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
             msgbuffer[j].type, msgbuffer[j].from, msgbuffer[j].to, msgbuffer[j].msg, msgbuffer[j].connfd,
             msgbuffer[j].forkId, msgbuffer[j].numDelivered);
+
+            printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
+          printf("[Controller] States to update :");
+          for (int s = 0; s < numStatesToUpdate; s++) {
+            printf("%d,", statesToUpdate[s]);
+          }
+          printf("\n");
 
 
             kill(current_process, SIGSTOP); // In case the msg is delivered several times
