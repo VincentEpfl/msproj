@@ -320,6 +320,10 @@ int main()
           0},
   };
 
+
+  systemStates[0].len = 1;
+  systemStates[0].forkPath[0] = 0;
+
   // Create the semaphore
   sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 0);
   if (sem == SEM_FAILED)
@@ -922,6 +926,7 @@ int main()
             if (systemStates[s].len == 0)
             { // init le 1 elem de forkpath devrait etre 0
               systemStates[s].len = 1;
+              systemStates[s].forkPath[0] = 0;
             }
             for (int f = 0; f < systemStates[s].len; f++)
             {
