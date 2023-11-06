@@ -417,6 +417,7 @@ int main()
   {
     if (i == 0) {
       sem_post(sem);
+      printf("[Controller] Schedule process 0\n");
       current_process = processes[0];
       current_process_index = 0;
     } else {
@@ -484,6 +485,7 @@ int main()
         printf("[Controller] This is a recv message\n");
         msgbuffer[i].connfd = connfd;
         int r = 0;
+
         for (int j = 0; j < i; j++)
         {
           // Look through the message array if the message it wants is
@@ -511,6 +513,7 @@ int main()
             if (systemStates[s].len == 0)
             { // init le 1 elem de forkpath devrait etre 0
               systemStates[s].len = 1;
+              systemStates[s].forkPath[0] = 0;
             }
             for (int f = 0; f < systemStates[s].len; f++)
             {
@@ -529,6 +532,13 @@ int main()
             // discard msg or something
             break;
           }
+
+          printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
+          printf("[Controller] States to update :");
+          for (int s = 0; s < numStatesToUpdate; s++) {
+            printf("%d,", statesToUpdate[s]);
+          }
+          printf("\n");
 
           // canDeliver(...)
 
@@ -581,6 +591,17 @@ int main()
           if (recvDeliverOk && sendDeliverOk && msgbuffer[j].type == 0 && msgbuffer[j].to == msgbuffer[i].to && forkOk)
           {
             printf("[Controller] send msg to receiver\n");
+            printf("msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
+            msgbuffer[j].type, msgbuffer[j].from, msgbuffer[j].to, msgbuffer[j].msg, msgbuffer[j].connfd,
+            msgbuffer[j].forkId, msgbuffer[j].numDelivered);
+            if (msgbuffer[j].numDelivered > 0) {
+              printf("delivered:[");
+              for (int d = 0; d < msgbuffer[j].numDelivered; d++) {
+                printf("%d, ", msgbuffer[j].delivered[d]);
+              }
+              printf("]\n");
+            }
+
             msg_was_delivered = true;
 
             // recv msg always need to be delivered only once
@@ -729,6 +750,7 @@ int main()
               current_process = forkid0;
               current_process_index = forkid0_index;
               kill(forkid0, SIGCONT);
+              printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
 
             }
             else
@@ -792,6 +814,8 @@ int main()
                       waitpid(forkid0, NULL, 0);
                       forkid0_killed = true;
                     }
+
+                    printf("[Controller] kill state %d on forkid %d\n", statesToUpdate[s], forkid0);
                     
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[statesToUpdate[s]].killed = 1; // TODO need handle states that are killed
@@ -813,6 +837,8 @@ int main()
                       waitpid(forkid1, NULL, 0);
                       forkid1_killed = true;
                     }
+
+                    printf("[Controller] kill state %d on forkid %d\n", statesToUpdate[numStates - 1], forkid1);
                     
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[numStates - 1].killed = 1; // TODO need handle states that are killed
@@ -829,6 +855,7 @@ int main()
                 current_process = forkid1;
                 current_process_index = forkid1_index - 1;
                 kill(forkid1, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
               } else if (forkid1_killed) { // forkid0 and forkid1 should not both be killed
                 numProcesses = numProcesses - 1;
                 processes[numProcesses] = -1; // "delete" forkid1
@@ -836,11 +863,13 @@ int main()
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
               } else { // both are alive, just chose 1
                 kill(current_process, SIGSTOP);
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
               }
 
             }
@@ -853,10 +882,12 @@ int main()
 
         // if the recv message was not delivered, schedule another process
         if (!msg_was_delivered) {
+          printf("[Controller] recv msg was not delivered\n");
           kill(current_process, SIGSTOP);
           current_process_index = (current_process_index + 1) % numProcesses;
           current_process = processes[current_process_index];
           kill(current_process, SIGCONT);
+          printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
         }
           
       }
@@ -910,6 +941,13 @@ int main()
             break;
           }
 
+          printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
+          printf("[Controller] States to update :");
+          for (int s = 0; s < numStatesToUpdate; s++) {
+            printf("%d,", statesToUpdate[s]);
+          }
+          printf("\n");
+
           // canDeliver()
 
           // Check that the receiver is not in a parallel execution
@@ -960,6 +998,21 @@ int main()
           if (recvDeliverOk && sendDeliverOk && forkOk && msgbuffer[j].type == 1 && msgbuffer[j].to == msgbuffer[i].to)
           {
             printf("[Controller] send msg to receiver\n");
+            printf("send msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
+            msgbuffer[i].type, msgbuffer[i].from, msgbuffer[i].to, msgbuffer[i].msg, msgbuffer[i].connfd,
+            msgbuffer[i].forkId, msgbuffer[i].numDelivered);
+            if (msgbuffer[i].numDelivered > 0) {
+              printf("delivered:[");
+              for (int d = 0; d < msgbuffer[i].numDelivered; d++) {
+                printf("%d, ", msgbuffer[i].delivered[d]);
+              }
+              printf("]\n");
+            }
+            printf("to recv msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
+            msgbuffer[j].type, msgbuffer[j].from, msgbuffer[j].to, msgbuffer[j].msg, msgbuffer[j].connfd,
+            msgbuffer[j].forkId, msgbuffer[j].numDelivered);
+
+
             kill(current_process, SIGSTOP); // In case the msg is delivered several times
             msg_was_delivered = true;
 
@@ -986,6 +1039,7 @@ int main()
               }
             }
             kill(current_process, SIGCONT);
+            printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
             // Try to send the message
             int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
@@ -1021,6 +1075,7 @@ int main()
               close(feedback_connfd);
             }
 
+            printf("[Controller] state recovered\n");
             newProcessState[0] = recmsg[1];
             newProcessState[1] = recmsg[2];
             int forkid0 = recmsg[0];
@@ -1115,6 +1170,7 @@ int main()
               current_process = forkid0;
               current_process_index = forkid0_index;
               kill(forkid0, SIGCONT);
+              printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
 
             }
             else
@@ -1179,6 +1235,8 @@ int main()
                       waitpid(forkid0, NULL, 0);
                       forkid0_killed = true;
                     }
+                    printf("[Controller] kill state %d on forkid %d\n", statesToUpdate[s], forkid0);
+                    
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[statesToUpdate[s]].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -1201,6 +1259,8 @@ int main()
                       waitpid(forkid1, NULL, 0);
                       forkid1_killed = true;
                     }
+                    printf("[Controller] kill state %d on forkid %d\n", statesToUpdate[numStates - 1], forkid1);
+                    
                     // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
                     systemStates[numStates - 1].killed = 1; // TODO need handle states that are killed
                     // also I'm sure to kill the state just created, better (like no msg sent or whatev) ?
@@ -1216,6 +1276,7 @@ int main()
                 current_process = forkid1;
                 current_process_index = forkid1_index - 1;
                 kill(forkid1, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid1);
               } else if (forkid1_killed) { // forkid0 and forkid1 should not both be killed
                 numProcesses = numProcesses - 1;
                 processes[numProcesses] = -1; // "delete" forkid1
@@ -1223,11 +1284,13 @@ int main()
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
               } else { // both are alive, just chose 1
                 kill(current_process, SIGSTOP);
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
+                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
               }
 
 
@@ -1241,9 +1304,11 @@ int main()
 
         // if the send message was not delivered, schedule another process
         if (!msg_was_delivered) {
+          printf("[Controller] send msg was not delivered\n");
           current_process_index = (current_process_index + 1) % numProcesses;
           current_process = processes[current_process_index];
           kill(current_process, SIGCONT);
+          printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
         }
         close(connfd);
       }
