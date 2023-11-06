@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <semaphore.h>
 #include <fcntl.h>
-#include "stubs.h"
 
 #define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
@@ -56,7 +55,7 @@ void BV_broadcast(int value)
                 printf("Process %d commits value %d\n", processId, value);
                 committedValues[value] = 1; // Mark the value as committed
             }
-            // *
+            
             continue;
         }
 
@@ -90,26 +89,13 @@ void processMessages(int value, int fromProcess)
     {
         printf("Process %d commits value %d\n", processId, value);
         committedValues[value] = 1; // Mark the value as committed
-        // *
+        
     }
     if (distinctCount > T && !hasBroadcasted[value])
     {
         BV_broadcast(value);
     }
-    // actually this is a problem because might exec after a broadcast
-    // = not the first send after recv
-    // = not what controller waits for (but does)
-    // need replace register state by a function in redirect
-    // then put logic so that first call to this fct after a recv remembers socket
-    // but send create another
-    // TODO if i can't make a shared lib that works just override an existing fct
-    // that i dont use
-    // or need to send state at * and here, be careful not to call twice...
-    // OR I in broadcast I put the case i == processid before the loop
-    // then in the loop I skip this iteration that was already done 1st
-    // technically ok
-    // then register state
-    // ah no because then i register state when initial broadcast as well...
+    // This is where it registers its state to the controller 
     int valuesCount[2];
     //valuesCount[0] = getpid();
     valuesCount[0] = countDistinctProcessesForValue(0);
@@ -198,7 +184,7 @@ int main(int argc, char *argv[])
             perror("[Process] Recv failure");
             exit(EXIT_FAILURE);
         }
-        sleep(1); // just chill
+        sleep(1); 
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);

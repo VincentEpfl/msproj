@@ -24,8 +24,6 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
 
-// int controller_socket = 0;
-
 int forkId = 0; // Only 0 at first for each process
 
 // send override
@@ -64,7 +62,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send feedback message to the controller
   printf("[Intercept] Send feedback\n");
-  int *intBuf = (int *)buf; // possible direct int[] ?
+  int *intBuf = (int *)buf; 
   int feedbackMessage[3];
   feedbackMessage[0] = forkId;         
   feedbackMessage[1] = intBuf[0]; 
@@ -75,13 +73,6 @@ send(int sockfd, const void *buf, size_t len, int flags)
   close(feedback_socket);
   return bytes_sent;
   } else {
-
-  // If controller socket already exist use it
-  // The only time it will be the case is in a child right after a recv
-  // This will be used to send the state to the controller, and closed
-  // right after
-  // right now I'm thinking of using a different feedback socket so wouldnt need that
-  // if (controller_socket == 0) {
   struct sockaddr_un address;
   int controller_socket;
   if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
@@ -101,7 +92,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
-  //  }
+  
 
   struct sockaddr_in peer_addr;
   socklen_t peer_addr_len = sizeof(peer_addr);
@@ -121,7 +112,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send (redirect) the message to the controller
   printf("[Intercept] Send\n");
-  int *intBuf = (int *)buf; // possible direct int[] ?
+  int *intBuf = (int *)buf; 
   int sendMessage[5];
   sendMessage[0] = 0;         // type = send
   sendMessage[1] = intBuf[0]; // from = first elem of msg
@@ -187,21 +178,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   int port = ntohs(local_addr.sin_port);
   int processId = port - 8080;
 
-  // For now no timeout, check in SimpleSendRecv if needed
-
-  // Maybe send state here. That way controller can tell to kill if redondant ?
-  // then need to consider the last recv controller receives, for which it
-  // has no more msg to transmit, to get the final state (impacted by the
-  // last actual recv just before)
-  // Yeah just send back state directly I guess, for now
-  // If i need to open a new socket / co in the controller just after sending
-  // the message to fork, and wait for reply from child, well i will do that,
-  // for now
-
   // Send a message to the controller that this process is ready to receive
-  // Right now the instruction is read directly from the message value, but
-  // the idea is to include this in format :
-  // msg = this process is ready to receive from a certain sender process
   printf("[Intercept] send to controller\n");
   int sendMessage[5];
   sendMessage[0] = 1;         // type = recv
@@ -264,24 +241,15 @@ recv(int sockfd, void *buf, size_t len, int flags)
         intBuf[0] = from;
         intBuf[1] = value;
 
-        // don't close controller socket so that child can send state
-        // to controller directly (this will close)
+        close(controller_socket); // verify ok
         return bytes_received;
       }
       i = i + 1;
     }
     else if (instruction == 2)
-    { // TODO instruction kill parent ?
+    { 
       printf("[Intercept] kill\n");
       // Say instruction 2 is kill
-      // Would it be better to have an instruction to kill a child process ?
-      // But then which one, here again only 2 options and if kill its that
-      // they are the same so any works, but more generally.. well who cares
-
-      // how about children processes ?
-
-      // close (controller_socket);
-      // exit(0);
 
       // Here I kill the last child (same because 2 and kill if =)
       if (kill(children[i - 1], SIGTERM) < 0)
@@ -295,4 +263,3 @@ recv(int sockfd, void *buf, size_t len, int flags)
   close(controller_socket);
   return 0;
 }
-// TODO override other function to register state
