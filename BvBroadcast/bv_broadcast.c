@@ -145,6 +145,13 @@ int main(int argc, char *argv[])
     int receivedValue;
 
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    int yes = 1;
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
+        perror("[Process] ERROR on setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT_BASE + processId);
     serverAddr.sin_addr.s_addr = INADDR_ANY;

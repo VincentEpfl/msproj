@@ -440,10 +440,22 @@ int main()
   int i = 0;
   int numStates = 1; // TODO maybe start at 1 and setup initial state...
   printf("[Controller] Listen for incoming messages\n");
-  while ((connfd = accept(sockfd, NULL, NULL)) != -1)
+  while (1)
   {
+    connfd = accept(sockfd, NULL, NULL);
+    if (connfd == -1) {
+      perror("[Controller] Accept failure");
+      exit(EXIT_FAILURE);
+    }
+    printf("[Controller] New connection\n");
 
     ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+
+    if (len == -1)
+        {
+            perror("[Controller] Recv failure");
+            exit(EXIT_FAILURE);
+        }
 
     if (len > 0)
     {
