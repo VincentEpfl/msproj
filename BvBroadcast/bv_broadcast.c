@@ -108,16 +108,11 @@ void processMessages(int value, int fromProcess)
     // technically ok
     // then register state
     // ah no because then i register state when initial broadcast as well...
-    int valuesCount[3];
-    valuesCount[0] = getpid();
-    valuesCount[1] = countDistinctProcessesForValue(0);
-    valuesCount[2] = countDistinctProcessesForValue(1);
-    int nb = register_state(valuesCount, sizeof(valuesCount)); // TODO state = committedValues
-    if (nb == -1)
-    {
-        perror("[Process] register state");
-        exit(EXIT_FAILURE);
-    }
+    int valuesCount[2];
+    //valuesCount[0] = getpid();
+    valuesCount[0] = countDistinctProcessesForValue(0);
+    valuesCount[1] = countDistinctProcessesForValue(1);
+    send(-1, &valuesCount, sizeof(valuesCount), 0);
 }
 
 int main(int argc, char *argv[])

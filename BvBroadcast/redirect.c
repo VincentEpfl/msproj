@@ -22,6 +22,8 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_PATH "./controller_socket"
 
+#define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
+
 // int controller_socket = 0;
 
 int forkId = 0; // Only 0 at first for each process
@@ -37,6 +39,42 @@ send(int sockfd, const void *buf, size_t len, int flags)
   {
     real_send = dlsym(RTLD_NEXT, "send");
   }
+
+  if (sockfd == -1) { // this is a send to the feedback socket
+
+  struct sockaddr_un address;
+  int feedback_socket;
+  if ((feedback_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+  {
+    perror("[Intercept] socket");
+    exit(EXIT_FAILURE);
+  }
+
+  memset(&address, 0, sizeof(address));
+  address.sun_family = AF_UNIX;
+  strncpy(address.sun_path, CONTROLLER_FEEDBACK_PATH,
+          sizeof(address.sun_path) - 1);
+
+  if (connect(feedback_socket, (struct sockaddr *)&address,
+              sizeof(struct sockaddr_un)) == -1)
+  {
+    perror("[Intercept] connect");
+    exit(EXIT_FAILURE);
+  }
+
+  // Send feedback message to the controller
+  printf("[Intercept] Send feedback\n");
+  int *intBuf = (int *)buf; // possible direct int[] ?
+  int feedbackMessage[3];
+  feedbackMessage[0] = forkId;         
+  feedbackMessage[1] = intBuf[0]; 
+  feedbackMessage[2] = intBuf[1]; 
+
+  ssize_t bytes_sent = real_send(feedback_socket, &feedbackMessage, sizeof(feedbackMessage), 0);
+
+  close(feedback_socket);
+  return bytes_sent;
+  } else {
 
   // If controller socket already exist use it
   // The only time it will be the case is in a child right after a recv
@@ -96,6 +134,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   close(controller_socket);
 
   return bytes_sent;
+}
 }
 
 // Override recv

@@ -853,6 +853,7 @@ int main()
       {
         // This is a send message : a process sends some data to another
         printf("[Controller] This is a send message\n");
+        kill(current_process, SIGSTOP);
         // Go through the message buffer to see if the process waiting for this
         // data is already there
 
@@ -947,6 +948,7 @@ int main()
           if (recvDeliverOk && sendDeliverOk && forkOk && msgbuffer[j].type == 1 && msgbuffer[j].to == msgbuffer[i].to)
           {
             printf("[Controller] send msg to receiver\n");
+            kill(current_process, SIGSTOP); // In case the msg is delivered several times
             msg_was_delivered = true;
 
             // TODO update same as above
@@ -958,6 +960,20 @@ int main()
             // send msg might need to be sent to different states
             msgbuffer[i].delivered[msgbuffer[i].numDelivered] = msgbuffer[j].forkId;
             msgbuffer[i].numDelivered = msgbuffer[i].numDelivered + 1;
+
+            if (msgbuffer[j].forkId == 0) {
+              current_process_index = msgbuffer[j].to;
+              current_process = processes[current_process_index];
+            } else {
+              current_process = msgbuffer[j].forkId;
+              for (int p = 0; p < numProcesses; p++) {
+                if (processes[p] == current_process) {
+                  current_process_index = p;
+                  break;
+                }
+              }
+            }
+            kill(current_process, SIGCONT);
 
             // Try to send the message
             int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
@@ -1213,7 +1229,6 @@ int main()
 
         // if the send message was not delivered, schedule another process
         if (!msg_was_delivered) {
-          kill(current_process, SIGSTOP);
           current_process_index = (current_process_index + 1) % numProcesses;
           current_process = processes[current_process_index];
           kill(current_process, SIGCONT);
