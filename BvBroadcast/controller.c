@@ -567,6 +567,10 @@ int main()
     {
       printf("[Controller] New connection\n");
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+      if (len == 0) {
+        perror("[Controller] Recv failure len == 0");
+        exit(EXIT_FAILURE);
+      }
       if (len == -1)
       {
         perror("[Controller] Recv failure");
