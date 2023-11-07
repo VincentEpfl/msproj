@@ -825,14 +825,9 @@ int main()
                 if (forkid0_killed) {
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid0
-                  schedule_new_process();
-                } else {
-                  kill(current_process, SIGSTOP);
-                current_process = forkid0;
-                current_process_index = forkid0_index;
-                kill(forkid0, SIGCONT);
-                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
-                }
+                  
+                } 
+                schedule_new_process();
 
                 
             }
@@ -1029,14 +1024,10 @@ int main()
                 if (forkid0_killed) {
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid0
-                  schedule_new_process();
-                } else {
-                  kill(current_process, SIGSTOP);
-                current_process = forkid0;
-                current_process_index = forkid0_index;
-                kill(forkid0, SIGCONT);
-                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
-                }
+                  
+                } 
+                schedule_new_process();
+
             }
               printControllerState(systemStates, numStates);
               // attention
