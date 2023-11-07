@@ -380,6 +380,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 
 void sendMsgToProcess(int connfd, int *message, int msglen, int *recmsg, int recmsglen)
 {
+  printf("[Controller] Send msg %d %d %d\n", message[0], message[1], message[2]);
   send(connfd, &message, msglen, 0);
 
   // Recover the resulting state
