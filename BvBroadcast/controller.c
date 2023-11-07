@@ -59,6 +59,8 @@ pid_t processes[100];
 int numProcesses = N;
 pid_t current_process;
 int current_process_index;
+int waiting_processes[100];
+int num_waiting_processes;
 
 // What should be max number of system state that we can track in parallel ?
 StateTODO systemStates[50] = {
@@ -268,7 +270,25 @@ void init()
 void schedule_new_process()
 {
   kill(current_process, SIGSTOP);
+  /*
   current_process_index = (current_process_index + 1) % numProcesses;
+  current_process = processes[current_process_index];
+  kill(current_process, SIGCONT);
+  */
+
+  current_process_index = (current_process_index + 1) % numProcesses;
+
+  bool iswaiting = true;
+  while (iswaiting) {
+  iswaiting = false;
+  for (int w = 0; w < num_waiting_processes; w++) {
+    if (waiting_processes[w] == current_process_index) {
+      current_process_index = (current_process_index + 1) % numProcesses;
+      iswaiting = true;
+    }
+  }
+}
+
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
   printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
@@ -583,7 +603,20 @@ int main()
               }
               printf("\n");
 
-              kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
+              //kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
+              if (msgbuffer[i].forkId == 0)
+              {
+                if (current_process_index != msgbuffer[i].to) {
+                  kill(current_process, SIGSTOP);
+                }
+              }
+              else
+              {
+                if (current_process != msgbuffer[i].forkId) {
+                  kill(current_process, SIGSTOP);
+                }
+              }
+
               msg_was_delivered = true;
 
               // recv msg always need to be delivered only once
@@ -593,6 +626,7 @@ int main()
               deliver_message(j, i);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
+              /*
               if (msgbuffer[i].forkId == 0)
               {
                 current_process_index = msgbuffer[i].to;
@@ -612,7 +646,7 @@ int main()
               }
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
-
+*/
 
               // Try to send the message
               int newProcessState[2];
@@ -653,7 +687,8 @@ int main()
                 // stop the current one ? it loops waiting for controller instructions anyway
                 numProcesses = numProcesses - 1;
                 processes[numProcesses] = -1; // "delete" forkid1
-                kill(current_process, SIGSTOP);
+                //kill(current_process, SIGSTOP);
+                waiting_processes[num_waiting_processes++] = current_process;
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
@@ -686,7 +721,8 @@ int main()
                   numProcesses = numProcesses - 1;
                   processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
                   processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
-                  kill(current_process, SIGSTOP);
+                  //kill(current_process, SIGSTOP);
+                  waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid1;
                   current_process_index = forkid1_index - 1;
                   kill(forkid1, SIGCONT);
@@ -696,7 +732,8 @@ int main()
                 { // forkid0 and forkid1 should not both be killed
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid1
-                  kill(current_process, SIGSTOP);
+                  //kill(current_process, SIGSTOP);
+                  waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid0;
                   current_process_index = forkid0_index;
                   kill(forkid0, SIGCONT);
@@ -704,7 +741,8 @@ int main()
                 }
                 else
                 { // both are alive, just chose 1
-                  kill(current_process, SIGSTOP);
+                  //kill(current_process, SIGSTOP);
+                  waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid0;
                   current_process_index = forkid0_index;
                   kill(forkid0, SIGCONT);
@@ -771,6 +809,7 @@ int main()
               deliver_message(i, j);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
+              /*
               if (msgbuffer[j].forkId == 0)
               {
                 current_process_index = msgbuffer[j].to;
@@ -790,7 +829,7 @@ int main()
               }
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
-
+*/
               // Try to send the message
               int newProcessState[2];
               int forkInfo[2];
