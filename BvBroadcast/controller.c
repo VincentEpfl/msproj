@@ -413,9 +413,10 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == type && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
 
-void sendMsgToProcess(int connfd, int *message, int msglen, int *recmsg, int recmsglen)
+void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
-  printf("[Controller] Send msg %d %d %d\n", message[0], message[1], message[2]);
+  int * messageint = (int *) message;
+  printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
   send(connfd, message, msglen, 0);
 
   // Recover the resulting state
@@ -433,7 +434,7 @@ void sendMsgToProcess(int connfd, int *message, int msglen, int *recmsg, int rec
   }
 }
 
-void sendMsgAndRecvState(int connfd, int *message, int msglen, int send_msg_index, int *newProcessState, int *forkInfo)
+void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
 {
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
@@ -441,13 +442,15 @@ void sendMsgAndRecvState(int connfd, int *message, int msglen, int send_msg_inde
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
   printf("[Controller] state recovered\n");
-  newProcessState[0] = recmsg[1];
-  newProcessState[1] = recmsg[2];
-  forkInfo[0] = recmsg[0];
-  forkInfo[1] = numProcesses;
-  processes[numProcesses++] = forkInfo[0];
-  kill(forkInfo[0], SIGSTOP);
-  printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessState[0], newProcessState[1], forkInfo[0]);
+  int *newProcessStateInt = (int *) newProcessState;
+  newProcessStateInt[0] = recmsg[1];
+  newProcessStateInt[1] = recmsg[2];
+  int *forkInfoInt = (int *) forkInfo;
+  forkInfoInt[0] = recmsg[0];
+  forkInfoInt[1] = numProcesses;
+  processes[numProcesses++] = forkInfoInt[0];
+  kill(forkInfoInt[0], SIGSTOP);
+  printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
 }
 
 void duplicateState(int originState, int destState)
