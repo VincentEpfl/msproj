@@ -189,6 +189,10 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
   ssize_t bytes_sent = real_send(controller_socket, sendMessage, sizeof(sendMessage), 0);
 
+  if (bytes_sent == -1) {
+    perror("ERROR sending message to controller");
+    exit(EXIT_FAILURE);
+  }
   // Wait for instructions from the controller
   // Carefull with recv, blocking but stream ? Insure that I recv the
   // right thing.
