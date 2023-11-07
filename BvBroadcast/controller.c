@@ -378,9 +378,9 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == type && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
 
-void sendMsgToProcess(int connfd, int *message, int *recmsg)
+void sendMsgToProcess(int connfd, int *message, int msglen, int *recmsg, int recmsglen)
 {
-  send(connfd, &message, sizeof(message), 0);
+  send(connfd, &message, msglen, 0);
 
   // Recover the resulting state
   // format [forkid, processState]
@@ -388,7 +388,7 @@ void sendMsgToProcess(int connfd, int *message, int *recmsg)
   int feedback_connfd;
   if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
   {
-    if (recv(feedback_connfd, recmsg, sizeof(recmsg), 0) == -1)
+    if (recv(feedback_connfd, recmsg, recmsglen, 0) == -1)
     {
       perror("[Controller] recv state");
       exit(EXIT_FAILURE);
@@ -397,12 +397,12 @@ void sendMsgToProcess(int connfd, int *message, int *recmsg)
   }
 }
 
-void sendMsgAndRecvState(int connfd, int *message, int send_msg_index, int *newProcessState, int *forkInfo)
+void sendMsgAndRecvState(int connfd, int *message, int msglen, int send_msg_index, int *newProcessState, int *forkInfo)
 {
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int recmsg[3];
-  sendMsgToProcess(connfd, message, recmsg);
+  sendMsgToProcess(connfd, message, msglen, recmsg, sizeof(recmsg));
 
   printf("[Controller] state recovered\n");
   newProcessState[0] = recmsg[1];
@@ -617,7 +617,7 @@ int main()
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
-              sendMsgAndRecvState(connfd, message, j, newProcessState, forkInfo);
+              sendMsgAndRecvState(connfd, message, sizeof(message), j, newProcessState, forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
@@ -627,7 +627,7 @@ int main()
               int messageOp[3] = {1, msgbuffer[j].from, opValue};
               int newProcessStateOp[2];
               int forkInfoOp[2];
-              sendMsgAndRecvState(connfd, messageOp, j, newProcessStateOp, forkInfoOp);
+              sendMsgAndRecvState(connfd, messageOp, sizeof(messageOp), j, newProcessStateOp, forkInfoOp);
               int forkid1 = forkInfoOp[0];
               int forkid1_index = forkInfoOp[1];
 
@@ -794,7 +794,7 @@ int main()
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
-              sendMsgAndRecvState(msgbuffer[j].connfd, message, i, newProcessState, forkInfo);
+              sendMsgAndRecvState(msgbuffer[j].connfd, message, sizeof(message), i, newProcessState, forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
@@ -805,7 +805,7 @@ int main()
               int newProcessStateOp[2];
               int forkInfoOp[2];
               // sendMsgToProcess()
-              sendMsgAndRecvState(msgbuffer[j].connfd, messageOp, i, newProcessStateOp, forkInfoOp);
+              sendMsgAndRecvState(msgbuffer[j].connfd, messageOp, sizeof(messageOp), i, newProcessStateOp, forkInfoOp);
               int forkid1 = forkInfoOp[0];
               int forkid1_index = forkInfoOp[1];
 
