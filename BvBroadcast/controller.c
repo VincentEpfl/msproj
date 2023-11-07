@@ -416,7 +416,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 void sendMsgToProcess(int connfd, int *message, int msglen, int *recmsg, int recmsglen)
 {
   printf("[Controller] Send msg %d %d %d\n", message[0], message[1], message[2]);
-  send(connfd, &message, msglen, 0);
+  send(connfd, message, msglen, 0);
 
   // Recover the resulting state
   // format [forkid, processState]
@@ -438,7 +438,7 @@ void sendMsgAndRecvState(int connfd, int *message, int msglen, int send_msg_inde
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int recmsg[3];
-  sendMsgToProcess(connfd, message, msglen, recmsg, sizeof(recmsg));
+  sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
   printf("[Controller] state recovered\n");
   newProcessState[0] = recmsg[1];
@@ -669,15 +669,16 @@ int main()
 */
 
               // Try to send the message
-              /*
+              
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
-              sendMsgAndRecvState(connfd, message, sizeof(message), j, newProcessState, forkInfo);
+              sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
-              */
+              
 
+              /*
               int newProcessState[2];
               int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
               int recmsg[3];
@@ -705,7 +706,7 @@ int main()
               processes[numProcesses++] = forkid0;
               kill(forkid0, SIGSTOP);
               printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
-
+*/
 
               // Try to send the message with the opposite value
               printf("[Controller] send opposite msg to receiver\n");
