@@ -162,7 +162,7 @@ int initSocket(bool feedback)
     struct timeval tv; // timeval structure to set the timeout
 
     // Set the timeout value
-    tv.tv_sec = 1;  // 1 seconds timeout
+    tv.tv_sec = 5;  // 1 seconds timeout
     tv.tv_usec = 0; // 0 microseconds
 
     // Set the timeout option
@@ -679,6 +679,8 @@ int main()
               sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
+              printf("[Controller] PROCESS %d state is now {%d, %d} in forkid %d with index %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0, forkid0_index);
+
               
 
               /*
@@ -717,7 +719,7 @@ int main()
               int messageOp[3] = {1, msgbuffer[j].from, opValue};
               int newProcessStateOp[2];
               int forkInfoOp[2];
-              sendMsgAndRecvState(connfd, messageOp, sizeof(messageOp), j, newProcessStateOp, forkInfoOp);
+              sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), j, &newProcessStateOp, &forkInfoOp);
               int forkid1 = forkInfoOp[0];
               int forkid1_index = forkInfoOp[1];
 
@@ -889,7 +891,7 @@ int main()
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
-              sendMsgAndRecvState(msgbuffer[j].connfd, message, sizeof(message), i, newProcessState, forkInfo);
+              sendMsgAndRecvState(msgbuffer[j].connfd, &message, sizeof(message), i, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
               
@@ -900,7 +902,7 @@ int main()
               int newProcessStateOp[2];
               int forkInfoOp[2];
               // sendMsgToProcess()
-              sendMsgAndRecvState(msgbuffer[j].connfd, messageOp, sizeof(messageOp), i, newProcessStateOp, forkInfoOp);
+              sendMsgAndRecvState(msgbuffer[j].connfd, &messageOp, sizeof(messageOp), i, &newProcessStateOp, &forkInfoOp);
               int forkid1 = forkInfoOp[0];
               int forkid1_index = forkInfoOp[1];
 
@@ -1005,6 +1007,7 @@ int main()
 
   close(sockfd);
   unlink(CONTROLLER_PATH);
+  unlink(CONTROLLER_FEEDBACK_PATH);
 
   while (wait(NULL) != -1)
     ;
