@@ -31,14 +31,14 @@ typedef struct
   int connfd; // -1 for send msg, because we don't keep the connection
   int forkId;
   int numDelivered;  // number of times it was delivered, always 0 or 1 for recv
-  int delivered[10]; // forkIds where it was delivered
+  int delivered[50]; // forkIds where it was delivered
 } Message;
 
 // TODO actually state should be
 typedef struct
 {
   int len;            // len of forkPath
-  pid_t forkPath[10]; // what should be max length ?
+  pid_t forkPath[50]; // what should be max length ?
 
   // received value format :
   // { process i :
@@ -51,10 +51,10 @@ typedef struct
 sem_t *sem;
 
 // Array to store messages
-Message msgbuffer[100];
+Message msgbuffer[1000];
 
 // Array to store processes
-pid_t processes[100];
+pid_t processes[1000];
 int numProcesses = N;
 pid_t current_process;
 int current_process_index;
@@ -62,7 +62,7 @@ int current_process_index;
 //int num_waiting_processes;
 
 // What should be max number of system state that we can track in parallel ?
-StateTODO systemStates[50] = {
+StateTODO systemStates[500] = {
     // good or need init all inside ?
     {
         0,
