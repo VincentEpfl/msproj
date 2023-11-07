@@ -546,6 +546,7 @@ int main()
         // Store received message in the message array
         put_msg_in_buffer(i, receivedMessage);
         bool msg_was_delivered = false;
+
         if (receivedMessage[0] == 1)
         {
           // Recv message = a process wants to receive a message from another
@@ -581,6 +582,7 @@ int main()
               }
               printf("\n");
 
+              kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
               msg_was_delivered = true;
 
               // recv msg always need to be delivered only once
@@ -588,6 +590,28 @@ int main()
 
               // send msg might need to be sent to different states
               deliver_message(j, i);
+
+              // schedule the process that sent the recv message and is waiting for controller instructions
+              if (msgbuffer[i].forkId == 0)
+              {
+                current_process_index = msgbuffer[i].to;
+                current_process = processes[current_process_index];
+              }
+              else
+              {
+                current_process = msgbuffer[i].forkId;
+                for (int p = 0; p < numProcesses; p++)
+                {
+                  if (processes[p] == current_process)
+                  {
+                    current_process_index = p;
+                    break;
+                  }
+                }
+              }
+              kill(current_process, SIGCONT);
+              printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
+
 
               // Try to send the message
               int newProcessState[2];
@@ -873,10 +897,7 @@ int main()
           if (!msg_was_delivered)
           {
             printf("[Controller] send msg was not delivered\n");
-            current_process_index = (current_process_index + 1) % numProcesses;
-            current_process = processes[current_process_index];
-            kill(current_process, SIGCONT);
-            printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
+            schedule_new_process();
           }
           close(connfd);
         }
