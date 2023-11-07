@@ -30,7 +30,7 @@ int forkId = 0; // Only 0 at first for each process
 ssize_t
 send(int sockfd, const void *buf, size_t len, int flags)
 {
-  printf("[Intercept] Enter send\n");
+  //printf("[Intercept] Enter send\n");
 
   // Load the real send
   if (!real_send)
@@ -61,7 +61,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   }
 
   // Send feedback message to the controller
-  printf("[Intercept] Send feedback\n");
+  //printf("[Intercept] Send feedback\n");
   int *intBuf = (int *)buf; 
   int feedbackMessage[3];
   feedbackMessage[0] = forkId;         
@@ -111,7 +111,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   }
 
   // Send (redirect) the message to the controller
-  printf("[Intercept] Send\n");
+  //printf("[Intercept] Send\n");
   int *intBuf = (int *)buf; 
   int sendMessage[5];
   sendMessage[0] = 0;         // type = send
@@ -132,7 +132,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
 ssize_t
 recv(int sockfd, void *buf, size_t len, int flags)
 {
-  printf("[Intercept] Enter recv\n");
+  //printf("[Intercept] Enter recv\n");
 
   // Load the real recv
   if (!real_recv)
@@ -179,7 +179,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   int processId = port - 8080;
 
   // Send a message to the controller that this process is ready to receive
-  printf("[Intercept] send to controller\n");
+  //printf("[Intercept] send to controller\n");
   int sendMessage[5];
   sendMessage[0] = 1;         // type = recv
   sendMessage[1] = -1;        // from = first elem of msg
@@ -206,7 +206,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   pid_t children[2]; // Only 2 here no ?
   int i = 0;
 
-  printf("[Intercept] wait for controller instructions\n");
+  //printf("[Intercept] wait for controller instructions\n");
 
   while (1)
   {
@@ -221,12 +221,15 @@ recv(int sockfd, void *buf, size_t len, int flags)
     int instruction = receivedMessage[0];
     int from = receivedMessage[1];
     int value = receivedMessage[2];
-    printf("[Intercept] recv from controller, instr %d : {from:%d, value:%d}\n", instruction, from, value);
-
+    printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d}\n", processId, instruction, from, value);
+    if (!(instruction == 1 || instruction == 2)) {
+      perror("[Intercept] Bad instruction from controller");
+      exit(EXIT_FAILURE);
+    }
     // Say instruction 1 is fork
     if (instruction == 1)
     {
-      printf("[Intercept] fork\n");
+      //printf("[Intercept] fork\n");
       children[i] = fork();
       if (children[i] < 0)
       {
@@ -252,7 +255,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
     }
     else if (instruction == 2)
     { 
-      printf("[Intercept] kill\n");
+      //printf("[Intercept] kill\n");
       // Say instruction 2 is kill
 
       // Here I kill the last child (same because 2 and kill if =)

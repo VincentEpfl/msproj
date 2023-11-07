@@ -514,6 +514,9 @@ void printControllerState(StateTODO *systemStates, int numStates)
   printf("[Controller] Print Controller State :\n");
   for (int s = 0; s < numStates; s++)
   {
+    if (systemStates[s].killed == 1) {
+      continue;
+    }
     printf("[Controller] State %d:\n", s);
     printf("[Controller] forkPath: ");
     for (int f = 0; f < systemStates[s].len; f++)
