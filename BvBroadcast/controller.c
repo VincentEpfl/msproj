@@ -374,6 +374,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
     forkOk = false;
     for (int f = 0; f < posInForkPath + 1; f++)
     {
+      printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
       if (systemStates[statesToUpdate[0]].forkPath[f] == msgbuffer[sendIndex].forkId)
       {
         forkOk = true;
@@ -393,6 +394,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
       {
         for (int g = 0; g < posInForkPath; g++)
         {
+          printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
           if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[0]].forkPath[g])
           {
             sendDeliverOk = false;
