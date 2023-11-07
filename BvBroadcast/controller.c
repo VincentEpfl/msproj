@@ -665,12 +665,43 @@ int main()
 */
 
               // Try to send the message
+              /*
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
               sendMsgAndRecvState(connfd, message, sizeof(message), j, newProcessState, forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
+              */
+
+              int newProcessState[2];
+              int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
+              int recmsg[3];
+              printf("[Controller] SEND MSG %d %d %d\n", message[0], message[1], message[2]);
+              send(connfd, &message, sizeof(message), 0);
+
+              // Recover the resulting state
+              // format [forkid, processState]
+
+              int feedback_connfd;
+              if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
+              {
+                if (recv(feedback_connfd, recmsg, sizeof(recmsg), 0) == -1)
+                {
+                  perror("[Controller] recv state");
+                  exit(EXIT_FAILURE);
+                }
+                close(feedback_connfd);
+              }
+              printf("[Controller] state recovered\n");
+              newProcessState[0] = recmsg[1];
+              newProcessState[1] = recmsg[2];
+              int forkid0 = recmsg[0];
+              int forkid0_index = numProcesses;
+              processes[numProcesses++] = forkid0;
+              kill(forkid0, SIGSTOP);
+              printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
+
 
               // Try to send the message with the opposite value
               printf("[Controller] send opposite msg to receiver\n");
@@ -846,44 +877,14 @@ int main()
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 */
-              // Try to send the message
-              /*
+              // Try to send the message             
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
               sendMsgAndRecvState(msgbuffer[j].connfd, message, sizeof(message), i, newProcessState, forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
-              */
-
-              int newProcessState[2];
-              int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
-              int recmsg[3];
-              printf("[Controller] SEND MSG %d %d %d\n", message[0], message[1], message[2]);
-              send(connfd, &message, sizeof(message), 0);
-
-              // Recover the resulting state
-              // format [forkid, processState]
-
-              int feedback_connfd;
-              if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
-              {
-                if (recv(feedback_connfd, recmsg, sizeof(recmsg), 0) == -1)
-                {
-                  perror("[Controller] recv state");
-                  exit(EXIT_FAILURE);
-                }
-                close(feedback_connfd);
-              }
-              printf("[Controller] state recovered\n");
-              newProcessState[0] = recmsg[1];
-              newProcessState[1] = recmsg[2];
-              int forkid0 = recmsg[0];
-              int forkid0_index = numProcesses;
-              processes[numProcesses++] = forkid0;
-              kill(forkid0, SIGSTOP);
-              printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
-
+              
               // Try to send the message with opposite value
               printf("[Controller] send opposite msg to receiver\n");
               int opValue = 1 - msgbuffer[i].msg;
