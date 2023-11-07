@@ -151,7 +151,7 @@ int initSocket(bool feedback)
     printf("[Controller] Create controller socket\n");
   }
 
-  if ((sockfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+  if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
     perror("[Controller] receive socket");
     exit(EXIT_FAILURE);
