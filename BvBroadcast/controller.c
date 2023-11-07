@@ -251,8 +251,23 @@ void init()
   sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 0);
   if (sem == SEM_FAILED)
   {
-    perror("Semaphore creation failed");
-    exit(EXIT_FAILURE);
+    if (errno == EEXIST) {
+            // Semaphore already exists, try to unlink and create again
+            printf("Semaphore already exists, trying to recreate it.\n");
+            if (sem_unlink("/sem_bv_broadcast") == -1) {
+                perror("Error unlinking semaphore");
+                exit(EXIT_FAILURE);
+            }
+            sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 1);
+            if (sem == SEM_FAILED) {
+                perror("Error creating semaphore after unlinking");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            // Some other error occurred
+            perror("Error creating semaphore");
+            exit(EXIT_FAILURE);
+        }
   }
 
   // Create controller socket to intercept processes communication
@@ -844,7 +859,7 @@ int main()
               int newProcessState[2];
               int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
               int recmsg[3];
-              printf("[Controller] Send msg %d %d %d\n", message[0], message[1], message[2]);
+              printf("[Controller] SEND MSG %d %d %d\n", message[0], message[1], message[2]);
               send(connfd, &message, sizeof(message), 0);
 
               // Recover the resulting state
