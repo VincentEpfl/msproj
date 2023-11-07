@@ -58,8 +58,8 @@ pid_t processes[100];
 int numProcesses = N;
 pid_t current_process;
 int current_process_index;
-int waiting_processes[100];
-int num_waiting_processes;
+//int waiting_processes[100];
+//int num_waiting_processes;
 
 // What should be max number of system state that we can track in parallel ?
 StateTODO systemStates[50] = {
@@ -162,7 +162,7 @@ int initSocket(bool feedback)
     struct timeval tv; // timeval structure to set the timeout
 
     // Set the timeout value
-    tv.tv_sec = 5;  // 1 seconds timeout
+    tv.tv_sec = 1;  // 1 seconds timeout
     tv.tv_usec = 0; // 0 microseconds
 
     // Set the timeout option
@@ -283,12 +283,11 @@ void init()
 void schedule_new_process()
 {
   kill(current_process, SIGSTOP);
-  /*
   current_process_index = (current_process_index + 1) % numProcesses;
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
-  */
-
+  
+/*
   current_process_index = (current_process_index + 1) % numProcesses;
 
   bool iswaiting = true;
@@ -307,6 +306,7 @@ void schedule_new_process()
 
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
+*/
   printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
@@ -556,7 +556,7 @@ int main()
       // Check if the error was due to a timeout
       if (errno == EWOULDBLOCK || errno == EAGAIN)
       {
-        printf("[Controller] No connections within the timeout period.\n");
+        //printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
       }
       else
@@ -624,7 +624,7 @@ int main()
               }
               printf("\n");
 
-              // kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
+              kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
               if (msgbuffer[i].forkId == 0)
               {
                 if (current_process_index != msgbuffer[i].to)
@@ -649,7 +649,7 @@ int main()
               deliver_message(j, i);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
-              /*
+              
               if (msgbuffer[i].forkId == 0)
               {
                 current_process_index = msgbuffer[i].to;
@@ -669,7 +669,7 @@ int main()
               }
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
-*/
+
 
               // Try to send the message
               
@@ -744,8 +744,8 @@ int main()
                 // stop the current one ? it loops waiting for controller instructions anyway
                 numProcesses = numProcesses - 1;
                 processes[numProcesses] = -1; // "delete" forkid1
-                // kill(current_process, SIGSTOP);
-                waiting_processes[num_waiting_processes++] = current_process;
+                kill(current_process, SIGSTOP);
+                //waiting_processes[num_waiting_processes++] = current_process;
                 current_process = forkid0;
                 current_process_index = forkid0_index;
                 kill(forkid0, SIGCONT);
@@ -778,8 +778,8 @@ int main()
                   numProcesses = numProcesses - 1;
                   processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
                   processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
-                  // kill(current_process, SIGSTOP);
-                  waiting_processes[num_waiting_processes++] = current_process;
+                  kill(current_process, SIGSTOP);
+                  //waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid1;
                   current_process_index = forkid1_index - 1;
                   kill(forkid1, SIGCONT);
@@ -789,8 +789,8 @@ int main()
                 { // forkid0 and forkid1 should not both be killed
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid1
-                  // kill(current_process, SIGSTOP);
-                  waiting_processes[num_waiting_processes++] = current_process;
+                  kill(current_process, SIGSTOP);
+                  //waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid0;
                   current_process_index = forkid0_index;
                   kill(forkid0, SIGCONT);
@@ -798,8 +798,8 @@ int main()
                 }
                 else
                 { // both are alive, just chose 1
-                  // kill(current_process, SIGSTOP);
-                  waiting_processes[num_waiting_processes++] = current_process;
+                  kill(current_process, SIGSTOP);
+                  //waiting_processes[num_waiting_processes++] = current_process;
                   current_process = forkid0;
                   current_process_index = forkid0_index;
                   kill(forkid0, SIGCONT);
@@ -866,7 +866,7 @@ int main()
               deliver_message(i, j);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
-              /*
+              
               if (msgbuffer[j].forkId == 0)
               {
                 current_process_index = msgbuffer[j].to;
@@ -886,7 +886,7 @@ int main()
               }
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
-*/
+
               // Try to send the message             
               int newProcessState[2];
               int forkInfo[2];
