@@ -217,6 +217,16 @@ recv(int sockfd, void *buf, size_t len, int flags)
       perror("Recv failure");
       exit(EXIT_FAILURE);
     }
+    if (bytes_received == 0) { // When the connection is closed from the controller
+      // ALSO MAYBE JUST AVOID THIS CASE FROM THE CONTROLLER BY NOT SCHEDULING PROCESSES THERE
+      // NOW JUST INFINITE LOOP, SLEEP LONGER THAN CONTROLLER WAITS FOR NEW CO, SHOULD BE FINE ?
+      //while(1) { sleep(2); }
+      // OR EXIT (LEAVES CHILDREN RUNNING, SAME PID, HANDLED BY INIT PROCESS)
+      // exit(EXIT_SUCCESS);
+      // OR JUST WAIT FOR CHILDREN TO TERMINATE AND EXIT
+      while (wait(NULL) != -1);
+      exit(EXIT_SUCCESS);
+    }
 
     int instruction = receivedMessage[0];
     int from = receivedMessage[1];

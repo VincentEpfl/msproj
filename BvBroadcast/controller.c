@@ -682,7 +682,6 @@ int main()
               sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
-              printf("[Controller] PROCESS %d state is now {%d, %d} in forkid %d with index %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0, forkid0_index);
 
               
 
