@@ -42,7 +42,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   struct sockaddr_un address;
   int feedback_socket;
-  if ((feedback_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+  if ((feedback_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
   {
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
@@ -75,7 +75,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   } else {
   struct sockaddr_un address;
   int controller_socket;
-  if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+  if ((controller_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
   {
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
@@ -151,7 +151,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
   // Create a socket to the controller
 
-  if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+  if ((controller_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
   {
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
