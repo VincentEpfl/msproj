@@ -215,7 +215,12 @@ void spawnProcesses()
     {
       char processIdStr[10], initialValueStr[10];
       sprintf(processIdStr, "%d", i);
-      sprintf(initialValueStr, "%d", 0);
+      if (i < 2) {
+        sprintf(initialValueStr, "%d", 1);
+      } else {
+        sprintf(initialValueStr, "%d", 0);
+      }
+      
       // Replace child process with BV-broadcast process
       setenv("LD_PRELOAD", "./redirect.so", 1);
       execl("./bv_broadcast", "bv_broadcast", processIdStr, initialValueStr, (char *)NULL);
