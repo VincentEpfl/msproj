@@ -419,6 +419,7 @@ bool checkStateValid(int state[N][2])
 
 bool checkAllStates()
 {
+  bool invalid = false;
   for (int s = 0; s < numStates; s++)
   {
     if (systemStates[s].killed == 1)
@@ -428,6 +429,7 @@ bool checkAllStates()
 
     if (!checkStateValid(systemStates[s].valuesCount))
     {
+      invalid = true;
       // maybe shut down everything, every process etc
       printf("[Controller] INVALID STATE FOUND\n");
       printf("State %d:\n", s);
@@ -448,6 +450,9 @@ bool checkAllStates()
         printf("}\n");
       }
     }
+  }
+  if (!invalid) {
+    printf("[Controller] NO INVALID STATE FOUND\n");
   }
 }
 
@@ -1286,6 +1291,7 @@ int main()
   }
 
   checkAllStates();
+  printf("[Controller] End of simulation\n");
 
   // accept is blocking so this is never reached
 
