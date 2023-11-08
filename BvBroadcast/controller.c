@@ -75,60 +75,7 @@ int sockfd;
 int feedback_sockfd;
 int numStates = 1;
 
-bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int recvIndex)
-{
-  //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
-  // Check if the message comes from a parallel execution/state,
-  // in this case we don't want it
-  bool forkOk = true; 
-  if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
-  {
-    // if fork id of send msg is before (or same as) the forkid of recv msg, ok
-    forkOk = false;
-    for (int f = 0; f < systemStates[stateToUpdate].len; f++) // TODO f < posinforkpath + 1 -> all
-    {
-      //printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
-      if (systemStates[stateToUpdate].forkPath[f] == msgbuffer[sendIndex].forkId)
-      {
-        forkOk = true;
-        break;
-      }
-    }
-  }
-
-  // Check if the send message was already delivered to this state
-  bool sendDeliverOk = true;
-  //if (numStates > 1) //  no if it was delivered to the same state...
-  //{
-    if (msgbuffer[sendIndex].numDelivered > 0)
-    {
-
-      for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
-      {
-        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need posinforkpath...)
-        {
-          //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
-          if (msgbuffer[sendIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
-          {
-            sendDeliverOk = false;
-            break;
-          }
-        }
-      }
-    }
-  //}
-
-  // Check if the recv message was already delivered
-  bool recvDeliverOk = true;
-  if (msgbuffer[recvIndex].numDelivered > 0) 
-  {
-    recvDeliverOk = false;
-  }
-
-  return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
-}
-
-int get_states_to_update(int *res, int *statesToUpdate, int send_msg_index, int recv_msg_index)
+int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
   int numStatesToUpdate = 0;
   int posInForkPath = 0;
@@ -156,12 +103,9 @@ int get_states_to_update(int *res, int *statesToUpdate, int send_msg_index, int 
       {
         if (systemStates[s].forkPath[f] == msgbuffer[recv_msg_index].forkId)
         {
-          if (canDeliverState(f, s, send_msg_index, recv_msg_index)){
-            statesToUpdate[numStatesToUpdate++] = s;
-            posInForkPath = f;
-            break;
-          }
-          
+          statesToUpdate[numStatesToUpdate++] = s;
+          posInForkPath = f;
+          break;
         }
       }
     }
@@ -457,10 +401,63 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 
       for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
       {
-        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need posinforkpath...)
+        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
         {
           //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
           if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[0]].forkPath[g])
+          {
+            sendDeliverOk = false;
+            break;
+          }
+        }
+      }
+    }
+  //}
+
+  // Check if the recv message was already delivered
+  bool recvDeliverOk = true;
+  if (msgbuffer[recvIndex].numDelivered > 0) 
+  {
+    recvDeliverOk = false;
+  }
+
+  return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
+}
+
+bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int recvIndex)
+{
+  //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
+  // Check if the message comes from a parallel execution/state,
+  // in this case we don't want it
+  bool forkOk = true; 
+  if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
+  {
+    // if fork id of send msg is before (or same as) the forkid of recv msg, ok
+    forkOk = false;
+    for (int f = 0; f < systemStates[stateToUpdate].len; f++) // TODO f < posinforkpath + 1 -> all
+    {
+      //printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
+      if (systemStates[stateToUpdate].forkPath[f] == msgbuffer[sendIndex].forkId)
+      {
+        forkOk = true;
+        break;
+      }
+    }
+  }
+
+  // Check if the send message was already delivered to this state
+  bool sendDeliverOk = true;
+  //if (numStates > 1) //  no if it was delivered to the same state...
+  //{
+    if (msgbuffer[sendIndex].numDelivered > 0)
+    {
+
+      for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+      {
+        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+        {
+          //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
+          if (msgbuffer[sendIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
           {
             sendDeliverOk = false;
             break;
@@ -672,19 +669,27 @@ int main()
             // already there
 
             // Get the system states to update
-            int statesToUpdate[numStates];
+            int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update(res, statesToUpdate, j, i) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, i) == -1)
             {
               break;
             }
-            int numStatesToUpdate = res[0];
+            int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
             //printf("[CONTROLLER TEST] pos in fork path outside fct : %d\n", posInForkPath);
             //printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
 
+            int statesToUpdate[numStatesToUpdateTemp];
+            int numStatesToUpdate = 0;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], j, i)) {
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              }
+            }
+
             //if (canDeliver(posInForkPath, statesToUpdate, j, i))
-            if (numStatesToUpdate > 0)
+            if (numStatesToUpdate != 0)
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
@@ -941,18 +946,27 @@ int main()
           for (int j = 0; j < i; j++)
           {
             // Get the system state to update
-            int statesToUpdate[numStates];
+            int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update(res, statesToUpdate, i, j) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, j) == -1)
             {
               break;
             }
-            int numStatesToUpdate = res[0];
+            int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
+
+
+            int statesToUpdate[numStatesToUpdateTemp];
+            int numStatesToUpdate = 0;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], i, j)) {
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              }
+            }
 
             // Found a recv message from the process that the send msg is addressed to
             //if (canDeliver(posInForkPath, statesToUpdate, i, j))
-            if (numStatesToUpdate > 0)
+            if (numStatesToUpdate != 0)
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(i);
