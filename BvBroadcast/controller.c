@@ -376,12 +376,12 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
   //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
   // Check if the message comes from a parallel execution/state,
   // in this case we don't want it
-  bool forkOk = true;
-  if (numStates > 1)
+  bool forkOk = true; 
+  if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
   {
     // if fork id of send msg is before (or same as) the forkid of recv msg, ok
     forkOk = false;
-    for (int f = 0; f < posInForkPath + 1; f++)
+    for (int f = 0; f < systemStates[statesToUpdate[0]].len; f++) // TODO f < posinforkpath + 1 -> all
     {
       //printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
       if (systemStates[statesToUpdate[0]].forkPath[f] == msgbuffer[sendIndex].forkId)
