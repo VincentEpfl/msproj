@@ -371,7 +371,7 @@ void printMessage(int index)
   }
 }
 
-bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvIndex, int type)
+bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvIndex)
 {
   //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
   // Check if the message comes from a parallel execution/state,
@@ -421,7 +421,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
     recvDeliverOk = false;
   }
 
-  return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == type && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
+  return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
 
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
@@ -627,7 +627,7 @@ int main()
             //printf("[CONTROLLER TEST] pos in fork path outside fct : %d\n", posInForkPath);
             //printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
 
-            if (canDeliver(posInForkPath, statesToUpdate, j, i, 0))
+            if (canDeliver(posInForkPath, statesToUpdate, j, i))
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
@@ -894,7 +894,7 @@ int main()
             int posInForkPath = res[1];
 
             // Found a recv message from the process that the send msg is addressed to
-            if (canDeliver(posInForkPath, statesToUpdate, i, j, 1))
+            if (canDeliver(posInForkPath, statesToUpdate, i, j))
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(i);
