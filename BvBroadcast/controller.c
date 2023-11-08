@@ -111,7 +111,7 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
     }
   }
   //printf("[CONTROLLER TEST] state to update[0] inside get fct : %d\n", statesToUpdate[0]);
-  
+  printf("[CONTROLLER TEST] pos in fork path inside fct : %d\n", posInForkPath);
   if (numStatesToUpdate == 0)
   {
     // discard msg or something
@@ -225,7 +225,7 @@ void spawnProcesses()
   }
 
   // Wait until all processes have setup their sockets
-  sleep(15);
+  sleep(5);
 
   // Signal all children to proceed, but only allow 1
   for (int i = 0; i < N; i++)
@@ -619,6 +619,7 @@ int main()
             }
             int numStatesToUpdate = res[0];
             int posInForkPath = res[1];
+            printf("[CONTROLLER TEST] pos in fork path outside fct : %d\n", posInForkPath);
             //printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
 
             if (canDeliver(posInForkPath, statesToUpdate, j, i, 0))
