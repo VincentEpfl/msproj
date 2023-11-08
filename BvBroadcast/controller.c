@@ -799,7 +799,7 @@ int main()
             int numStatesToUpdate = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
-              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], j, i))
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len, statesToUpdateTemp[s], j, i)) // 1 posinforkpath
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
@@ -1077,7 +1077,7 @@ int main()
             int numStatesToUpdate = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
-              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], i, j))
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len, statesToUpdateTemp[s], i, j)) // 1 posinforkpath
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
