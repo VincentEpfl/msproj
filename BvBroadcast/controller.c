@@ -718,6 +718,7 @@ int main()
   int receivedMessage[5];
   int connfd;
   int i = 0;
+  int nothingCounter = 0;
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
@@ -728,6 +729,10 @@ int main()
       {
         // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
+        nothingCounter = nothingCounter + 1;
+        if (nothingCounter > numProcesses) {
+          break;
+        }
       }
       else
       {
@@ -739,6 +744,7 @@ int main()
     else
     {
       printf("[Controller] New connection\n");
+      nothingCounter = 0;
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
       if (len == 0)
       {
@@ -1028,7 +1034,7 @@ int main()
                 schedule_new_process();
               }
               printControllerState(systemStates, numStates);
-              checkAllStates();
+              //checkAllStates();
               close(connfd);
               break;
             }
@@ -1259,7 +1265,7 @@ int main()
                 schedule_new_process();
               }
               printControllerState(systemStates, numStates);
-              checkAllStates();
+              //checkAllStates();
               // attention
               close(msgbuffer[j].connfd);
               // Since this is a send message, there could be other recv messages waiting to be delivered this msg
@@ -1278,6 +1284,8 @@ int main()
       }
     }
   }
+
+  checkAllStates();
 
   // accept is blocking so this is never reached
 
