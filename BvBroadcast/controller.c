@@ -20,6 +20,7 @@
 #define MAXMSG 256
 
 #define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 // Message struct
 typedef struct
@@ -33,7 +34,6 @@ typedef struct
   int numDelivered;  // number of times it was delivered, always 0 or 1 for recv
   int delivered[50]; // forkIds where it was delivered
 } Message;
-
 
 typedef struct
 {
@@ -58,8 +58,8 @@ pid_t processes[1000];
 int numProcesses = N;
 pid_t current_process;
 int current_process_index;
-//int waiting_processes[100];
-//int num_waiting_processes;
+// int waiting_processes[100];
+// int num_waiting_processes;
 
 // What should be max number of system state that we can track in parallel ?
 State systemStates[500] = {
@@ -79,39 +79,39 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
   int numStatesToUpdate = 0;
   int posInForkPath = 0;
-  //if (numStates == 1)
+  // if (numStates == 1)
   //{
-    //numStatesToUpdate = 1;
-    //statesToUpdate[0] = 0;
+  // numStatesToUpdate = 1;
+  // statesToUpdate[0] = 0;
   //}
-  //else
+  // else
   //{
-    for (int s = 0; s < numStates; s++)
+  for (int s = 0; s < numStates; s++)
+  {
+    // Don't want to update a state that was killed
+    if (systemStates[s].killed == 1)
     {
-      // Don't want to update a state that was killed
-      if (systemStates[s].killed == 1)
-      {
-        continue;
-      }
+      continue;
+    }
 
-      if (systemStates[s].len == 0)
-      { // init le 1 elem de forkpath devrait etre 0
-        systemStates[s].len = 1;
-        systemStates[s].forkPath[0] = 0;
-      }
-      for (int f = 0; f < systemStates[s].len; f++)
+    if (systemStates[s].len == 0)
+    { // init le 1 elem de forkpath devrait etre 0
+      systemStates[s].len = 1;
+      systemStates[s].forkPath[0] = 0;
+    }
+    for (int f = 0; f < systemStates[s].len; f++)
+    {
+      if (systemStates[s].forkPath[f] == msgbuffer[recv_msg_index].forkId)
       {
-        if (systemStates[s].forkPath[f] == msgbuffer[recv_msg_index].forkId)
-        {
-          statesToUpdate[numStatesToUpdate++] = s;
-          posInForkPath = f;
-          break;
-        }
+        statesToUpdate[numStatesToUpdate++] = s;
+        posInForkPath = f;
+        break;
       }
     }
+  }
   //}
-  //printf("[CONTROLLER TEST] state to update[0] inside get fct : %d\n", statesToUpdate[0]);
-  //printf("[CONTROLLER TEST] pos in fork path inside fct : %d\n", posInForkPath);
+  // printf("[CONTROLLER TEST] state to update[0] inside get fct : %d\n", statesToUpdate[0]);
+  // printf("[CONTROLLER TEST] pos in fork path inside fct : %d\n", posInForkPath);
   if (numStatesToUpdate == 0)
   {
     // discard msg or something
@@ -121,7 +121,6 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
   res[0] = numStatesToUpdate;
   res[1] = posInForkPath;
   return 0;
-
 }
 
 void put_msg_in_buffer(int index, int *receivedMessage)
@@ -215,12 +214,15 @@ void spawnProcesses()
     {
       char processIdStr[10], initialValueStr[10];
       sprintf(processIdStr, "%d", i);
-      if (i < 2) {
+      if (i < 2)
+      {
         sprintf(initialValueStr, "%d", 1);
-      } else {
+      }
+      else
+      {
         sprintf(initialValueStr, "%d", 0);
       }
-      
+
       // Replace child process with BV-broadcast process
       setenv("LD_PRELOAD", "./redirect.so", 1);
       execl("./bv_broadcast", "bv_broadcast", processIdStr, initialValueStr, (char *)NULL);
@@ -259,23 +261,28 @@ void init()
   sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 0);
   if (sem == SEM_FAILED)
   {
-    if (errno == EEXIST) {
-            // Semaphore already exists, try to unlink and create again
-            printf("Semaphore already exists, trying to recreate it.\n");
-            if (sem_unlink("/sem_bv_broadcast") == -1) {
-                perror("Error unlinking semaphore");
-                exit(EXIT_FAILURE);
-            }
-            sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 1);
-            if (sem == SEM_FAILED) {
-                perror("Error creating semaphore after unlinking");
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            // Some other error occurred
-            perror("Error creating semaphore");
-            exit(EXIT_FAILURE);
-        }
+    if (errno == EEXIST)
+    {
+      // Semaphore already exists, try to unlink and create again
+      printf("Semaphore already exists, trying to recreate it.\n");
+      if (sem_unlink("/sem_bv_broadcast") == -1)
+      {
+        perror("Error unlinking semaphore");
+        exit(EXIT_FAILURE);
+      }
+      sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 1);
+      if (sem == SEM_FAILED)
+      {
+        perror("Error creating semaphore after unlinking");
+        exit(EXIT_FAILURE);
+      }
+    }
+    else
+    {
+      // Some other error occurred
+      perror("Error creating semaphore");
+      exit(EXIT_FAILURE);
+    }
   }
 
   // Create controller socket to intercept processes communication
@@ -294,27 +301,27 @@ void schedule_new_process()
   current_process_index = (current_process_index + 1) % numProcesses;
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
-  
-/*
-  current_process_index = (current_process_index + 1) % numProcesses;
 
-  bool iswaiting = true;
-  while (iswaiting)
-  {
-    iswaiting = false;
-    for (int w = 0; w < num_waiting_processes; w++)
+  /*
+    current_process_index = (current_process_index + 1) % numProcesses;
+
+    bool iswaiting = true;
+    while (iswaiting)
     {
-      if (waiting_processes[w] == current_process_index)
+      iswaiting = false;
+      for (int w = 0; w < num_waiting_processes; w++)
       {
-        current_process_index = (current_process_index + 1) % numProcesses;
-        iswaiting = true;
+        if (waiting_processes[w] == current_process_index)
+        {
+          current_process_index = (current_process_index + 1) % numProcesses;
+          iswaiting = true;
+        }
       }
     }
-  }
 
-  current_process = processes[current_process_index];
-  kill(current_process, SIGCONT);
-*/
+    current_process = processes[current_process_index];
+    kill(current_process, SIGCONT);
+  */
   printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
@@ -349,6 +356,101 @@ bool compareProcessState(int processState1[2], int processState2[2])
   return true;
 }
 
+bool checkStateValid(int state[N][2])
+{
+  int committed_values[N][2];
+  for (int i = 0; i < N; i++)
+  {
+    for (int j = 0; j < 2; j++)
+    {
+      if (state[i][j] > 2 * T)
+      { // Have to modify for bug
+        committed_values[i][j] = 1;
+      }
+      else
+      {
+        committed_values[i][j] = 0;
+      }
+    }
+  }
+  bool valid = true;
+  if (committed_values[0][0] == 0)
+  {
+    for (int i = 1; i < N; i++)
+    {
+      if (committed_values[i][0] != 0)
+      {
+        valid = false;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 1; i < N; i++)
+    {
+      if (committed_values[i][0] != 1)
+      {
+        valid = false;
+      }
+    }
+  }
+  if (committed_values[0][1] == 0)
+  {
+    for (int i = 1; i < N; i++)
+    {
+      if (committed_values[i][1] != 0)
+      {
+        valid = false;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 1; i < N; i++)
+    {
+      if (committed_values[i][1] != 1)
+      {
+        valid = false;
+      }
+    }
+  }
+  return valid;
+}
+
+bool checkAllStates()
+{
+  for (int s = 0; s < numStates; s++)
+  {
+    if (systemStates[s].killed == 1)
+    {
+      continue;
+    }
+
+    if (!checkStateValid(systemStates[s].valuesCount))
+    {
+      // maybe shut down everything, every process etc
+      printf("[Controller] INVALID STATE FOUND\n");
+      printf("State %d:\n", s);
+      printf("forkPath: ");
+      for (int f = 0; f < systemStates[s].len; f++)
+      {
+        printf("%d/", systemStates[s].forkPath[f]);
+      }
+      printf("\n");
+      printf("values count: \n");
+      for (int p = 0; p < N; p++)
+      {
+        printf("process %d : {", p);
+        for (int v = 0; v < 2; v++)
+        {
+          printf("%d, ", systemStates[s].valuesCount[p][v]);
+        }
+        printf("}\n");
+      }
+    }
+  }
+}
+
 void deliver_message(int delivered, int to)
 {
   msgbuffer[delivered].delivered[msgbuffer[delivered].numDelivered] = msgbuffer[to].forkId;
@@ -373,17 +475,17 @@ void printMessage(int index)
 
 bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvIndex)
 {
-  //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
-  // Check if the message comes from a parallel execution/state,
-  // in this case we don't want it
-  bool forkOk = true; 
+  // printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
+  //  Check if the message comes from a parallel execution/state,
+  //  in this case we don't want it
+  bool forkOk = true;
   if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
   {
     // if fork id of send msg is before (or same as) the forkid of recv msg, ok
     forkOk = false;
     for (int f = 0; f < systemStates[statesToUpdate[0]].len; f++) // TODO f < posinforkpath + 1 -> all
     {
-      //printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
+      // printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
       if (systemStates[statesToUpdate[0]].forkPath[f] == msgbuffer[sendIndex].forkId)
       {
         forkOk = true;
@@ -394,29 +496,29 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 
   // Check if the send message was already delivered to this state
   bool sendDeliverOk = true;
-  //if (numStates > 1) //  no if it was delivered to the same state...
+  // if (numStates > 1) //  no if it was delivered to the same state...
   //{
-    if (msgbuffer[sendIndex].numDelivered > 0)
-    {
+  if (msgbuffer[sendIndex].numDelivered > 0)
+  {
 
-      for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+    for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+    {
+      for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
       {
-        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+        // printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
+        if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[0]].forkPath[g])
         {
-          //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
-          if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[0]].forkPath[g])
-          {
-            sendDeliverOk = false;
-            break;
-          }
+          sendDeliverOk = false;
+          break;
         }
       }
     }
+  }
   //}
 
   // Check if the recv message was already delivered
   bool recvDeliverOk = true;
-  if (msgbuffer[recvIndex].numDelivered > 0) 
+  if (msgbuffer[recvIndex].numDelivered > 0)
   {
     recvDeliverOk = false;
   }
@@ -426,17 +528,17 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 
 bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int recvIndex)
 {
-  //printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
-  // Check if the message comes from a parallel execution/state,
-  // in this case we don't want it
-  bool forkOk = true; 
+  // printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
+  //  Check if the message comes from a parallel execution/state,
+  //  in this case we don't want it
+  bool forkOk = true;
   if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
   {
     // if fork id of send msg is before (or same as) the forkid of recv msg, ok
     forkOk = false;
     for (int f = 0; f < systemStates[stateToUpdate].len; f++) // TODO f < posinforkpath + 1 -> all
     {
-      //printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
+      // printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
       if (systemStates[stateToUpdate].forkPath[f] == msgbuffer[sendIndex].forkId)
       {
         forkOk = true;
@@ -447,29 +549,29 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 
   // Check if the send message was already delivered to this state
   bool sendDeliverOk = true;
-  //if (numStates > 1) //  no if it was delivered to the same state...
+  // if (numStates > 1) //  no if it was delivered to the same state...
   //{
-    if (msgbuffer[sendIndex].numDelivered > 0)
-    {
+  if (msgbuffer[sendIndex].numDelivered > 0)
+  {
 
-      for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+    for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+    {
+      for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
       {
-        for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+        // printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
+        if (msgbuffer[sendIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
         {
-          //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
-          if (msgbuffer[sendIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
-          {
-            sendDeliverOk = false;
-            break;
-          }
+          sendDeliverOk = false;
+          break;
         }
       }
     }
+  }
   //}
 
   // Check if the recv message was already delivered
   bool recvDeliverOk = true;
-  if (msgbuffer[recvIndex].numDelivered > 0) 
+  if (msgbuffer[recvIndex].numDelivered > 0)
   {
     recvDeliverOk = false;
   }
@@ -479,7 +581,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
-  int * messageint = (int *) message;
+  int *messageint = (int *)message;
   printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
   send(connfd, message, msglen, 0);
 
@@ -506,10 +608,10 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
   printf("[Controller] state recovered\n");
-  int *newProcessStateInt = (int *) newProcessState;
+  int *newProcessStateInt = (int *)newProcessState;
   newProcessStateInt[0] = recmsg[1];
   newProcessStateInt[1] = recmsg[2];
-  int *forkInfoInt = (int *) forkInfo;
+  int *forkInfoInt = (int *)forkInfo;
   forkInfoInt[0] = recmsg[0];
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
@@ -578,7 +680,8 @@ void printControllerState(State *systemStates, int numStates)
   printf("[Controller] Print Controller State :\n");
   for (int s = 0; s < numStates; s++)
   {
-    if (systemStates[s].killed == 1) {
+    if (systemStates[s].killed == 1)
+    {
       continue;
     }
     printf("[Controller] State %d:\n", s);
@@ -623,7 +726,7 @@ int main()
       // Check if the error was due to a timeout
       if (errno == EWOULDBLOCK || errno == EAGAIN)
       {
-        //printf("[Controller] No connections within the timeout period.\n");
+        // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
       }
       else
@@ -637,7 +740,8 @@ int main()
     {
       printf("[Controller] New connection\n");
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
-      if (len == 0) {
+      if (len == 0)
+      {
         perror("[Controller] Recv failure len == 0");
         exit(EXIT_FAILURE);
       }
@@ -677,18 +781,20 @@ int main()
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
-            //printf("[CONTROLLER TEST] pos in fork path outside fct : %d\n", posInForkPath);
-            //printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
+            // printf("[CONTROLLER TEST] pos in fork path outside fct : %d\n", posInForkPath);
+            // printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
 
             int statesToUpdate[numStatesToUpdateTemp];
             int numStatesToUpdate = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++) {
-              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], j, i)) {
+            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            {
+              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], j, i))
+              {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
             }
 
-            //if (canDeliver(posInForkPath, statesToUpdate, j, i))
+            // if (canDeliver(posInForkPath, statesToUpdate, j, i))
             if (numStatesToUpdate != 0)
             {
               printf("[Controller] send msg to receiver\n");
@@ -727,7 +833,7 @@ int main()
               deliver_message(j, i);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
-              
+
               if (msgbuffer[i].forkId == 0)
               {
                 current_process_index = msgbuffer[i].to;
@@ -748,17 +854,14 @@ int main()
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
-
               // Try to send the message
-              
+
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
               sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
-
-              
 
               /*
               int newProcessState[2];
@@ -791,120 +894,125 @@ int main()
 */
               if (msgbuffer[j].from == 3)
               {
-              // Try to send the message with the opposite value
-              printf("[Controller] send opposite msg to receiver\n");
-              int opValue = 1 - msgbuffer[j].msg;
-              int messageOp[3] = {1, msgbuffer[j].from, opValue};
-              int newProcessStateOp[2];
-              int forkInfoOp[2];
-              sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), j, &newProcessStateOp, &forkInfoOp);
-              int forkid1 = forkInfoOp[0];
-              int forkid1_index = forkInfoOp[1];
+                // Try to send the message with the opposite value
+                printf("[Controller] send opposite msg to receiver\n");
+                int opValue = 1 - msgbuffer[j].msg;
+                int messageOp[3] = {1, msgbuffer[j].from, opValue};
+                int newProcessStateOp[2];
+                int forkInfoOp[2];
+                sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), j, &newProcessStateOp, &forkInfoOp);
+                int forkid1 = forkInfoOp[0];
+                int forkid1_index = forkInfoOp[1];
 
-              if (compareProcessState(newProcessState, newProcessStateOp))
-              {
-                // Here I consider that I kill forkid1 by default
-
-                printf("[Controller] Same result: kill a child\n");
-                int killMessage[3] = {2, -1, -1};
-                if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
+                if (compareProcessState(newProcessState, newProcessStateOp))
                 {
-                  perror("[Controller] send fail");
-                  exit(EXIT_FAILURE);
-                }
+                  // Here I consider that I kill forkid1 by default
 
-                bool forkid0_killed = false;
-                // Update the system states
-                for (int s = 0; s < numStatesToUpdate; s++)
-                {
-                  updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[i].to);
-                  // probablement ajouter kill state... si kill forkid0 just schedule un autre...
-                  forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
-                }
+                  printf("[Controller] Same result: kill a child\n");
+                  int killMessage[3] = {2, -1, -1};
+                  if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
+                  {
+                    perror("[Controller] send fail");
+                    exit(EXIT_FAILURE);
+                  }
 
-                // stop the current one ? it loops waiting for controller instructions anyway
-                numProcesses = numProcesses - 1;
-                processes[numProcesses] = -1; // "delete" forkid1
+                  bool forkid0_killed = false;
+                  // Update the system states
+                  for (int s = 0; s < numStatesToUpdate; s++)
+                  {
+                    updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[i].to);
+                    // probablement ajouter kill state... si kill forkid0 just schedule un autre...
+                    forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+                  }
 
-                if (forkid0_killed) {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1; // "delete" forkid0
-                  schedule_new_process();
-                } else { // to be fair maybe also use schedule
-                  kill(current_process, SIGSTOP);
-                //waiting_processes[num_waiting_processes++] = current_process;
-                current_process = forkid0;
-                current_process_index = forkid0_index;
-                kill(forkid0, SIGCONT);
-                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
-                }
-
-              }
-              else
-              {
-
-                // Copy sys state to update in 1 new state for each fork
-                bool forkid0_killed = false;
-                bool forkid1_killed = false;
-                for (int s = 0; s < numStatesToUpdate; s++)
-                {
-
-                  // Copies the state to update into a new state object in the array of states
-                  duplicateState(statesToUpdate[s], numStates);
-
-                  // Update the states
-                  updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[i].to);
-                  updateState(numStates, forkid1, newProcessStateOp, msgbuffer[i].to);
-
-                  numStates = numStates + 1;
-
-                  // If the new system states are the same as some that are already stored, kill the new ones
-                  forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
-                  forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
-                }
-                if (forkid0_killed && forkid1_killed) {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1;
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1;
-                  schedule_new_process();
-                }
-                else if (forkid0_killed)
-                {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
-                  processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
-                  kill(current_process, SIGSTOP);
-                  //waiting_processes[num_waiting_processes++] = current_process;
-                  current_process = forkid1;
-                  current_process_index = forkid1_index - 1;
-                  kill(forkid1, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
-                }
-                else if (forkid1_killed)
-                { 
+                  // stop the current one ? it loops waiting for controller instructions anyway
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid1
-                  kill(current_process, SIGSTOP);
-                  //waiting_processes[num_waiting_processes++] = current_process;
-                  current_process = forkid0;
-                  current_process_index = forkid0_index;
-                  kill(forkid0, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+
+                  if (forkid0_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1; // "delete" forkid0
+                    schedule_new_process();
+                  }
+                  else
+                  { // to be fair maybe also use schedule
+                    kill(current_process, SIGSTOP);
+                    // waiting_processes[num_waiting_processes++] = current_process;
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                  }
                 }
                 else
-                { // both are alive, just chose 1
-                  kill(current_process, SIGSTOP);
-                  //waiting_processes[num_waiting_processes++] = current_process;
-                  current_process = forkid0;
-                  current_process_index = forkid0_index;
-                  kill(forkid0, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                {
+
+                  // Copy sys state to update in 1 new state for each fork
+                  bool forkid0_killed = false;
+                  bool forkid1_killed = false;
+                  for (int s = 0; s < numStatesToUpdate; s++)
+                  {
+
+                    // Copies the state to update into a new state object in the array of states
+                    duplicateState(statesToUpdate[s], numStates);
+
+                    // Update the states
+                    updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[i].to);
+                    updateState(numStates, forkid1, newProcessStateOp, msgbuffer[i].to);
+
+                    numStates = numStates + 1;
+
+                    // If the new system states are the same as some that are already stored, kill the new ones
+                    forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+                    forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
+                  }
+                  if (forkid0_killed && forkid1_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1;
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1;
+                    schedule_new_process();
+                  }
+                  else if (forkid0_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
+                    processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
+                    kill(current_process, SIGSTOP);
+                    // waiting_processes[num_waiting_processes++] = current_process;
+                    current_process = forkid1;
+                    current_process_index = forkid1_index - 1;
+                    kill(forkid1, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
+                  }
+                  else if (forkid1_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1; // "delete" forkid1
+                    kill(current_process, SIGSTOP);
+                    // waiting_processes[num_waiting_processes++] = current_process;
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                  }
+                  else
+                  { // both are alive, just chose 1
+                    kill(current_process, SIGSTOP);
+                    // waiting_processes[num_waiting_processes++] = current_process;
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                  }
                 }
               }
-            } else {// end if p = 3 for expl
-            // In this case we only transmit the message with its actual value
-              // Update the system states
+              else
+              { // end if p = 3 for expl
+                // In this case we only transmit the message with its actual value
+                // Update the system states
                 bool forkid0_killed = false;
                 for (int s = 0; s < numStatesToUpdate; s++)
                 {
@@ -912,16 +1020,15 @@ int main()
                   forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
                 }
 
-                if (forkid0_killed) {
+                if (forkid0_killed)
+                {
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid0
-                  
-                } 
+                }
                 schedule_new_process();
-
-                
-            }
+              }
               printControllerState(systemStates, numStates);
+              checkAllStates();
               close(connfd);
               break;
             }
@@ -955,17 +1062,18 @@ int main()
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
 
-
             int statesToUpdate[numStatesToUpdateTemp];
             int numStatesToUpdate = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++) {
-              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], i, j)) {
+            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            {
+              if (canDeliverState(posInForkPath, statesToUpdateTemp[s], i, j))
+              {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
             }
 
             // Found a recv message from the process that the send msg is addressed to
-            //if (canDeliver(posInForkPath, statesToUpdate, i, j))
+            // if (canDeliver(posInForkPath, statesToUpdate, i, j))
             if (numStatesToUpdate != 0)
             {
               printf("[Controller] send msg to receiver\n");
@@ -991,7 +1099,7 @@ int main()
               deliver_message(i, j);
 
               // schedule the process that sent the recv message and is waiting for controller instructions
-              
+
               if (msgbuffer[j].forkId == 0)
               {
                 current_process_index = msgbuffer[j].to;
@@ -1012,7 +1120,7 @@ int main()
               kill(current_process, SIGCONT);
               printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
-              // Try to send the message             
+              // Try to send the message
               int newProcessState[2];
               int forkInfo[2];
               int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
@@ -1020,116 +1128,122 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (msgbuffer[i].from == 3) {
-              
-              // Try to send the message with opposite value
-              printf("[Controller] send opposite msg to receiver\n");
-              int opValue = 1 - msgbuffer[i].msg;
-              int messageOp[3] = {1, msgbuffer[i].from, opValue};
-              int newProcessStateOp[2];
-              int forkInfoOp[2];
-              // sendMsgToProcess()
-              sendMsgAndRecvState(msgbuffer[j].connfd, &messageOp, sizeof(messageOp), i, &newProcessStateOp, &forkInfoOp);
-              int forkid1 = forkInfoOp[0];
-              int forkid1_index = forkInfoOp[1];
-
-              if (compareProcessState(newProcessState, newProcessStateOp))
-              {
-                // Here I consider that I kill forkid1 by default
-
-                printf("[Controller] Same result: kill a child\n");
-                int killMessage[3] = {2, -1, -1};
-                if (send(msgbuffer[j].connfd, &killMessage, sizeof(killMessage), 0) == -1)
-                {
-                  perror("[Controller] send fail");
-                  exit(EXIT_FAILURE);
-                }
-
-                bool forkid0_killed = false;
-                // Update the system states
-                for (int s = 0; s < numStatesToUpdate; s++)
-                {
-                  updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[j].to);
-                  forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
-                }
-                numProcesses = numProcesses - 1;
-                processes[numProcesses] = -1; // "delete" forkid1
-
-                if (forkid0_killed) {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1; // "delete" forkid0
-                  schedule_new_process();
-                } else {
-                  kill(current_process, SIGSTOP);
-                current_process = forkid0;
-                current_process_index = forkid0_index;
-                kill(forkid0, SIGCONT);
-                printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
-                }
-                
-              }
-              else
+              if (msgbuffer[i].from == 3)
               {
 
-                // Copy sys state to update in 1 new state for each fork
-                bool forkid0_killed = false;
-                bool forkid1_killed = false;
-                for (int s = 0; s < numStatesToUpdate; s++)
+                // Try to send the message with opposite value
+                printf("[Controller] send opposite msg to receiver\n");
+                int opValue = 1 - msgbuffer[i].msg;
+                int messageOp[3] = {1, msgbuffer[i].from, opValue};
+                int newProcessStateOp[2];
+                int forkInfoOp[2];
+                // sendMsgToProcess()
+                sendMsgAndRecvState(msgbuffer[j].connfd, &messageOp, sizeof(messageOp), i, &newProcessStateOp, &forkInfoOp);
+                int forkid1 = forkInfoOp[0];
+                int forkid1_index = forkInfoOp[1];
+
+                if (compareProcessState(newProcessState, newProcessStateOp))
                 {
+                  // Here I consider that I kill forkid1 by default
 
-                  // Copies the state to update into a new state object in the array of states
-                  duplicateState(statesToUpdate[s], numStates);
+                  printf("[Controller] Same result: kill a child\n");
+                  int killMessage[3] = {2, -1, -1};
+                  if (send(msgbuffer[j].connfd, &killMessage, sizeof(killMessage), 0) == -1)
+                  {
+                    perror("[Controller] send fail");
+                    exit(EXIT_FAILURE);
+                  }
 
-                  // Update the states
-                  updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[j].to);
-                  updateState(numStates, forkid1, newProcessStateOp, msgbuffer[j].to);
-
-                  numStates = numStates + 1;
-
-                  // If the new system states are the same as some that are already stored, kill the new ones
-                  forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
-                  forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
-                }
-                if (forkid0_killed && forkid1_killed) {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1;
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses] = -1;
-                  schedule_new_process();
-                }
-                else if (forkid0_killed)
-                {
-                  numProcesses = numProcesses - 1;
-                  processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
-                  processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
-                  kill(current_process, SIGSTOP);
-                  current_process = forkid1;
-                  current_process_index = forkid1_index - 1;
-                  kill(forkid1, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid1);
-                }
-                else if (forkid1_killed)
-                { 
+                  bool forkid0_killed = false;
+                  // Update the system states
+                  for (int s = 0; s < numStatesToUpdate; s++)
+                  {
+                    updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[j].to);
+                    forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+                  }
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid1
-                  kill(current_process, SIGSTOP);
-                  current_process = forkid0;
-                  current_process_index = forkid0_index;
-                  kill(forkid0, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+
+                  if (forkid0_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1; // "delete" forkid0
+                    schedule_new_process();
+                  }
+                  else
+                  {
+                    kill(current_process, SIGSTOP);
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                  }
                 }
                 else
-                { // both are alive, just chose 1
-                  kill(current_process, SIGSTOP);
-                  current_process = forkid0;
-                  current_process_index = forkid0_index;
-                  kill(forkid0, SIGCONT);
-                  printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                {
+
+                  // Copy sys state to update in 1 new state for each fork
+                  bool forkid0_killed = false;
+                  bool forkid1_killed = false;
+                  for (int s = 0; s < numStatesToUpdate; s++)
+                  {
+
+                    // Copies the state to update into a new state object in the array of states
+                    duplicateState(statesToUpdate[s], numStates);
+
+                    // Update the states
+                    updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[j].to);
+                    updateState(numStates, forkid1, newProcessStateOp, msgbuffer[j].to);
+
+                    numStates = numStates + 1;
+
+                    // If the new system states are the same as some that are already stored, kill the new ones
+                    forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+                    forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
+                  }
+                  if (forkid0_killed && forkid1_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1;
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1;
+                    schedule_new_process();
+                  }
+                  else if (forkid0_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
+                    processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
+                    kill(current_process, SIGSTOP);
+                    current_process = forkid1;
+                    current_process_index = forkid1_index - 1;
+                    kill(forkid1, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid1);
+                  }
+                  else if (forkid1_killed)
+                  {
+                    numProcesses = numProcesses - 1;
+                    processes[numProcesses] = -1; // "delete" forkid1
+                    kill(current_process, SIGSTOP);
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                  }
+                  else
+                  { // both are alive, just chose 1
+                    kill(current_process, SIGSTOP);
+                    current_process = forkid0;
+                    current_process_index = forkid0_index;
+                    kill(forkid0, SIGCONT);
+                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                  }
                 }
               }
-            } else { // end if p = 3 for expl
-              // In this case we only transmit the message with its actual value
-              // Update the system states
+              else
+              { // end if p = 3 for expl
+                // In this case we only transmit the message with its actual value
+                // Update the system states
                 bool forkid0_killed = false;
                 for (int s = 0; s < numStatesToUpdate; s++)
                 {
@@ -1137,15 +1251,15 @@ int main()
                   forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
                 }
 
-                if (forkid0_killed) {
+                if (forkid0_killed)
+                {
                   numProcesses = numProcesses - 1;
                   processes[numProcesses] = -1; // "delete" forkid0
-                  
-                } 
+                }
                 schedule_new_process();
-
-            }
+              }
               printControllerState(systemStates, numStates);
+              checkAllStates();
               // attention
               close(msgbuffer[j].connfd);
               // Since this is a send message, there could be other recv messages waiting to be delivered this msg
