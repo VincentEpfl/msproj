@@ -903,7 +903,7 @@ int main()
               kill(forkid0, SIGSTOP);
               printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
 */
-              if (false) // msgbuffer[j].from == 3
+              if (msgbuffer[j].from == 1) // msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
                 printf("[Controller] send opposite msg to receiver\n");
@@ -1139,7 +1139,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (false) // msgbuffer[i].from == 3
+              if (msgbuffer[i].from == 1) // msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
