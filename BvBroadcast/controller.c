@@ -79,13 +79,13 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
   int numStatesToUpdate = 0;
   int posInForkPath = 0;
-  if (numStates == 1)
-  {
-    numStatesToUpdate = 1;
-    statesToUpdate[0] = 0;
-  }
-  else
-  {
+  //if (numStates == 1)
+  //{
+    //numStatesToUpdate = 1;
+    //statesToUpdate[0] = 0;
+  //}
+  //else
+  //{
     for (int s = 0; s < numStates; s++)
     {
       // Don't want to update a state that was killed
@@ -109,7 +109,7 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
         }
       }
     }
-  }
+  //}
   //printf("[CONTROLLER TEST] state to update[0] inside get fct : %d\n", statesToUpdate[0]);
   printf("[CONTROLLER TEST] pos in fork path inside fct : %d\n", posInForkPath);
   if (numStatesToUpdate == 0)
