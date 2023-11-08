@@ -110,15 +110,18 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
       }
     }
   }
-  res[0] = numStatesToUpdate;
-  res[1] = posInForkPath;
-  return 0;
-
+  printf("[CONTROLLER TEST] state to update[0] inside get fct : %d\n", statesToUpdate[0]);
+  
   if (numStatesToUpdate == 0)
   {
     // discard msg or something
     return -1;
   }
+
+  res[0] = numStatesToUpdate;
+  res[1] = posInForkPath;
+  return 0;
+
 }
 
 void put_msg_in_buffer(int index, int *receivedMessage)
@@ -365,6 +368,7 @@ void printMessage(int index)
 
 bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvIndex, int type)
 {
+  printf("[CONTROLLER TEST] state to update[0] inside deliver fct : %d\n", statesToUpdate[0]);
   // Check if the message comes from a parallel execution/state,
   // in this case we don't want it
   bool forkOk = true;
@@ -392,7 +396,7 @@ bool canDeliver(int posInForkPath, int *statesToUpdate, int sendIndex, int recvI
 
       for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
       {
-        for (int g = 0; g < posInForkPath; g++)
+        for (int g = 0; g < posInForkPath + 1; g++)
         {
           //printf("[CONTROLLER TEST] send msg delivered %d\n", msgbuffer[sendIndex].delivered[f]);
           if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[0]].forkPath[g])
@@ -615,6 +619,7 @@ int main()
             }
             int numStatesToUpdate = res[0];
             int posInForkPath = res[1];
+            printf("[CONTROLLER TEST] state to update[0] outside deliver fct : %d\n", statesToUpdate[0]);
 
             if (canDeliver(posInForkPath, statesToUpdate, j, i, 0))
             {
