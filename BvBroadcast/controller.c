@@ -232,7 +232,7 @@ void spawnProcesses()
   }
 
   // Wait until all processes have setup their sockets
-  sleep(5);
+  sleep(3);
 
   // Signal all children to proceed, but only allow 1
   for (int i = 0; i < N; i++)

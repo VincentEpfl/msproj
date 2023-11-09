@@ -73,7 +73,7 @@ void BV_broadcast(int value)
             exit(EXIT_FAILURE);
         }
         */
-        sleep(3); // 
+        sleep(2); // 
         send(sockfd, &message, sizeof(message), 0);
 
         printf("Process %d Value %d sent to process %d\n", processId, value, i);
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
             perror("[Process] Recv failure");
             exit(EXIT_FAILURE);
         }
-        sleep(3); //
+        sleep(2); //
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         int destinationId = receivedMessage[2];
