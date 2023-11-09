@@ -762,7 +762,7 @@ int main()
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
-    if (nothingDelivered > 150) {
+    if (nothingDelivered > 500) {
       if (nothingDelivered % 10 == 0) {
         printf("[Controller] nothing delivered for a while...\n");
       }
@@ -776,7 +776,7 @@ int main()
         // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 150) {
+        if (noNewConnection > 500) {
           if (noNewConnection % 10 == 0) {
             printf("[Controller] no new connections for a while...\n");
           }
