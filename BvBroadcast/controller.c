@@ -772,10 +772,7 @@ int main()
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
-    if (nothingDelivered > 500) {
-      if (nothingDelivered % 10 == 0) {
-        printf("[Controller] nothing delivered for a while...\n");
-      }
+    if (nothingDelivered > 150) {
       break;
     }
     if ((connfd = accept(sockfd, NULL, NULL)) < 0)
@@ -783,13 +780,10 @@ int main()
       // Check if the error was due to a timeout
       if (errno == EWOULDBLOCK || errno == EAGAIN)
       {
-        // printf("[Controller] No connections within the timeout period.\n");
+        printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 500) {
-          if (noNewConnection % 10 == 0) {
-            printf("[Controller] no new connections for a while...\n");
-          }
+        if (noNewConnection > 150) {
           break;
         }
       }
@@ -829,7 +823,7 @@ int main()
         if (receivedMessage[0] == 1)
         {
           // Recv message = a process wants to receive a message from another
-          //printf("[Controller] This is a recv message\n");
+          printf("[Controller] This is a recv message\n");
           //kill(current_process, SIGSTOP); //*
           msgbuffer[i].connfd = connfd;
           int r = 0;
@@ -863,7 +857,7 @@ int main()
 
             // if (canDeliver(posInForkPath, statesToUpdate, j, i))
             if (numStatesToUpdate != 0)
-            { /*
+            { 
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
               printf("to recv : \n");
@@ -875,7 +869,7 @@ int main()
               {
                 printf("%d,", statesToUpdate[s]);
               }
-              printf("\n"); */
+              printf("\n"); 
 
               kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
               // TODO this is probably completely useless, but changes nothing so see after
@@ -971,7 +965,7 @@ int main()
               if (msgbuffer[j].from == 3) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
-                //printf("[Controller] send opposite msg to receiver\n");
+                printf("[Controller] send opposite msg to receiver\n");
                 int opValue = 1 - msgbuffer[j].msg;
                 int messageOp[4] = {1, msgbuffer[j].from, opValue, msgbuffer[j].to};
                 int newProcessStateOp[2];
@@ -1107,7 +1101,7 @@ int main()
                 }
                 schedule_new_process();
               }
-              //printControllerState(systemStates, numStates);
+              printControllerState(systemStates, numStates);
               //checkAllStates();
               //close(connfd); We might need it later since several send can be sent to one deliver
               //break; In fact can have several send delivered to one recv...
@@ -1118,7 +1112,7 @@ int main()
           if (!msg_was_delivered)
           {
             nothingDelivered = nothingDelivered + 1;
-            //printf("[Controller] recv msg was not delivered\n");
+            printf("[Controller] recv msg was not delivered\n");
             schedule_new_process();
           } else {
             nothingDelivered = 0;
@@ -1128,7 +1122,7 @@ int main()
         if (receivedMessage[0] == 0)
         {
           // This is a send message : a process sends some data to another
-          //printf("[Controller] This is a send message\n");
+          printf("[Controller] This is a send message\n");
           //kill(current_process, SIGSTOP);
           // Go through the message buffer to see if the process waiting for this
           // data is already there
@@ -1158,7 +1152,7 @@ int main()
             // Found a recv message from the process that the send msg is addressed to
             // if (canDeliver(posInForkPath, statesToUpdate, i, j))
             if (numStatesToUpdate != 0)
-            { /*
+            { 
               printf("[Controller] send msg to receiver\n");
               printMessage(i);
               printf("to recv : \n");
@@ -1170,7 +1164,7 @@ int main()
               {
                 printf("%d,", statesToUpdate[s]);
               }
-              printf("\n"); */
+              printf("\n"); 
 
               kill(current_process, SIGSTOP); // In case the msg is delivered several times
               msg_was_delivered = true;
@@ -1220,7 +1214,7 @@ int main()
               {
 
                 // Try to send the message with opposite value
-                //printf("[Controller] send opposite msg to receiver\n");
+                printf("[Controller] send opposite msg to receiver\n");
                 int opValue = 1 - msgbuffer[i].msg;
                 int messageOp[4] = {1, msgbuffer[i].from, opValue, msgbuffer[i].to};
                 int newProcessStateOp[2];
@@ -1350,7 +1344,7 @@ int main()
                 }
                 schedule_new_process();
               }
-              //printControllerState(systemStates, numStates);
+              printControllerState(systemStates, numStates);
               //checkAllStates();
               // attention
               //close(msgbuffer[j].connfd); We might need it later since several send msg can be delivered to one recv
