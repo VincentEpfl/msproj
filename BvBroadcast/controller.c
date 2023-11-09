@@ -1216,7 +1216,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (msgbuffer[j].from == 3) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
+              if (msgbuffer[i].from == 3) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
