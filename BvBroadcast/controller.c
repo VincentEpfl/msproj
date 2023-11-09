@@ -1061,7 +1061,7 @@ int main()
               }
               printControllerState(systemStates, numStates);
               //checkAllStates();
-              close(connfd);
+              //close(connfd); We might need it later since several send can be sent to one deliver
               //break; In fact can have several send delivered to one recv...
             }
           }
@@ -1296,7 +1296,7 @@ int main()
               printControllerState(systemStates, numStates);
               //checkAllStates();
               // attention
-              close(msgbuffer[j].connfd);
+              //close(msgbuffer[j].connfd); We might need it later since several send msg can be delivered to one recv
               // break; TODO try it doesnt matter because timeout, maybe it would prevent weird things
               // Since this is a send message, there could be other recv messages waiting to be delivered this msg
             }
