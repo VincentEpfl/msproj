@@ -587,7 +587,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
   int *messageint = (int *)message;
-  printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
+  //printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
   send(connfd, message, msglen, 0);
 
   // Recover the resulting state
@@ -723,10 +723,14 @@ int main()
   int receivedMessage[5];
   int connfd;
   int i = 0;
-  int nothingCounter = 0;
+  int noNewConnection = 0;
+  int nothingDelivered = 0;
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
+    if (nothingDelivered > numProcesses - 1) {
+      break;
+    }
     if ((connfd = accept(sockfd, NULL, NULL)) < 0)
     {
       // Check if the error was due to a timeout
@@ -734,8 +738,8 @@ int main()
       {
         // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
-        nothingCounter = nothingCounter + 1;
-        if (nothingCounter > numProcesses) {
+        noNewConnection = noNewConnection + 1;
+        if (noNewConnection > numProcesses) {
           break;
         }
       }
@@ -749,7 +753,7 @@ int main()
     else
     {
       printf("[Controller] New connection\n");
-      nothingCounter = 0;
+      noNewConnection = 0;
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
       if (len == 0)
       {
@@ -869,7 +873,7 @@ int main()
 
               int newProcessState[2];
               int forkInfo[2];
-              int message[3] = {1, msgbuffer[j].from, msgbuffer[j].msg};
+              int message[4] = {1, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
               sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
@@ -908,7 +912,7 @@ int main()
                 // Try to send the message with the opposite value
                 printf("[Controller] send opposite msg to receiver\n");
                 int opValue = 1 - msgbuffer[j].msg;
-                int messageOp[3] = {1, msgbuffer[j].from, opValue};
+                int messageOp[4] = {1, msgbuffer[j].from, opValue, msgbuffer[j].to};
                 int newProcessStateOp[2];
                 int forkInfoOp[2];
                 sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), j, &newProcessStateOp, &forkInfoOp);
@@ -920,7 +924,7 @@ int main()
                   // Here I consider that I kill forkid1 by default
 
                   printf("[Controller] Same result: kill a child\n");
-                  int killMessage[3] = {2, -1, -1};
+                  int killMessage[4] = {2, -1, -1, -1};
                   if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
                   {
                     perror("[Controller] send fail");
@@ -1048,8 +1052,11 @@ int main()
           // if the recv message was not delivered, schedule another process
           if (!msg_was_delivered)
           {
+            nothingDelivered = nothingDelivered + 1;
             printf("[Controller] recv msg was not delivered\n");
             schedule_new_process();
+          } else {
+            nothingDelivered = 0;
           }
         }
 
@@ -1134,7 +1141,7 @@ int main()
               // Try to send the message
               int newProcessState[2];
               int forkInfo[2];
-              int message[3] = {1, msgbuffer[i].from, msgbuffer[i].msg};
+              int message[4] = {1, msgbuffer[i].from, msgbuffer[i].msg, msgbuffer[i].to};
               sendMsgAndRecvState(msgbuffer[j].connfd, &message, sizeof(message), i, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
@@ -1145,7 +1152,7 @@ int main()
                 // Try to send the message with opposite value
                 printf("[Controller] send opposite msg to receiver\n");
                 int opValue = 1 - msgbuffer[i].msg;
-                int messageOp[3] = {1, msgbuffer[i].from, opValue};
+                int messageOp[4] = {1, msgbuffer[i].from, opValue, msgbuffer[i].to};
                 int newProcessStateOp[2];
                 int forkInfoOp[2];
                 // sendMsgToProcess()
@@ -1158,7 +1165,7 @@ int main()
                   // Here I consider that I kill forkid1 by default
 
                   printf("[Controller] Same result: kill a child\n");
-                  int killMessage[3] = {2, -1, -1};
+                  int killMessage[4] = {2, -1, -1, -1};
                   if (send(msgbuffer[j].connfd, &killMessage, sizeof(killMessage), 0) == -1)
                   {
                     perror("[Controller] send fail");
@@ -1281,8 +1288,11 @@ int main()
           // if the send message was not delivered, schedule another process
           if (!msg_was_delivered)
           {
+            nothingDelivered = nothingDelivered + 1;
             printf("[Controller] send msg was not delivered\n");
             schedule_new_process();
+          } else {
+            nothingDelivered = 0;
           }
           close(connfd);
         }

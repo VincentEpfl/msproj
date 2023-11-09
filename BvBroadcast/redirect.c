@@ -38,7 +38,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
     real_send = dlsym(RTLD_NEXT, "send");
   }
 
-  if (sockfd == -1) { // this is a send to the feedback socket
+  if (sockfd == -1) { // this is a send to the feedback socket TODO -1 probablement pas le + intelligent
 
   struct sockaddr_un address;
   int feedback_socket;
@@ -93,7 +93,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
     exit(EXIT_FAILURE);
   }
   
-
+/*
   struct sockaddr_in peer_addr;
   socklen_t peer_addr_len = sizeof(peer_addr);
   int port;
@@ -109,6 +109,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
     perror("getpeername");
     exit(EXIT_FAILURE);
   }
+  */
 
   // Send (redirect) the message to the controller
   //printf("[Intercept] Send\n");
@@ -116,7 +117,8 @@ send(int sockfd, const void *buf, size_t len, int flags)
   int sendMessage[5];
   sendMessage[0] = 0;         // type = send
   sendMessage[1] = intBuf[0]; // from = first elem of msg
-  sendMessage[2] = processId; // to = determine from sock fd dest port
+  //sendMessage[2] = processId; // to = determine from sock fd dest port
+  sendMessage[2] = intBuf[2]; 
   sendMessage[3] = intBuf[1]; // msg = second elem of msg
   sendMessage[4] = forkId;    // forkId
 
@@ -201,7 +203,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   // reliable and no reorder) instead of SOCK_STREAM (TCP like)
 
   // Message format
-  int receivedMessage[3];
+  int receivedMessage[4];
 
   pid_t children[2]; // Only 2 here no ?
   int i = 0;
@@ -231,7 +233,8 @@ recv(int sockfd, void *buf, size_t len, int flags)
     int instruction = receivedMessage[0];
     int from = receivedMessage[1];
     int value = receivedMessage[2];
-    printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d}\n", processId, instruction, from, value);
+    int to = receivedMessage[3];
+    printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d, to:%d}\n", processId, instruction, from, value, to);
     if (!(instruction == 1 || instruction == 2)) {
       perror("[Intercept] Bad instruction from controller");
       exit(EXIT_FAILURE);
@@ -257,6 +260,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         int *intBuf = (int *)buf;
         intBuf[0] = from;
         intBuf[1] = value;
+        intBuf[2] = to;
 
         close(controller_socket); // verify ok
         return bytes_received;

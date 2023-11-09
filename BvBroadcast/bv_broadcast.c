@@ -35,7 +35,7 @@ void BV_broadcast(int value)
 {
     int sockfd;
     struct sockaddr_in serverAddr;
-    int message[2] = {processId, value}; // First element is the process ID, second is the value
+    //int message[2] = {processId, value}; // First element is the process ID, second is the value
 
     printf("Process %d: Start BV broadcast\n", processId);
     hasBroadcasted[value] = 1; // Mark the value as broadcasted. Mettre apres fin broadcast + clean (il y avait une raison de mettre avant mais now no)
@@ -59,17 +59,20 @@ void BV_broadcast(int value)
             continue;
         }
 
+        int message[3] = {processId, value, i}; // add destination in message
+
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
         inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-        
+        /*
         if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
         {
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
+        */
         sleep(3); // 
         send(sockfd, &message, sizeof(message), 0);
 
@@ -165,13 +168,13 @@ int main(int argc, char *argv[])
     // Now, broadcast the initial value
     BV_broadcast(initialValue);
 
-    int receivedMessage[2]; // To store both the sender's process ID and the value
+    int receivedMessage[3]; // To store both the sender's process ID and the value
 
     // Listening loop
     while (1)
     {
         
-        connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
+        //connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
         if (connfd == -1)
         {
             perror("[Process] Accept failure");
@@ -187,6 +190,7 @@ int main(int argc, char *argv[])
         sleep(3); //
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
+        int destinationId = receivedMessage[2];
         printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);
         if (receivedValue >= 0)
         { // Ignore special signals
