@@ -216,11 +216,11 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
       if (i < 2)
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
       else
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
       // Replace child process with BV-broadcast process
@@ -930,7 +930,7 @@ int main()
               kill(forkid0, SIGSTOP);
               printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
 */
-              if (false) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
+              if (msgbuffer[j].from == 3) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
                 printf("[Controller] send opposite msg to receiver\n");
@@ -1169,7 +1169,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (false) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
+              if (msgbuffer[i].from == 3) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
