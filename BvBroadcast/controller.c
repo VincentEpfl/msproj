@@ -32,7 +32,7 @@ typedef struct
   int connfd; // -1 for send msg, because we don't keep the connection
   int forkId;
   int numDelivered;  // number of times it was delivered, always 0 or 1 for recv
-  int delivered[50]; // forkIds where it was delivered
+  int delivered[500]; // forkIds where it was delivered
 } Message;
 
 typedef struct
@@ -132,7 +132,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
   msgbuffer[index].connfd = -1;
   msgbuffer[index].forkId = receivedMessage[4];
   msgbuffer[index].numDelivered = 0;
-  for (int d = 0; d < 50; d++)
+  for (int d = 0; d < 500; d++)
   {
     msgbuffer[index].delivered[d] = 0;
   }
