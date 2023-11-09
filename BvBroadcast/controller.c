@@ -622,7 +622,10 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 {
   int *messageint = (int *)message;
   //printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
-  send(connfd, message, msglen, 0);
+  if (send(connfd, message, msglen, 0) == -1) {
+    perror("[Controller] send failure");
+    exit(EXIT_FAILURE);
+  }
 
   // Recover the resulting state
   // format [forkid, processState]
@@ -634,8 +637,14 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
     {
       perror("[Controller] recv state");
       exit(EXIT_FAILURE);
+    } else {
+      perror("[Controller] recv failure");
+      exit(EXIT_FAILURE);
     }
     close(feedback_connfd);
+  } else {
+    perror("[Controller] accept failure");
+    exit(EXIT_FAILURE);
   }
 }
 
