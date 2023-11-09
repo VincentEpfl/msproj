@@ -751,7 +751,7 @@ int main()
         // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > numProcesses) {
+        if (noNewConnection > 50) {
           break;
         }
       }
