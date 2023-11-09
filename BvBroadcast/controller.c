@@ -462,6 +462,11 @@ void deliver_message(int delivered, int to)
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
 
+deliver_message_to_state(int delivered, int state) {
+  msgbuffer[delivered].delivered[msgbuffer[delivered].numDelivered] = state;
+  msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
+}
+
 void printMessage(int index)
 {
   printf("msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
@@ -552,6 +557,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
     }
   }
 
+/*
   // Check if the send message was already delivered to this state
   bool sendDeliverOk = true;
   // if (numStates > 1) //  no if it was delivered to the same state...
@@ -592,6 +598,22 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
       }
     }
   }
+
+  */
+ bool sendDeliverOk = true;
+ for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++) {
+  if (msgbuffer[sendIndex].delivered[f] == stateToUpdate) {
+    sendDeliverOk = false;
+  }
+ }
+
+bool recvDeliverOk = true;
+ for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++) {
+  if (msgbuffer[recvIndex].delivered[f] == stateToUpdate) {
+    recvDeliverOk = false;
+  }
+ }
+ 
 
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
@@ -865,10 +887,15 @@ int main()
               msg_was_delivered = true;
 
               // recv msg always need to be delivered only once
-              deliver_message(i, j);
+              //deliver_message(i, j);
 
               // send msg might need to be sent to different states
-              deliver_message(j, i);
+              //deliver_message(j, i);
+
+              for (int s = 0; s < numStatesToUpdate; s++) {
+                deliver_message_to_state(j, statesToUpdate[s]);
+                deliver_message_to_state(i, statesToUpdate[s]);
+              }
 
               // schedule the process that sent the recv message and is waiting for controller instructions
 
@@ -1134,10 +1161,15 @@ int main()
               msg_was_delivered = true;
 
               // recv msg always need to be delivered only once
-              deliver_message(j, i);
+              //deliver_message(j, i);
 
               // send msg might need to be sent to different states
-              deliver_message(i, j);
+              //deliver_message(i, j);
+
+              for (int s = 0; s < numStatesToUpdate; s++) {
+                deliver_message_to_state(j, statesToUpdate[s]);
+                deliver_message_to_state(i, statesToUpdate[s]);
+              }
 
               // schedule the process that sent the recv message and is waiting for controller instructions
 
