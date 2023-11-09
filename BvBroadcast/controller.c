@@ -322,7 +322,7 @@ void schedule_new_process()
     current_process = processes[current_process_index];
     kill(current_process, SIGCONT);
   */
-  printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
+  //printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
 // Compares the state of the system
@@ -867,7 +867,7 @@ int main()
                 }
               }
               kill(current_process, SIGCONT);
-              printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
+              //printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
               // Try to send the message
 
@@ -907,7 +907,7 @@ int main()
               kill(forkid0, SIGSTOP);
               printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[j].to, newProcessState[0], newProcessState[1], forkid0);
 */
-              if (false) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
+              if (msgbuffer[j].from == 1) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
                 printf("[Controller] send opposite msg to receiver\n");
@@ -957,7 +957,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
                   }
                 }
                 else
@@ -1000,7 +1000,7 @@ int main()
                     current_process = forkid1;
                     current_process_index = forkid1_index - 1;
                     kill(forkid1, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
                   }
                   else if (forkid1_killed)
                   {
@@ -1011,7 +1011,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
                   }
                   else
                   { // both are alive, just chose 1
@@ -1020,7 +1020,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
                   }
                 }
               }
@@ -1136,7 +1136,7 @@ int main()
                 }
               }
               kill(current_process, SIGCONT);
-              printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
+              //printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
               // Try to send the message
               int newProcessState[2];
@@ -1146,7 +1146,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (false) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
+              if (msgbuffer[i].from == 1) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
@@ -1194,7 +1194,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
                   }
                 }
                 else
@@ -1236,7 +1236,7 @@ int main()
                     current_process = forkid1;
                     current_process_index = forkid1_index - 1;
                     kill(forkid1, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid1);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid1);
                   }
                   else if (forkid1_killed)
                   {
@@ -1246,7 +1246,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
                   }
                   else
                   { // both are alive, just chose 1
@@ -1254,7 +1254,7 @@ int main()
                     current_process = forkid0;
                     current_process_index = forkid0_index;
                     kill(forkid0, SIGCONT);
-                    printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
+                    //printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[i].to, forkid0);
                   }
                 }
               }
