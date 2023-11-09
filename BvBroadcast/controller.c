@@ -578,7 +578,19 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   bool recvDeliverOk = true;
   if (msgbuffer[recvIndex].numDelivered > 0)
   {
-    recvDeliverOk = false;
+    //recvDeliverOk = false; probably not in fact
+
+    for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
+    {
+      for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+      {
+        if (msgbuffer[recvIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
+        {
+          recvDeliverOk = false;
+          break;
+        }
+      }
+    }
   }
 
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
@@ -779,6 +791,7 @@ int main()
         {
           // Recv message = a process wants to receive a message from another
           printf("[Controller] This is a recv message\n");
+          kill(current_process, SIGSTOP); //*
           msgbuffer[i].connfd = connfd;
           int r = 0;
 
@@ -803,7 +816,7 @@ int main()
             int numStatesToUpdate = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len, statesToUpdateTemp[s], j, i)) // 1 posinforkpath
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], j, i)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
@@ -814,6 +827,8 @@ int main()
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
+              printf("to recv : \n");
+              printMessage(i);
 
               printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
               printf("[Controller] States to update :");
@@ -824,6 +839,7 @@ int main()
               printf("\n");
 
               kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
+              // TODO this is probably completely useless, but changes nothing so see after
               if (msgbuffer[i].forkId == 0)
               {
                 if (current_process_index != msgbuffer[i].to)
@@ -838,6 +854,7 @@ int main()
                   kill(current_process, SIGSTOP);
                 }
               }
+              // end useless ...
 
               msg_was_delivered = true;
 
@@ -1045,7 +1062,7 @@ int main()
               printControllerState(systemStates, numStates);
               //checkAllStates();
               close(connfd);
-              break;
+              //break; In fact can have several send delivered to one recv...
             }
           }
 
@@ -1084,7 +1101,7 @@ int main()
             int numStatesToUpdate = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len, statesToUpdateTemp[s], i, j)) // 1 posinforkpath
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], i, j)) // 1 posinforkpath
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
