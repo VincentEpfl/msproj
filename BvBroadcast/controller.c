@@ -791,7 +791,7 @@ int main()
         {
           // Recv message = a process wants to receive a message from another
           printf("[Controller] This is a recv message\n");
-          kill(current_process, SIGSTOP); //*
+          //kill(current_process, SIGSTOP); //*
           msgbuffer[i].connfd = connfd;
           int r = 0;
 
@@ -1081,7 +1081,7 @@ int main()
         {
           // This is a send message : a process sends some data to another
           printf("[Controller] This is a send message\n");
-          kill(current_process, SIGSTOP);
+          //kill(current_process, SIGSTOP);
           // Go through the message buffer to see if the process waiting for this
           // data is already there
 
