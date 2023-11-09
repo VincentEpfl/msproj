@@ -462,7 +462,7 @@ void deliver_message(int delivered, int to)
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
 
-deliver_message_to_state(int delivered, int state) {
+void deliver_message_to_state(int delivered, int state) {
   msgbuffer[delivered].delivered[msgbuffer[delivered].numDelivered] = state;
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
