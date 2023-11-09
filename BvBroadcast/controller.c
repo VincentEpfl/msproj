@@ -601,18 +601,22 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 
   */
  bool sendDeliverOk = true;
+ if (msgbuffer[sendIndex].numDelivered > 1) {
  for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++) {
   if (msgbuffer[sendIndex].delivered[f] == stateToUpdate) {
     sendDeliverOk = false;
   }
  }
+}
 
 bool recvDeliverOk = true;
+if (msgbuffer[recvIndex].numDelivered > 1) {
  for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++) {
   if (msgbuffer[recvIndex].delivered[f] == stateToUpdate) {
     recvDeliverOk = false;
   }
  }
+}
  
 
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
@@ -1033,6 +1037,10 @@ int main()
                     updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[i].to);
                     updateState(numStates, forkid1, newProcessStateOp, msgbuffer[i].to);
 
+                    // of course those messages have to be delivered in the forked states (since they are in the originals)
+                    deliver_message_to_state(j, numStates);
+                    deliver_message_to_state(i, numStates);
+
                     numStates = numStates + 1;
 
                     // If the new system states are the same as some that are already stored, kill the new ones
@@ -1208,7 +1216,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (msgbuffer[i].from == 3) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
+              if (msgbuffer[j].from == 3) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
@@ -1274,6 +1282,10 @@ int main()
                     // Update the states
                     updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[j].to);
                     updateState(numStates, forkid1, newProcessStateOp, msgbuffer[j].to);
+
+                    // of course those messages have to be delivered in the forked states (since they are in the originals)
+                    deliver_message_to_state(j, numStates);
+                    deliver_message_to_state(i, numStates);
 
                     numStates = numStates + 1;
 
