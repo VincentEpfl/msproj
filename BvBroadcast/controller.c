@@ -1356,9 +1356,10 @@ int main()
       }
     }
   }
-
+  printControllerState(systemStates, numStates);
   checkAllStates();
   printf("[Controller] End of simulation\n");
+  
 
   // accept is blocking so this is never reached
 
