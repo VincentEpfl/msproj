@@ -728,7 +728,7 @@ int main()
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
-    if (nothingDelivered > numProcesses - 1) {
+    if (nothingDelivered > 50) {
       break;
     }
     if ((connfd = accept(sockfd, NULL, NULL)) < 0)
