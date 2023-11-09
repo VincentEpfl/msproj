@@ -462,10 +462,12 @@ void deliver_message(int delivered, int to)
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
 
+/*
 void deliver_message_to_state(int delivered, int state) {
   msgbuffer[delivered].delivered[msgbuffer[delivered].numDelivered] = state;
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
+*/
 
 void printMessage(int index)
 {
@@ -557,7 +559,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
     }
   }
 
-/*
+
   // Check if the send message was already delivered to this state
   bool sendDeliverOk = true;
   // if (numStates > 1) //  no if it was delivered to the same state...
@@ -599,7 +601,8 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
     }
   }
 
-  */
+  
+ /*
  bool sendDeliverOk = true;
  if (msgbuffer[sendIndex].numDelivered > 0) {
  for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++) {
@@ -617,6 +620,7 @@ if (msgbuffer[recvIndex].numDelivered > 0) {
   }
  }
 }
+*/
  
 
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
@@ -873,6 +877,7 @@ int main()
 
               kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
               // TODO this is probably completely useless, but changes nothing so see after
+              /*
               if (msgbuffer[i].forkId == 0)
               {
                 if (current_process_index != msgbuffer[i].to)
@@ -886,21 +891,22 @@ int main()
                 {
                   kill(current_process, SIGSTOP);
                 }
-              }
+              } */
               // end useless ...
 
               msg_was_delivered = true;
 
               // recv msg always need to be delivered only once
-              //deliver_message(i, j);
+              deliver_message(i, j);
 
               // send msg might need to be sent to different states
-              //deliver_message(j, i);
+              deliver_message(j, i);
 
+/*
               for (int s = 0; s < numStatesToUpdate; s++) {
                 deliver_message_to_state(j, statesToUpdate[s]);
                 deliver_message_to_state(i, statesToUpdate[s]);
-              }
+              } */
 
               // schedule the process that sent the recv message and is waiting for controller instructions
 
@@ -1032,8 +1038,8 @@ int main()
                     updateState(numStates, forkid1, newProcessStateOp, msgbuffer[i].to);
 
                     // of course those messages have to be delivered in the forked states (since they are in the originals)
-                    deliver_message_to_state(j, numStates);
-                    deliver_message_to_state(i, numStates);
+                    //deliver_message_to_state(j, numStates);
+                    //deliver_message_to_state(i, numStates);
 
                     numStates = numStates + 1;
 
@@ -1175,10 +1181,11 @@ int main()
               // send msg might need to be sent to different states
               //deliver_message(i, j);
 
+/*
               for (int s = 0; s < numStatesToUpdate; s++) {
                 deliver_message_to_state(j, statesToUpdate[s]);
                 deliver_message_to_state(i, statesToUpdate[s]);
-              }
+              } */
 
               // schedule the process that sent the recv message and is waiting for controller instructions
 
@@ -1278,8 +1285,8 @@ int main()
                     updateState(numStates, forkid1, newProcessStateOp, msgbuffer[j].to);
 
                     // of course those messages have to be delivered in the forked states (since they are in the originals)
-                    deliver_message_to_state(j, numStates);
-                    deliver_message_to_state(i, numStates);
+                    //deliver_message_to_state(j, numStates);
+                    //deliver_message_to_state(i, numStates);
 
                     numStates = numStates + 1;
 
@@ -1357,7 +1364,7 @@ int main()
           if (!msg_was_delivered)
           {
             nothingDelivered = nothingDelivered + 1;
-            //printf("[Controller] send msg was not delivered\n");
+            printf("[Controller] send msg was not delivered\n");
             schedule_new_process();
           } else {
             nothingDelivered = 0;
