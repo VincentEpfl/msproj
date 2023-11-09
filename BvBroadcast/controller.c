@@ -32,13 +32,13 @@ typedef struct
   int connfd; // -1 for send msg, because we don't keep the connection
   int forkId;
   int numDelivered;  // number of times it was delivered, always 0 or 1 for recv
-  int delivered[500]; // forkIds where it was delivered
+  int delivered[1000]; // forkIds where it was delivered
 } Message;
 
 typedef struct
 {
   int len;            // len of forkPath
-  pid_t forkPath[50]; // what should be max length ?
+  pid_t forkPath[500]; // what should be max length ?
 
   // received value format :
   // { process i :
@@ -51,7 +51,7 @@ typedef struct
 sem_t *sem;
 
 // Array to store messages
-Message msgbuffer[1000];
+Message msgbuffer[10000];
 
 // Array to store processes
 pid_t processes[1000];
@@ -62,7 +62,7 @@ int current_process_index;
 // int num_waiting_processes;
 
 // What should be max number of system state that we can track in parallel ?
-State systemStates[500] = {
+State systemStates[1000] = {
     // good or need init all inside ?
     {
         0,
@@ -132,7 +132,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
   msgbuffer[index].connfd = -1;
   msgbuffer[index].forkId = receivedMessage[4];
   msgbuffer[index].numDelivered = 0;
-  for (int d = 0; d < 500; d++)
+  for (int d = 0; d < 1000; d++)
   {
     msgbuffer[index].delivered[d] = 0;
   }
