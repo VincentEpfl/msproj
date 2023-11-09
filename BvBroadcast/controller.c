@@ -601,7 +601,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 
   */
  bool sendDeliverOk = true;
- if (msgbuffer[sendIndex].numDelivered > 1) {
+ if (msgbuffer[sendIndex].numDelivered > 0) {
  for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++) {
   if (msgbuffer[sendIndex].delivered[f] == stateToUpdate) {
     sendDeliverOk = false;
@@ -610,7 +610,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 }
 
 bool recvDeliverOk = true;
-if (msgbuffer[recvIndex].numDelivered > 1) {
+if (msgbuffer[recvIndex].numDelivered > 0) {
  for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++) {
   if (msgbuffer[recvIndex].delivered[f] == stateToUpdate) {
     recvDeliverOk = false;
