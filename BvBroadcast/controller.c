@@ -635,12 +635,9 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
   {
     if (recv(feedback_connfd, recmsg, recmsglen, 0) == -1)
     {
-      perror("[Controller] recv state");
+      perror("[Controller] recv state feedback socket");
       exit(EXIT_FAILURE);
-    } else {
-      perror("[Controller] recv failure feedback socket");
-      exit(EXIT_FAILURE);
-    }
+    } 
     close(feedback_connfd);
   } else {
     perror("[Controller] accept failure");
