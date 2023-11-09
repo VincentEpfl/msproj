@@ -45,14 +45,14 @@ void BV_broadcast(int value)
         if (i == processId)
         {
             // Send value to itself + receive
-            printf("Process %d Value %d sent to myself\n", processId, value);
+            //printf("Process %d Value %d sent to myself\n", processId, value);
             received_values[processId][value] = 1;
             int distinctCount = countDistinctProcessesForValue(value);
-            printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+            //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // Introduce bug 2T -> 2T - 1
             if (distinctCount > 2 * T && !committedValues[value])
             {
-                printf("Process %d commits value %d\n", processId, value);
+                //printf("Process %d commits value %d\n", processId, value);
                 committedValues[value] = 1; // Mark the value as committed
             }
             
@@ -73,10 +73,10 @@ void BV_broadcast(int value)
             exit(EXIT_FAILURE);
         }
         */
-        sleep(2); // 
+        sleep(1); // 
         send(sockfd, &message, sizeof(message), 0);
 
-        printf("Process %d Value %d sent to process %d\n", processId, value, i);
+        //printf("Process %d Value %d sent to process %d\n", processId, value, i);
 
         close(sockfd);
     }
@@ -86,11 +86,11 @@ void processMessages(int value, int fromProcess)
 {
     received_values[fromProcess][value] = 1;
     int distinctCount = countDistinctProcessesForValue(value);
-    printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+    //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // Introduce bug 2T -> 2T - 1
     if (distinctCount > 2 * T && !committedValues[value])
     {
-        printf("Process %d commits value %d\n", processId, value);
+        //printf("Process %d commits value %d\n", processId, value);
         committedValues[value] = 1; // Mark the value as committed
         
     }
@@ -187,11 +187,11 @@ int main(int argc, char *argv[])
             perror("[Process] Recv failure");
             exit(EXIT_FAILURE);
         }
-        sleep(2); //
+        sleep(1); //
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         int destinationId = receivedMessage[2];
-        printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);
+        //printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);
         if (receivedValue >= 0)
         { // Ignore special signals
             processMessages(receivedValue, senderId);

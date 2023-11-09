@@ -234,7 +234,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
     int from = receivedMessage[1];
     int value = receivedMessage[2];
     int to = receivedMessage[3];
-    printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d, to:%d}\n", processId, instruction, from, value, to);
+    //printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d, to:%d}\n", processId, instruction, from, value, to);
     if (!(instruction == 1 || instruction == 2)) {
       perror("[Intercept] Bad instruction from controller");
       exit(EXIT_FAILURE);
