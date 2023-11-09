@@ -220,7 +220,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
 
       // Replace child process with BV-broadcast process
@@ -740,7 +740,10 @@ int main()
   printf("[Controller] Listen for incoming messages\n");
   while (1)
   {
-    if (nothingDelivered > 50) {
+    if (nothingDelivered > 150) {
+      if (nothingDelivered % 10 == 0) {
+        printf("[Controller] nothing delivered for a while...\n");
+      }
       break;
     }
     if ((connfd = accept(sockfd, NULL, NULL)) < 0)
@@ -751,7 +754,10 @@ int main()
         // printf("[Controller] No connections within the timeout period.\n");
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 50) {
+        if (noNewConnection > 150) {
+          if (noNewConnection % 10 == 0) {
+            printf("[Controller] no new connections for a while...\n");
+          }
           break;
         }
       }
