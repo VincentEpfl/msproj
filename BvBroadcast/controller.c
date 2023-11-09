@@ -165,7 +165,7 @@ int initSocket(bool feedback)
 
     // Set the timeout value
     tv.tv_sec = 0;  // 1 seconds timeout
-    tv.tv_usec = 500; // 0 microseconds
+    tv.tv_usec = 500000; // 0 microseconds
 
     // Set the timeout option
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv))
