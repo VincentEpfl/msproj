@@ -6,8 +6,8 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#define N 4 // Total number of processes
-#define T 1 // Maximum number of Byzantine processes
+#define N 3 // Total number of processes
+#define T 0 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
 int received_values[N][2] = {{0, 0}}; // Using an array to store the binary values (0 and 1)
@@ -45,14 +45,14 @@ void BV_broadcast(int value)
         if (i == processId)
         {
             // Send value to itself + receive
-            printf("Process %d Value %d sent to myself\n", processId, value);
+            //printf("Process %d Value %d sent to myself\n", processId, value);
             received_values[processId][value] = 1;
             int distinctCount = countDistinctProcessesForValue(value);
-            printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+            //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // Introduce bug 2T -> 2T - 1
             if (distinctCount > 2 * T && !committedValues[value])
             {
-                printf("Process %d commits value %d\n", processId, value);
+                //printf("Process %d commits value %d\n", processId, value);
                 committedValues[value] = 1; // Mark the value as committed
             }
             
@@ -61,10 +61,12 @@ void BV_broadcast(int value)
 
         int message[3] = {processId, value, i}; // add destination in message
 
+        /*
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
         inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+        */
 
         /*
         if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
@@ -73,12 +75,13 @@ void BV_broadcast(int value)
             exit(EXIT_FAILURE);
         }
         */
-        sleep(3); // 
+        sockfd = 1;
+        sleep(1); // 
         send(sockfd, &message, sizeof(message), 0);
 
-        printf("Process %d Value %d sent to process %d\n", processId, value, i);
+        //printf("Process %d Value %d sent to process %d\n", processId, value, i);
 
-        close(sockfd);
+        //close(sockfd);
     }
 }
 
@@ -86,11 +89,11 @@ void processMessages(int value, int fromProcess)
 {
     received_values[fromProcess][value] = 1;
     int distinctCount = countDistinctProcessesForValue(value);
-    printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+    //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // Introduce bug 2T -> 2T - 1
     if (distinctCount > 2 * T && !committedValues[value])
     {
-        printf("Process %d commits value %d\n", processId, value);
+        //printf("Process %d commits value %d\n", processId, value);
         committedValues[value] = 1; // Mark the value as committed
         
     }
@@ -175,11 +178,12 @@ int main(int argc, char *argv[])
     {
         
         //connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
+        /*
         if (connfd == -1)
         {
             perror("[Process] Accept failure");
             exit(EXIT_FAILURE);
-        }
+        } */
         
         int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
         if (nbytes == -1)
@@ -191,12 +195,12 @@ int main(int argc, char *argv[])
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         int destinationId = receivedMessage[2];
-        printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);
+        //printf("Process %d: Value %d received from process %d\n", processId, receivedValue, senderId);
         if (receivedValue >= 0)
         { // Ignore special signals
             processMessages(receivedValue, senderId);
         }
-        close(connfd);
+        //close(connfd);
     }
 
     return 0;

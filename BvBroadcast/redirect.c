@@ -72,7 +72,9 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   close(feedback_socket);
   return bytes_sent;
-  } else {
+
+  } else { // This is normal message
+
   struct sockaddr_un address;
   int controller_socket;
   if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
@@ -92,24 +94,6 @@ send(int sockfd, const void *buf, size_t len, int flags)
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
-  
-/*
-  struct sockaddr_in peer_addr;
-  socklen_t peer_addr_len = sizeof(peer_addr);
-  int port;
-  int processId;
-  if (getpeername(sockfd, (struct sockaddr *)&peer_addr, &peer_addr_len) == 0)
-  {
-    port = ntohs(peer_addr.sin_port);
-    processId = port - 8080;
-    printf("Intercepted message to process %d\n", processId);
-  }
-  else
-  {
-    perror("getpeername");
-    exit(EXIT_FAILURE);
-  }
-  */
 
   // Send (redirect) the message to the controller
   //printf("[Intercept] Send\n");
@@ -205,7 +189,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   // Message format
   int receivedMessage[4];
 
-  pid_t children[50]; // how many max ?
+  pid_t children[100]; // how many max ?
   int i = 0;
 
   //printf("[Intercept] wait for controller instructions\n");
