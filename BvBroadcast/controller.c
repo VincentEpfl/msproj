@@ -860,7 +860,7 @@ int main()
             }
 
             // if (canDeliver(posInForkPath, statesToUpdate, j, i))
-            if (numStatesToUpdate != 0)
+            if (numStatesToUpdate != 0) // what if != numStatesToUpdateTemp = need all states recv ok ?
             { 
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
