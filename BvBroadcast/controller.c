@@ -210,7 +210,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
 
       // Replace child process with BV-broadcast process
