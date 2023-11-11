@@ -171,6 +171,14 @@ int main(int argc, char *argv[])
     // Now, broadcast the initial value
     BV_broadcast(initialValue);
 
+    // Something like that to be sure that all "normal" send messages are in the buffer first
+    // and then we get only echo messages
+    // after I can just mark msg i for i > N - 1 in redirect as echo messages I guess
+
+    //sem_wait(sem);
+    //printf("Process %d done waiting\n", processId);
+    //sem_close(sem);
+
     int receivedMessage[3]; // To store both the sender's process ID and the value
 
     // Listening loop

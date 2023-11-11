@@ -879,6 +879,14 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
+              // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
+              //  send(connfd, msg[instr:delivernothing])
+              // recv(connfd) -> forkid (je peux le faire direct sur cette socket)
+              // add forkid0 to states to update as normal, add this forkid to the other states
+              // do that here, also in the case where exploration (echo msg from p1/p3), same just 
+              // add the option to not deliver
+              // also check kill state etc
+
               if (false) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
