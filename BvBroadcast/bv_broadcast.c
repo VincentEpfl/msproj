@@ -17,6 +17,7 @@ int committedValues[2] = {0, 0}; // Flags to check if the process has committed 
 // actually this should be bin_values
 
 sem_t *sem;
+sem_t *sem_init_brd;
 
 int countDistinctProcessesForValue(int value)
 {
@@ -123,6 +124,12 @@ int main(int argc, char *argv[])
         perror("[Process] Semaphore open failed");
         exit(1);
     }
+    sem_init_brd = sem_open("/sem_bv_broadcast_init_brd", O_CREAT, 0644, 0);
+    if (sem_init_brd == SEM_FAILED)
+    {
+        perror("[Process] Semaphore open failed");
+        exit(1);
+    }
 
     processId = atoi(argv[1]);
     int initialValue = atoi(argv[2]);
@@ -165,7 +172,7 @@ int main(int argc, char *argv[])
     printf("Process %d with initial value %d listening on port %d...\n", processId, initialValue, PORT_BASE + processId);
 
     sem_wait(sem);
-    printf("Process %d done waiting\n", processId);
+    printf("Process %d done waiting for sockets init\n", processId);
     sem_close(sem);
 
     // Now, broadcast the initial value
@@ -175,9 +182,9 @@ int main(int argc, char *argv[])
     // and then we get only echo messages
     // after I can just mark msg i for i > N - 1 in redirect as echo messages I guess
 
-    //sem_wait(sem);
-    //printf("Process %d done waiting\n", processId);
-    //sem_close(sem);
+    sem_wait(sem_init_brd);
+    printf("Process %d done waiting for broadcast init\n", processId);
+    sem_close(sem_init_brd);
 
     int receivedMessage[3]; // To store both the sender's process ID and the value
 

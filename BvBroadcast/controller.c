@@ -49,6 +49,7 @@ typedef struct
 } State;
 
 sem_t *sem;
+sem_t *sem_init_brd;
 
 // Array to store messages
 Message msgbuffer[1000];
@@ -230,13 +231,33 @@ void spawnProcesses()
     if (i == 0)
     {
       sem_post(sem);
+      //printf("[Controller] Schedule process 0\n");
+      //current_process = processes[0];
+      //current_process_index = 0;
+    }
+    else
+    {
+      sem_post(sem);
+      //kill(processes[i], SIGSTOP);
+    }
+  }
+
+  // Wait until all processes have done init broadcast TEMPORARY
+  sleep(5);
+
+  // Signal all children to proceed, but only allow 1
+  for (int i = 0; i < N; i++)
+  {
+    if (i == 0)
+    {
+      sem_post(sem_init_brd);
       printf("[Controller] Schedule process 0\n");
       current_process = processes[0];
       current_process_index = 0;
     }
     else
     {
-      sem_post(sem);
+      sem_post(sem_init_brd);
       kill(processes[i], SIGSTOP);
     }
   }
@@ -261,6 +282,34 @@ void init()
         exit(EXIT_FAILURE);
       }
       sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 1);
+      if (sem == SEM_FAILED)
+      {
+        perror("Error creating semaphore after unlinking");
+        exit(EXIT_FAILURE);
+      }
+    }
+    else
+    {
+      // Some other error occurred
+      perror("Error creating semaphore");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  // Create the semaphore init brd
+  sem_init_brd = sem_open("/sem_bv_broadcast_init_brd", O_CREAT, 0644, 0);
+  if (sem_init_brd == SEM_FAILED)
+  {
+    if (errno == EEXIST)
+    {
+      // Semaphore already exists, try to unlink and create again
+      printf("Semaphore already exists, trying to recreate it.\n");
+      if (sem_unlink("/sem_bv_broadcast_init_brd") == -1)
+      {
+        perror("Error unlinking semaphore");
+        exit(EXIT_FAILURE);
+      }
+      sem_init_brd = sem_open("/sem_bv_broadcast_init_brd", O_CREAT, 0644, 1);
       if (sem == SEM_FAILED)
       {
         perror("Error creating semaphore after unlinking");
@@ -1307,6 +1356,9 @@ int main()
 
   sem_close(sem);
   sem_unlink("/sem_bv_broadcast"); // Cleanup the semaphore
+
+  sem_close(sem_init_brd);
+  sem_unlink("/sem_bv_broadcast_init_brd"); // Cleanup the semaphore
 
   return 0;
 }
