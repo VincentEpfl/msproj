@@ -939,7 +939,7 @@ int main()
               int forkInfoNoAction[2];
               int forkidNoAction;
               int forkidNoAction_index;
-              if (msgbuffer[j].echo == 1) {
+              if (msgbuffer[j].echo == 1 && numStatesNoAction > 0) {
                 printf("[Controller] Received an echo message, try this\n");
                 int messageNoAction[4] = {3, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
                 sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), j, &newProcessStateNoAction, &forkInfoNoAction);
@@ -1223,7 +1223,7 @@ int main()
               int forkInfoNoAction[2];
               int forkidNoAction;
               int forkidNoAction_index;
-              if (msgbuffer[j].echo == 1) {
+              if (msgbuffer[j].echo == 1 && numStatesNoAction > 0) {
                 printf("[Controller] Received an echo message, try this\n");
                 int messageNoAction[4] = {3, msgbuffer[i].from, msgbuffer[i].msg, msgbuffer[i].to};
                 sendMsgAndRecvState(msgbuffer[j].connfd, &messageNoAction, sizeof(messageNoAction), i, &newProcessStateNoAction, &forkInfoNoAction);
