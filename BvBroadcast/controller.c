@@ -1103,7 +1103,7 @@ int main()
           for (int j = 0; j < i; j++)
           {
             // Get the system state to update
-            /*
+            
             int statesToUpdateTemp[numStates];
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, j) == -1)
@@ -1121,8 +1121,9 @@ int main()
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
-            } */
+            } 
 
+            /*
             int statesToUpdate[numStates];
             int res[2];
             if (get_states_to_update(res, statesToUpdate, j) == -1)
@@ -1131,11 +1132,12 @@ int main()
             }
             int numStatesToUpdate = res[0];
             int posInForkPath = res[1];
+            */
 
             // Found a recv message from the process that the send msg is addressed to
             // if (canDeliver(posInForkPath, statesToUpdate, i, j))
-            //if (numStatesToUpdate != 0)
-            if (canDeliver(statesToUpdate, numStatesToUpdate, i, j))
+            if (numStatesToUpdate != 0)
+            //if (canDeliver(statesToUpdate, numStatesToUpdate, i, j))
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(i);
