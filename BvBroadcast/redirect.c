@@ -24,7 +24,12 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
 
+#define N 3 // Total number of processes
+
 int forkId = 0; // Only 0 at first for each process
+
+int sendMsgCounter = 0;
+int initValue = -1; // Obviously should not be -1
 
 // send override
 ssize_t
@@ -75,6 +80,12 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   } else { // This is normal message
   // maybe mark as a echo message if it is # i > N - 1, just need sent msg counter
+  sendMsgCounter = sendMsgCounter + 1;
+  int *intBuf = (int *)buf; 
+  if (sendMsgCounter == 1) {
+    initValue = intBuf[1];
+  }
+  
 
   struct sockaddr_un address;
   int controller_socket;
@@ -98,14 +109,20 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send (redirect) the message to the controller
   //printf("[Intercept] Send\n");
-  int *intBuf = (int *)buf; 
-  int sendMessage[5];
+  
+  int sendMessage[6];
   sendMessage[0] = 0;         // type = send
   sendMessage[1] = intBuf[0]; // from = first elem of msg
   //sendMessage[2] = processId; // to = determine from sock fd dest port
   sendMessage[2] = intBuf[2]; 
   sendMessage[3] = intBuf[1]; // msg = second elem of msg
   sendMessage[4] = forkId;    // forkId
+
+  if (sendMsgCounter > N - 1) { // if echo message
+    sendMessage[5] = 1; // set the echo tag
+  } else {
+    sendMessage[5] = 0; // not an echo message
+  }
 
   ssize_t bytes_sent = real_send(controller_socket, &sendMessage, sizeof(sendMessage), 0);
 
@@ -167,12 +184,14 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
   // Send a message to the controller that this process is ready to receive
   //printf("[Intercept] send to controller\n");
-  int sendMessage[5];
+  int sendMessage[6];
   sendMessage[0] = 1;         // type = recv
   sendMessage[1] = -1;        // from = first elem of msg
   sendMessage[2] = processId; // to = determine from sock fd port IF NO do trick osef put param or put serv address in global and access here whatev... no energy for this shit
   sendMessage[3] = -1;        // msg = -1 recv msg
   sendMessage[4] = forkId;    // forkId
+  sendMessage[5] = -1; // echo tag
+
 
   ssize_t bytes_sent = real_send(controller_socket, sendMessage, sizeof(sendMessage), 0);
 
@@ -269,7 +288,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
         intBuf[0] = processId; // from this process id
-        intBuf[1] = 0; // the initial value of this process HARDCODE 0 TODO change for other cases
+        intBuf[1] = initValue; // the initial value of this process HARDCODE 0 TODO change for other cases
         intBuf[2] = to;
 
         close(controller_socket); // verify ok

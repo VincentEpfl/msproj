@@ -31,6 +31,7 @@ typedef struct
   int msg;    // for recv put -1
   int connfd; // -1 for send msg, because we don't keep the connection
   int forkId;
+  int echo; // 0 if not an echo msg, 1 if echo msg, -1 for recv msg
   int numDelivered;  // number of times it was delivered, always 0 or 1 for recv
   int delivered[500]; // forkIds where it was delivered
 } Message;
@@ -122,6 +123,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
   msgbuffer[index].msg = receivedMessage[3];
   msgbuffer[index].connfd = -1;
   msgbuffer[index].forkId = receivedMessage[4];
+  msgbuffer[index].echo = receivedMessage[5];
   msgbuffer[index].numDelivered = 0;
   for (int d = 0; d < 500; d++)
   {
@@ -757,7 +759,7 @@ int main()
   // = msg recveived : stop process that sent, exec/continue a process in array
 
   // format : [send:0/recv:1, from:processId/-1, to:processId, value:0/1, forkid]
-  int receivedMessage[5];
+  int receivedMessage[6];
   int connfd;
   int i = 0;
   int noNewConnection = 0;
@@ -937,7 +939,7 @@ int main()
               int forkInfoNoAction[2];
               int forkidNoAction;
               int forkidNoAction_index;
-              if (msgbuffer[j].forkId != 0) {
+              if (msgbuffer[j].echo == 1) {
                 printf("[Controller] Received an echo message, try this\n");
                 int messageNoAction[4] = {3, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
                 sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), j, &newProcessStateNoAction, &forkInfoNoAction);
@@ -1221,7 +1223,7 @@ int main()
               int forkInfoNoAction[2];
               int forkidNoAction;
               int forkidNoAction_index;
-              if (msgbuffer[j].forkId != 0) {
+              if (msgbuffer[j].echo == 1) {
                 printf("[Controller] Received an echo message, try this\n");
                 int messageNoAction[4] = {3, msgbuffer[i].from, msgbuffer[i].msg, msgbuffer[i].to};
                 sendMsgAndRecvState(msgbuffer[j].connfd, &messageNoAction, sizeof(messageNoAction), i, &newProcessStateNoAction, &forkInfoNoAction);
