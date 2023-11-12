@@ -209,7 +209,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
       if (i < 2)
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
       else
       {
@@ -383,7 +383,7 @@ bool checkStateValid(int state[N][2])
   {
     for (int j = 0; j < 2; j++)
     {
-      if (state[i][j] > 2 * T)
+      if (state[i][j] > 2 * T - 1)
       { // Have to modify for bug
         committed_values[i][j] = 1;
       }
