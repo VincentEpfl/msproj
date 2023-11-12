@@ -220,7 +220,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
     int value = receivedMessage[2];
     int to = receivedMessage[3];
     printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d, to:%d}\n", processId, instruction, from, value, to);
-    if (!(instruction == 1 || instruction == 2)) {
+    if (!(instruction == 1 || instruction == 2 || instruction == 3)) {
       perror("[Intercept] Bad instruction from controller");
       exit(EXIT_FAILURE);
     }
@@ -245,6 +245,31 @@ recv(int sockfd, void *buf, size_t len, int flags)
         int *intBuf = (int *)buf;
         intBuf[0] = from;
         intBuf[1] = value;
+        intBuf[2] = to;
+
+        close(controller_socket); // verify ok
+        return bytes_received;
+      }
+      i = i + 1;
+    }
+    else if (instruction == 3) {
+      children[i] = fork();
+      if (children[i] < 0)
+      {
+        perror("[Intercept] fork");
+        exit(EXIT_FAILURE);
+      }
+      if (children[i] == 0)
+      {
+        // The child process continues the execution with the msg value
+        // received by the controller
+
+        forkId = getpid();
+
+        // Unwrap message from controller and transmit data to process
+        int *intBuf = (int *)buf;
+        intBuf[0] = processId; // from this process id
+        intBuf[1] = 0; // the initial value of this process HARDCODE 0 TODO change for other cases
         intBuf[2] = to;
 
         close(controller_socket); // verify ok

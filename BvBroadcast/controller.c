@@ -838,11 +838,15 @@ int main()
 
             int statesToUpdate[numStatesToUpdateTemp];
             int numStatesToUpdate = 0;
+            int statesNoAction[numStatesToUpdateTemp];
+            int numStatesNoAction = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
               if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], j, i)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              } else { // verify that this includes the right states (I checked once seems ok)
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
               }
             } 
 
@@ -922,6 +926,33 @@ int main()
               kill(current_process, SIGCONT);
               //printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
+              // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
+              //  send(connfd, msg[instr:delivernothing])
+              // recv(connfd) -> forkid (je peux le faire direct sur cette socket)
+              // add forkid0 to states to update as normal, add this forkid to the other states
+              // do that here, also in the case where exploration (echo msg from p1/p3), same just 
+              // add the option to not deliver
+              // also check kill state etc
+              int newProcessStateNoAction[2];
+              int forkInfoNoAction[2];
+              int forkidNoAction;
+              int forkidNoAction_index;
+              if (msgbuffer[j].forkId != 0) {
+                printf("[Controller] Received an echo message, try this\n");
+                int messageNoAction[4] = {3, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
+                sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), j, &newProcessStateNoAction, &forkInfoNoAction);
+                forkidNoAction = forkInfoNoAction[0];
+                forkidNoAction_index = forkInfoNoAction[1];
+                
+                  // Update the system states This doesnt act on the same state than the rest so should compose fine
+                  for (int s = 0; s < numStatesNoAction; s++)
+                  {
+                    // just update forkpath and len
+                    updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[i].to);
+                    // actual state should not change so no need to kill
+                  }
+              }
+
               // Try to send the message
 
               int newProcessState[2];
@@ -930,14 +961,6 @@ int main()
               sendMsgAndRecvState(connfd, &message, sizeof(message), j, &newProcessState, &forkInfo);
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
-
-              // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
-              //  send(connfd, msg[instr:delivernothing])
-              // recv(connfd) -> forkid (je peux le faire direct sur cette socket)
-              // add forkid0 to states to update as normal, add this forkid to the other states
-              // do that here, also in the case where exploration (echo msg from p1/p3), same just 
-              // add the option to not deliver
-              // also check kill state etc
 
               if (msgbuffer[j].from == 1) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
@@ -1115,11 +1138,15 @@ int main()
 
             int statesToUpdate[numStatesToUpdateTemp];
             int numStatesToUpdate = 0;
+            int statesNoAction[numStatesToUpdateTemp];
+            int numStatesNoAction = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++)
             {
               if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], i, j)) // 1 posinforkpath
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              } else {
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
               }
             } 
 
@@ -1182,6 +1209,33 @@ int main()
               }
               kill(current_process, SIGCONT);
               //printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
+
+              // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
+              //  send(connfd, msg[instr:delivernothing])
+              // recv(connfd) -> forkid (je peux le faire direct sur cette socket)
+              // add forkid0 to states to update as normal, add this forkid to the other states
+              // do that here, also in the case where exploration (echo msg from p1/p3), same just 
+              // add the option to not deliver
+              // also check kill state etc
+              int newProcessStateNoAction[2];
+              int forkInfoNoAction[2];
+              int forkidNoAction;
+              int forkidNoAction_index;
+              if (msgbuffer[j].forkId != 0) {
+                printf("[Controller] Received an echo message, try this\n");
+                int messageNoAction[4] = {3, msgbuffer[i].from, msgbuffer[i].msg, msgbuffer[i].to};
+                sendMsgAndRecvState(msgbuffer[j].connfd, &messageNoAction, sizeof(messageNoAction), i, &newProcessStateNoAction, &forkInfoNoAction);
+                forkidNoAction = forkInfoNoAction[0];
+                forkidNoAction_index = forkInfoNoAction[1];
+                
+                  // Update the system states This doesnt act on the same state than the rest so should compose fine
+                  for (int s = 0; s < numStatesNoAction; s++)
+                  {
+                    // just update forkpath and len
+                    updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[j].to);
+                    // actual state should not change so no need to kill
+                  }
+              }
 
               // Try to send the message
               int newProcessState[2];
