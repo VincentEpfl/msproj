@@ -941,6 +941,12 @@ int main()
               int forkidNoAction_index;
               if (msgbuffer[j].echo == 1 && numStatesNoAction > 0) {
                 printf("[Controller] Received an echo message, try this\n");
+                printf("[Controller] States with no action :");
+                for (int s = 0; s < numStatesNoAction; s++)
+                {
+                  printf("%d,", statesNoAction[s]);
+                }
+                printf("\n");
                 int messageNoAction[4] = {3, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
                 sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), j, &newProcessStateNoAction, &forkInfoNoAction);
                 forkidNoAction = forkInfoNoAction[0];
@@ -964,7 +970,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (msgbuffer[j].from == 1) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
+              if (false) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
               {
                 // Try to send the message with the opposite value
                 printf("[Controller] send opposite msg to receiver\n");
@@ -1225,6 +1231,12 @@ int main()
               int forkidNoAction_index;
               if (msgbuffer[j].echo == 1 && numStatesNoAction > 0) {
                 printf("[Controller] Received an echo message, try this\n");
+                printf("[Controller] States with no action :");
+                for (int s = 0; s < numStatesNoAction; s++)
+                {
+                  printf("%d,", statesNoAction[s]);
+                }
+                printf("\n");
                 int messageNoAction[4] = {3, msgbuffer[i].from, msgbuffer[i].msg, msgbuffer[i].to};
                 sendMsgAndRecvState(msgbuffer[j].connfd, &messageNoAction, sizeof(messageNoAction), i, &newProcessStateNoAction, &forkInfoNoAction);
                 forkidNoAction = forkInfoNoAction[0];
@@ -1247,7 +1259,7 @@ int main()
               int forkid0 = forkInfo[0];
               int forkid0_index = forkInfo[1];
 
-              if (msgbuffer[i].from == 1) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
+              if (false) // msgbuffer[i].from == 1 msgbuffer[i].from == 3
               {
 
                 // Try to send the message with opposite value
