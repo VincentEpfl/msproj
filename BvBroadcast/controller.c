@@ -595,8 +595,9 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   bool recvDeliverOk = true;
   if (msgbuffer[recvIndex].numDelivered > 0)
   {
-    //recvDeliverOk = false; probably not in fact
+    recvDeliverOk = false; 
 
+    /*
     for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
     {
       for (int g = 0; g < posInForkPath + 1; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
@@ -608,6 +609,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
         }
       }
     }
+    */
   }
 
   return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
@@ -824,7 +826,7 @@ int main()
             // already there
 
             // Get the system states to update
-            /*
+            
             int statesToUpdateTemp[numStates];
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, i) == -1)
@@ -842,8 +844,9 @@ int main()
               {
                 statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
               }
-            } */
+            } 
 
+            /*
             int statesToUpdate[numStates];
             int res[2];
             if (get_states_to_update(res, statesToUpdate, i) == -1)
@@ -852,10 +855,10 @@ int main()
             }
             int numStatesToUpdate = res[0];
             int posInForkPath = res[1];
+            */
 
-            // if (canDeliver(posInForkPath, statesToUpdate, j, i))
-            //if (numStatesToUpdate != 0)
-            if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
+            if (numStatesToUpdate != 0)
+            //if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
             {
               printf("[Controller] send msg to receiver\n");
               printMessage(j);
