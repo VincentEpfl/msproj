@@ -873,11 +873,22 @@ int main()
 
               printf("[Controller] numStatesToUpdate: %d, posInForkPath: %d\n", numStatesToUpdate, posInForkPath);
               printf("[Controller] States to update :");
+              printf("[");
               for (int s = 0; s < numStatesToUpdate; s++)
               {
                 printf("%d,", statesToUpdate[s]);
               }
-              printf("\n");
+              printf("]\n");
+
+              if (numStatesNoAction > 0) {
+                printf("[Controller] There are states in recv msg range that cant be updated:\n");
+                printf("[");
+                for (int s = 0; s < numStatesNoAction; s++)
+                {
+                  printf("%d,", statesNoAction[s]);
+                }
+                printf("]\n");
+              }
 
               kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
               // TODO this is probably completely useless, but changes nothing so see after
@@ -942,11 +953,12 @@ int main()
               if (msgbuffer[j].echo == 1 && numStatesNoAction > 0) {
                 printf("[Controller] Received an echo message, try this\n");
                 printf("[Controller] States with no action :");
+                printf("[");
                 for (int s = 0; s < numStatesNoAction; s++)
                 {
                   printf("%d,", statesNoAction[s]);
                 }
-                printf("\n");
+                printf("]\n");
                 int messageNoAction[4] = {3, msgbuffer[j].from, msgbuffer[j].msg, msgbuffer[j].to};
                 sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), j, &newProcessStateNoAction, &forkInfoNoAction);
                 forkidNoAction = forkInfoNoAction[0];
@@ -1416,6 +1428,72 @@ int main()
 
   printControllerState(systemStates, numStates);
   checkAllStates();
+  for (int m1 = 0; m1 < i; m1++) {
+    for (int m2 = 0; m2 < i; m2++) {
+      if (m1 == m2) {
+        continue;
+      }
+      if (msgbuffer[m1].type == 1) { // m1 recv msg
+        int statesToUpdateTemp[numStates];
+            int res[2];
+            if (get_states_to_update(res, statesToUpdateTemp, m1) == -1)
+            {
+              break;
+            }
+            int numStatesToUpdateTemp = res[0];
+            int posInForkPath = res[1];
+
+            int statesToUpdate[numStatesToUpdateTemp];
+            int numStatesToUpdate = 0;
+            int statesNoAction[numStatesToUpdateTemp];
+            int numStatesNoAction = 0;
+            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            {
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], m2, m1)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
+              {
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              } else { // verify that this includes the right states (I checked once seems ok)
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+              }
+            } 
+            if (numStatesToUpdate != 0) {
+              printf("[Controller] Still something to deliver :\n");
+              printMessage(m2);
+              printf("to recv : \n");
+              printMessage(m1);
+            }
+      } else { // m1 send msg
+        int statesToUpdateTemp[numStates];
+            int res[2];
+            if (get_states_to_update(res, statesToUpdateTemp, m2) == -1)
+            {
+              break;
+            }
+            int numStatesToUpdateTemp = res[0];
+            int posInForkPath = res[1];
+
+            int statesToUpdate[numStatesToUpdateTemp];
+            int numStatesToUpdate = 0;
+            int statesNoAction[numStatesToUpdateTemp];
+            int numStatesNoAction = 0;
+            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            {
+              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], m1, m2)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
+              {
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+              } else { // verify that this includes the right states (I checked once seems ok)
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+              }
+            } 
+            if (numStatesToUpdate != 0) {
+              printf("[Controller] Still something to deliver :\n");
+              printMessage(m1);
+              printf("to recv : \n");
+              printMessage(m2);
+            }
+      }
+    }
+  }
   printf("[Controller] End of simulation\n");
 
   // accept is blocking so this is never reached
