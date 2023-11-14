@@ -175,12 +175,17 @@ int main(int argc, char *argv[])
     printf("Process %d done waiting for sockets init\n", processId);
     sem_close(sem);
 
+    if (processId == 3) { // just so the "problematic" messages arrive last, remove after
+        sleep(3);
+    }
+
     // Now, broadcast the initial value
     BV_broadcast(initialValue);
 
     // Something like that to be sure that all "normal" send messages are in the buffer first
     // and then we get only echo messages
     // after I can just mark msg i for i > N - 1 in redirect as echo messages I guess
+    // remove after
 
     sem_wait(sem_init_brd);
     printf("Process %d done waiting for broadcast init\n", processId);
