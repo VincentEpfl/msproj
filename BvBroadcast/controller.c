@@ -1171,8 +1171,8 @@ int main()
               }
               printControllerState(systemStates, numStates);
               //checkAllStates();
-              close(connfd); //NO We might need it later since several send can be sent to one deliver
-              break; //NO In fact can have several send delivered to one recv...
+              //close(connfd); // We might need it later since several send can be sent to one deliver
+              //break; // In fact can have several send delivered to one recv...
             }
           }
 
@@ -1201,7 +1201,7 @@ int main()
             
             int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update(res, statesToUpdateTemp, j) == -1)
+            if (get_states_to_update1(res, statesToUpdateTemp, j) == -1)
             {
               break;
             }
@@ -1456,7 +1456,7 @@ int main()
               printControllerState(systemStates, numStates);
               //checkAllStates();
               // attention
-              close(msgbuffer[j].connfd); //We might need it later since several send msg can be delivered to one recv
+              //close(msgbuffer[j].connfd); //We might need it later since several send msg can be delivered to one recv
               // break; TODO try it doesnt matter because timeout, maybe it would prevent weird things
               // Since this is a send message, there could be other recv messages waiting to be delivered this msg
             }
@@ -1488,7 +1488,7 @@ int main()
       if (msgbuffer[m1].type == 1) { // m1 recv msg
         int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update(res, statesToUpdateTemp, m1) == -1)
+            if (get_states_to_update1(res, statesToUpdateTemp, m1) == -1)
             {
               break;
             }
@@ -1517,7 +1517,7 @@ int main()
       } else { // m1 send msg
         int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update(res, statesToUpdateTemp, m2) == -1)
+            if (get_states_to_update1(res, statesToUpdateTemp, m2) == -1)
             {
               break;
             }
