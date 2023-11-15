@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     sem_close(sem);
 
     if (processId == 3) { // just so the "problematic" messages arrive last, remove after
-        sleep(15);
+        sleep(5);
     }
 
     // Now, broadcast the initial value
