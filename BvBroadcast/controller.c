@@ -668,6 +668,24 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   return sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
 
+bool canDeliverRecvState(int stateToUpdate, int recvIndex) {
+  bool recvDeliver = true;
+  if (msgbuffer[recvIndex].numDelivered > 0) {
+    for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
+    {
+      for (int g = 0; g < systemStates[stateToUpdate].len; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+      {
+        if (msgbuffer[recvIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
+        {
+          recvDeliver = false;
+          break;
+        }
+      }
+    }
+  }
+  return recvDeliver;
+}
+
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
   int *messageint = (int *)message;
@@ -883,24 +901,32 @@ int main()
             
             int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update1(res, statesToUpdateTemp, i) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, i) == -1)
             {
               break;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
 
-            int statesToUpdate[numStatesToUpdateTemp];
+            int statesToUpdateTemp2[numStatesToUpdateTemp];
+            int numStatesToUpdateTemp2;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverRecvState(statesToUpdateTemp[s], i)) {
+                statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
+              }
+            }
+
+            int statesToUpdate[numStatesToUpdateTemp2];
             int numStatesToUpdate = 0;
-            int statesNoAction[numStatesToUpdateTemp];
+            int statesNoAction[numStatesToUpdateTemp2];
             int numStatesNoAction = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            for (int s = 0; s < numStatesToUpdateTemp2; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], j, i)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
+              if (canDeliverState(systemStates[statesToUpdateTemp2[s]].len - 1, statesToUpdateTemp2[s], j, i)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
               {
-                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp2[s];
               } else { // verify that this includes the right states (I checked once seems ok)
-                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
               }
             } 
 
@@ -1201,24 +1227,32 @@ int main()
             
             int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update1(res, statesToUpdateTemp, j) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, j) == -1)
             {
               break;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
 
-            int statesToUpdate[numStatesToUpdateTemp];
+            int statesToUpdateTemp2[numStatesToUpdateTemp];
+            int numStatesToUpdateTemp2;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverRecvState(statesToUpdateTemp[s], j)) {
+                statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
+              }
+            }
+
+            int statesToUpdate[numStatesToUpdateTemp2];
             int numStatesToUpdate = 0;
-            int statesNoAction[numStatesToUpdateTemp];
+            int statesNoAction[numStatesToUpdateTemp2];
             int numStatesNoAction = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            for (int s = 0; s < numStatesToUpdateTemp2; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], i, j)) // 1 posinforkpath
+              if (canDeliverState(systemStates[statesToUpdateTemp2[s]].len - 1, statesToUpdateTemp2[s], i, j)) // 1 posinforkpath
               {
-                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp2[s];
               } else {
-                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
               }
             } 
 
@@ -1488,24 +1522,32 @@ int main()
       if (msgbuffer[m1].type == 1) { // m1 recv msg
         int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update1(res, statesToUpdateTemp, m1) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, m1) == -1)
             {
               break;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
 
-            int statesToUpdate[numStatesToUpdateTemp];
+            int statesToUpdateTemp2[numStatesToUpdateTemp];
+            int numStatesToUpdateTemp2;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverRecvState(statesToUpdateTemp[s], m1)) {
+                statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
+              }
+            }
+
+            int statesToUpdate[numStatesToUpdateTemp2];
             int numStatesToUpdate = 0;
-            int statesNoAction[numStatesToUpdateTemp];
+            int statesNoAction[numStatesToUpdateTemp2];
             int numStatesNoAction = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            for (int s = 0; s < numStatesToUpdateTemp2; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], m2, m1)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
+              if (canDeliverState(systemStates[statesToUpdateTemp2[s]].len - 1, statesToUpdateTemp2[s], m2, m1)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
               {
-                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp2[s];
               } else { // verify that this includes the right states (I checked once seems ok)
-                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
               }
             } 
             if (numStatesToUpdate != 0) {
@@ -1517,24 +1559,32 @@ int main()
       } else { // m1 send msg
         int statesToUpdateTemp[numStates];
             int res[2];
-            if (get_states_to_update1(res, statesToUpdateTemp, m2) == -1)
+            if (get_states_to_update(res, statesToUpdateTemp, m2) == -1)
             {
               break;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
 
-            int statesToUpdate[numStatesToUpdateTemp];
+            int statesToUpdateTemp2[numStatesToUpdateTemp];
+            int numStatesToUpdateTemp2;
+            for (int s = 0; s < numStatesToUpdateTemp; s++) {
+              if (canDeliverRecvState(statesToUpdateTemp[s], m2)) {
+                statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
+              }
+            }
+
+            int statesToUpdate[numStatesToUpdateTemp2];
             int numStatesToUpdate = 0;
-            int statesNoAction[numStatesToUpdateTemp];
+            int statesNoAction[numStatesToUpdateTemp2];
             int numStatesNoAction = 0;
-            for (int s = 0; s < numStatesToUpdateTemp; s++)
+            for (int s = 0; s < numStatesToUpdateTemp2; s++)
             {
-              if (canDeliverState(systemStates[statesToUpdateTemp[s]].len - 1, statesToUpdateTemp[s], m1, m2)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
+              if (canDeliverState(systemStates[statesToUpdateTemp2[s]].len - 1, statesToUpdateTemp2[s], m1, m2)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
               {
-                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+                statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp2[s];
               } else { // verify that this includes the right states (I checked once seems ok)
-                statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+                statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
               }
             } 
             if (numStatesToUpdate != 0) {
