@@ -903,7 +903,7 @@ int main()
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, i) == -1)
             {
-              break;
+              continue; // TODO CONTINUE NOT BREAK ????
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
@@ -915,6 +915,8 @@ int main()
                 statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
               }
             }
+
+            // TODO if numstatestoupdatetemp2 == 0 continue ou break ?
 
             int statesToUpdate[numStatesToUpdateTemp2];
             int numStatesToUpdate = 0;
@@ -1229,7 +1231,7 @@ int main()
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, j) == -1)
             {
-              break;
+              continue; // TODO continue not break ?
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
@@ -1524,7 +1526,7 @@ int main()
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, m1) == -1)
             {
-              break;
+              continue;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
@@ -1561,7 +1563,7 @@ int main()
             int res[2];
             if (get_states_to_update(res, statesToUpdateTemp, m2) == -1)
             {
-              break;
+              continue;
             }
             int numStatesToUpdateTemp = res[0];
             int posInForkPath = res[1];
