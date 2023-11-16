@@ -909,7 +909,7 @@ int main()
             int posInForkPath = res[1];
 
             int statesToUpdateTemp2[numStatesToUpdateTemp];
-            int numStatesToUpdateTemp2;
+            int numStatesToUpdateTemp2 = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++) {
               if (canDeliverRecvState(statesToUpdateTemp[s], i)) {
                 statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
@@ -1235,7 +1235,7 @@ int main()
             int posInForkPath = res[1];
 
             int statesToUpdateTemp2[numStatesToUpdateTemp];
-            int numStatesToUpdateTemp2;
+            int numStatesToUpdateTemp2 = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++) {
               if (canDeliverRecvState(statesToUpdateTemp[s], j)) {
                 statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
@@ -1530,7 +1530,7 @@ int main()
             int posInForkPath = res[1];
 
             int statesToUpdateTemp2[numStatesToUpdateTemp];
-            int numStatesToUpdateTemp2;
+            int numStatesToUpdateTemp2 = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++) {
               if (canDeliverRecvState(statesToUpdateTemp[s], m1)) {
                 statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
@@ -1567,7 +1567,7 @@ int main()
             int posInForkPath = res[1];
 
             int statesToUpdateTemp2[numStatesToUpdateTemp];
-            int numStatesToUpdateTemp2;
+            int numStatesToUpdateTemp2 = 0;
             for (int s = 0; s < numStatesToUpdateTemp; s++) {
               if (canDeliverRecvState(statesToUpdateTemp[s], m2)) {
                 statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
