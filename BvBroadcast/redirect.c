@@ -224,12 +224,6 @@ recv(int sockfd, void *buf, size_t len, int flags)
       exit(EXIT_FAILURE);
     }
     if (bytes_received == 0) { // When the connection is closed from the controller
-      // ALSO MAYBE JUST AVOID THIS CASE FROM THE CONTROLLER BY NOT SCHEDULING PROCESSES THERE
-      // NOW JUST INFINITE LOOP, SLEEP LONGER THAN CONTROLLER WAITS FOR NEW CO, SHOULD BE FINE ?
-      //while(1) { sleep(2); }
-      // OR EXIT (LEAVES CHILDREN RUNNING, SAME PID, HANDLED BY INIT PROCESS)
-      // exit(EXIT_SUCCESS);
-      // OR JUST WAIT FOR CHILDREN TO TERMINATE AND EXIT
       while (wait(NULL) != -1);
       exit(EXIT_SUCCESS);
     }
@@ -308,25 +302,6 @@ recv(int sockfd, void *buf, size_t len, int flags)
         exit(EXIT_FAILURE);
       }
     }
-    // add instruction deliver nothing 
-    // I don't know if I can call the function I'm in in C
-    // maybe put everything in auxiliary functions and call...
-    // anyways
-    // fork !! important, then in the child
-    // then create a socket connection to controller, send a recv message from the child
-    // wait for instr from controller
-    // same instructions
-    // I dont know if its possible actually 
-    // trick : fork and actually return, but with the value init val, from this process
-    // since the state counts the number of values received by distinct processes
-    // receiving the initial value from itself will never modify the state
-    // and then I can retrieve the state as usual in the controller 
-    // and continue execution as normal, just process will have one more fork where the 
-    // msg was not delivered
-    // meme le processing du resulting state sera le meme, c'est juste que voila le state 
-    // du process n'aura pas changé, et on l'ajoute a tous les autres states auxquels le
-    // msg n'a pas ete delivered (TOUS ?), en gros on ajoute juste le forkid pour les futurs
-    // messages
 
   }
 

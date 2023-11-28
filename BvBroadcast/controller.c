@@ -115,61 +115,6 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
   return 0;
 }
 
-int get_states_to_update1(int *res, int *statesToUpdate, int recv_msg_index)
-{
-  int numStatesToUpdate = 0;
-  int posInForkPath = 0;
-
-  for (int s = 0; s < numStates; s++)
-  {
-    // Don't want to update a state that was killed
-    if (systemStates[s].killed == 1)
-    {
-      continue;
-    }
-
-    if (systemStates[s].len == 0)
-    { // init le 1 elem de forkpath devrait etre 0
-      systemStates[s].len = 1;
-      systemStates[s].forkPath[0] = 0;
-    }
-    for (int f = 0; f < systemStates[s].len; f++)
-    {
-      if (systemStates[s].forkPath[f] == msgbuffer[recv_msg_index].forkId)
-      {
-        bool addState = true;
-        for (int g = 0; g < msgbuffer[recv_msg_index].numDelivered; g++)
-        {
-          for (int h = 0; h < systemStates[s].len; h++)
-          {
-            if (msgbuffer[recv_msg_index].delivered[g] == systemStates[s].forkPath[h])
-            {
-              addState = false;
-              break;
-            }
-          }
-        }
-        if (addState)
-        {
-          statesToUpdate[numStatesToUpdate++] = s;
-          posInForkPath = f;
-          break;
-        }
-      }
-    }
-  }
-
-  if (numStatesToUpdate == 0)
-  {
-    // discard msg or something
-    return -1;
-  }
-
-  res[0] = numStatesToUpdate;
-  res[1] = posInForkPath;
-  return 0;
-}
-
 void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
@@ -433,6 +378,8 @@ bool compareProcessState(int processState1[2], int processState2[2])
 
 bool checkStateValid(int state[N][2])
 {
+  // TODO do that except for the byzantines processes (technically that's the property)
+  // TODO check the other properties
   int committed_values[N][2];
   for (int i = 0; i < N; i++)
   {
@@ -552,63 +499,6 @@ void printMessage(int index)
     }
     printf("]\n");
   }
-}
-
-bool canDeliver(int *statesToUpdate, int numStatesToUpdate, int sendIndex, int recvIndex)
-{
-  //  Check if the message comes from a parallel execution/state,
-  //  in this case we don't want it
-  bool forkOk = true;
-  if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
-  {
-    forkOk = false;
-    int numForkOk = 0;
-    for (int s = 0; s < numStatesToUpdate; s++)
-    {
-      for (int f = 0; f < systemStates[statesToUpdate[s]].len; f++)
-      {
-        if (systemStates[statesToUpdate[s]].forkPath[f] == msgbuffer[sendIndex].forkId)
-        {
-          numForkOk = numForkOk + 1;
-          break;
-        }
-      }
-    }
-    if (numForkOk == numStatesToUpdate)
-    {
-      forkOk = true;
-    }
-  }
-
-  // Check if the send message was already delivered to this state
-  bool sendDeliverOk = true;
-
-  if (msgbuffer[sendIndex].numDelivered > 0)
-  {
-    for (int s = 0; s < numStatesToUpdate; s++)
-    {
-      for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
-      {
-        for (int g = 0; g < systemStates[statesToUpdate[s]].len; g++)
-        {
-          if (msgbuffer[sendIndex].delivered[f] == systemStates[statesToUpdate[s]].forkPath[g])
-          {
-            sendDeliverOk = false;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  // Check if the recv message was already delivered
-  bool recvDeliverOk = true;
-  if (msgbuffer[recvIndex].numDelivered > 0)
-  {
-    recvDeliverOk = false;
-  }
-
-  return recvDeliverOk && sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
 }
 
 bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int recvIndex)
