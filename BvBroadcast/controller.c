@@ -36,6 +36,15 @@ typedef struct
   int delivered[500]; // forkIds where it was delivered
 } Message;
 
+// Message struct
+typedef struct
+{
+  int from;   // -1 for recv msg, because can recv from any process
+  int to;     // for recv msg this is the process that wants to recv
+  int msg;    // for recv put -1
+  int forkId;
+} MessageTrace;
+
 typedef struct
 {
   int len;             // len of forkPath
@@ -54,6 +63,8 @@ sem_t *sem_init_brd;
 
 // Array to store messages
 Message msgbuffer[1000];
+MessageTrace msghistory[1000];
+int nummsg = 0;
 
 // Array to store processes
 pid_t processes[10000];
@@ -717,10 +728,30 @@ void printControllerState(State *systemStates, int numStates)
       }
       printf("}\n");
     }
+    printf("[Controller] messages exchanged: \n");
+    for (int f = 0; f < systemStates[s].len; f++)
+    {
+      for (int g = 0; g < nummsg; g++) {
+        if (msghistory[g].forkId == systemStates[s].forkPath[f]) {
+          printf("Message %d ", msghistory[g].msg);
+          printf("from %d ", msghistory[g].from);
+          printf("to %d\n", msghistory[g].to);
+        }
+      }
+      
+    }
   }
 }
 
-void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
+void addMsgToHistory(int forkid, int from, int to, int val) {
+        msghistory[nummsg].forkId = forkid;
+        msghistory[nummsg].from = from;
+        msghistory[nummsg].to = to;
+        msghistory[nummsg].msg = val;
+        nummsg = nummsg + 1;
+}
+
+int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 {
   int connfd = 0;
   if (recv) {
@@ -795,7 +826,7 @@ void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         printf("%d,", statesNoAction[s]);
       }
       printf("]\n");
-    }
+    } 
 
     kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
 
@@ -862,6 +893,8 @@ void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to);
         // actual state should not change so no need to kill
       }
+
+      // here no need to update msghistory because for this id no message was received
     }
 
     // Try to send the message
@@ -872,6 +905,9 @@ void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
     int forkid0 = forkInfo[0];
     int forkid0_index = forkInfo[1];
+
+    // add msg to history
+    addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
     if (msgbuffer[sendIndex].from == 3) // msgbuffer[j].from == 1 msgbuffer[j].from == 3
     {
@@ -928,6 +964,8 @@ void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       else
       {
+        // add op msg to history
+        addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue);
 
         // Copy sys state to update in 1 new state for each fork
         bool forkid0_killed = false;
@@ -1012,7 +1050,9 @@ void handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // checkAllStates();
     // close(connfd); // We might need it later since several send can be sent to one deliver
     // break; // In fact can have several send delivered to one recv...
+    return 1; // msg was delivered 
   }
+return 0; // msg was not delivered
 }
 
 int main()
@@ -1093,7 +1133,14 @@ int main()
 
           for (int j = 0; j < i; j++)
           {
-            handleMessagePair(i, j, connfd, true);
+            int del = 0;
+            del = handleMessagePair(i, j, connfd, true);
+            if (del == -1) {
+              continue;
+            } 
+            if (del == 1) {
+              msg_was_delivered = true;
+            }
           }
 
           // if the recv message was not delivered, schedule another process
@@ -1119,7 +1166,14 @@ int main()
 
           for (int j = 0; j < i; j++)
           {
-            handleMessagePair(j, i, connfd, false);
+            int del = 0;
+            del = handleMessagePair(j, i, connfd, false);
+            if (del == -1) {
+              continue;
+            } 
+            if (del == 1) {
+              msg_was_delivered = true;
+            }
           }
 
           // if the send message was not delivered, schedule another process
