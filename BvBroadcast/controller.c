@@ -220,7 +220,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
       if (i < 2)
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
       else
       {
