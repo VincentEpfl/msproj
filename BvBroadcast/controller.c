@@ -220,7 +220,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
       if (i < 2)
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
       else
       {
@@ -909,7 +909,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (false) // msgbuffer[j].from == 1 msgbuffer[j].from == 3 msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 2) // msgbuffer[j].from == 1 msgbuffer[j].from == 3 msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       printf("[Controller] send opposite msg to receiver\n");
