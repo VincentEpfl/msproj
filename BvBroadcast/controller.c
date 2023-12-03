@@ -635,7 +635,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   int recmsg[3];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
-  printf("[Controller] state recovered\n");
+  //printf("[Controller] state recovered\n");
   int *newProcessStateInt = (int *)newProcessState;
   newProcessStateInt[0] = recmsg[1];
   newProcessStateInt[1] = recmsg[2];
@@ -644,7 +644,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
   kill(forkInfoInt[0], SIGSTOP);
-  printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
+  //printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
 }
 
 void duplicateState(int originState, int destState)
@@ -694,7 +694,7 @@ bool killStateAlreadyThere(int state, int numStates, int killHandle, bool forkid
         waitpid(killHandle, NULL, 0); // necessary ?
         forkid_killed_temp = true;
       }
-      printf("[Controller] kill state %d on forkid %d\n", state, killHandle);
+      //printf("[Controller] kill state %d on forkid %d\n", state, killHandle);
 
       // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
       systemStates[state].killed = 1;
@@ -805,6 +805,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
   if (numStatesToUpdate != 0)
   // if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
   {
+    /*
     printf("[Controller] send msg to receiver\n");
     printMessage(sendIndex);
     printf("to recv : \n");
@@ -829,6 +830,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       printf("]\n");
     } 
+    */
 
     kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
 
@@ -875,6 +877,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkidNoAction_index;
     if (msgbuffer[sendIndex].echo == 1 && numStatesNoAction > 0)
     {
+      /*
       printf("[Controller] Received an echo message, try this\n");
       printf("[Controller] States with no action :");
       printf("[");
@@ -883,6 +886,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         printf("%d,", statesNoAction[s]);
       }
       printf("]\n");
+      */
       int messageNoAction[4] = {3, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
       sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
       forkidNoAction = forkInfoNoAction[0];
@@ -914,7 +918,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
-      printf("[Controller] send opposite msg to receiver\n");
+      //printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
       int messageOp[4] = {1, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
       int newProcessStateOp[2];
@@ -927,7 +931,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       {
         // Here I consider that I kill forkid1 by default
 
-        printf("[Controller] Same result: kill a child\n");
+        //printf("[Controller] Same result: kill a child\n");
         int killMessage[4] = {2, -1, -1, -1};
         if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
         {
@@ -1128,7 +1132,7 @@ int main()
         if (receivedMessage[0] == 1)
         {
           // Recv message = a process wants to receive a message from another
-          printf("[Controller] This is a recv message\n");
+          //printf("[Controller] This is a recv message\n");
           // kill(current_process, SIGSTOP); //*
           msgbuffer[i].connfd = connfd;
           int r = 0;
@@ -1155,13 +1159,15 @@ int main()
           else
           {
             nothingDelivered = 0;
+            printf("[Controller] Number of states we went through : %d\n", numStates);
+            printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
         }
 
         if (receivedMessage[0] == 0)
         {
           // This is a send message : a process sends some data to another
-          printf("[Controller] This is a send message\n");
+          //printf("[Controller] This is a send message\n");
           // kill(current_process, SIGSTOP);
           //  Go through the message buffer to see if the process waiting for this
           //  data is already there
@@ -1188,6 +1194,8 @@ int main()
           else
           {
             nothingDelivered = 0;
+            printf("[Controller] Number of states we went through : %d\n", numStates);
+            printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
           close(connfd);
         }
