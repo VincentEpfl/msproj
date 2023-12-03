@@ -85,6 +85,7 @@ State systemStates[1000] = {
 int sockfd;
 int feedback_sockfd;
 int numStates = 1;
+int numStatesKilled = 0;
 
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
@@ -697,6 +698,7 @@ bool killStateAlreadyThere(int state, int numStates, int killHandle, bool forkid
 
       // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
       systemStates[state].killed = 1;
+      numStatesKilled = numStatesKilled + 1;
     }
   }
   return forkid_killed_temp;
@@ -1295,6 +1297,8 @@ int main()
     }
   }
   printf("[Controller] End of simulation\n");
+  printf("[Controller] Number of states we went through : %d\n", numStates);
+  printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
 
   // accept is blocking so this is never reached
 
