@@ -1046,7 +1046,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       schedule_new_process();
     }
-    printControllerState(systemStates, numStates);
+    //printControllerState(systemStates, numStates);
     // checkAllStates();
     // close(connfd); // We might need it later since several send can be sent to one deliver
     // break; // In fact can have several send delivered to one recv...
