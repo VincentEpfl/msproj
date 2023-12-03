@@ -77,7 +77,7 @@ void BV_broadcast(int value)
         }
         */
         sockfd = 1;
-        sleep(1); // 
+        //sleep(1); // 
         usleep(100000);
 
         send(sockfd, &message, sizeof(message), 0);
