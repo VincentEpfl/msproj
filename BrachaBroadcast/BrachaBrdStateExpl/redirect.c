@@ -67,22 +67,12 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send feedback message to the controller
   //printf("[Intercept] Send feedback\n");
-  // TODO maybe just flatten array
-  int *intBuf = (int *)buf; // TODO check that this cast is ok for [][][]
-  int feedbackMessagePrev[3];
-  feedbackMessagePrev[0] = forkId; // TODO check how to add the forkid correctly to [][][]        
-  feedbackMessagePrev[1] = intBuf[0]; 
-  feedbackMessagePrev[2] = intBuf[1]; 
 
 // ALGO CHG
-  int feedbackMessage[3][N][2];
-  for (int t = 0; t < 3; t++) {
-    for (int op = 0; op < N; op++) {
-      feedbackMessage[t][op][0] = intBuf[t][op][0];
-      feedbackMessage[t][op][1] = intBuf[t][op][1];
-    }
-  }
-  // TODO add forkId
+  int message[3][N][2];
+  char feedbackMessage[sizeof(forkId) + sizeof(message)];
+  memcpy(feedbackMessage, &forkId, sizeof(forkId));
+  memcpy(feedbackMessage + sizeof(forkId), buf, sizeof(message));
 
   ssize_t bytes_sent = real_send(feedback_socket, &feedbackMessage, sizeof(feedbackMessage), 0);
 

@@ -19,8 +19,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 3 // Total number of processes
-#define T 0 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 // Message struct
 typedef struct
@@ -609,21 +609,18 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
 {
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
-  int recmsg[3][N][2];
+  int forkId;
+  int msg[3][N][2];
+  char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
+  memcpy(&forkId, recmsg, sizeof(int));
+  memcpy(newProcessState, recmsg + sizeof(int), sizeof(msg));
+
   //printf("[Controller] state recovered\n");
-  int *newProcessStateInt = (int *)newProcessState;
-  for (int t = 0; t < 3; t++) { // TODO do that correctly, maybe flatten etc
-    for (int op = 0; op < N; op++) {
-      newProcessStateInt[t][op][0] = recmsg[t][op][0];
-      newProcessStateInt[t][op][1] = recmsg[t][op][1];
-    }
-  }
-  newProcessStateInt[0] = recmsg[1];
-  newProcessStateInt[1] = recmsg[2];
+  
   int *forkInfoInt = (int *)forkInfo;
-  forkInfoInt[0] = recmsg[0]; //TODO check how to retrieve that
+  forkInfoInt[0] = forkId; 
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
   kill(forkInfoInt[0], SIGSTOP);
@@ -655,7 +652,7 @@ void duplicateState(int originState, int destState)
 }
 
 // ALGO CHG
-void updateState(int stateToUpdate, int forkid, int *newProcessState, int updatedProcess)
+void updateState(int stateToUpdate, int forkid, int newProcessState[][N][2], int updatedProcess)
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
@@ -875,7 +872,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // do that here, also in the case where exploration (echo msg from p1/p3), same just
     // add the option to not deliver
     // also check kill state etc
-    int newProcessStateNoAction[2];
+    int newProcessStateNoAction[3][N][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -911,7 +908,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // Try to send the message
 
-    int newProcessState[2];
+    int newProcessState[3][N][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG
     int message[6] = {1, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
@@ -922,14 +919,15 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+// EXPLORATION CONDITION
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG 
       int messageOp[6] = {1, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag,  msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
-      int newProcessStateOp[2];
+      int newProcessStateOp[3][N][2]; // ALGO CHG
       int forkInfoOp[2];
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
