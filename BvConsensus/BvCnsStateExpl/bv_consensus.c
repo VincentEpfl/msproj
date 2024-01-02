@@ -12,6 +12,9 @@
 #define T 1 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
+sem_t *sem;
+sem_t *sem_init_brd;
+
 // Message type
 // format (est/aux, round, source process , val, destination process)
 typedef struct 
@@ -146,7 +149,7 @@ void broadcast(int value, int roundNumber) {
 
         int message[5] = {0, rnd, processId, value, i}; // format (est/aux, round, source, val, destination)
 
-        
+        /*
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
@@ -157,12 +160,15 @@ void broadcast(int value, int roundNumber) {
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
+        */
+
+       sockfd = 1;
         
         // TO HELP TRIGGER BUG
         usleep(100000);
         send(sockfd, &message, sizeof(message), 0);
         printf("Process %d, Round %d : Value %d sent to process %d with tag AUX\n", processId, rnd, value, i);
-        close(sockfd);
+        //close(sockfd);
     }
 }
 
@@ -206,7 +212,7 @@ void BV_broadcast(int value, int roundNumber)
 
         int message[5] = {1, rnd, processId, value, i}; // format (est/aux, round, source, val, destination)
 
-        
+        /*
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
@@ -219,6 +225,8 @@ void BV_broadcast(int value, int roundNumber)
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
+        */
+        sockfd = 1;
         
         
         // TO HELP TRIGGER BUG
@@ -227,7 +235,7 @@ void BV_broadcast(int value, int roundNumber)
 
         printf("Process %d, Round %d : Value %d sent to process %d with tag EST\n", processId, rnd, value, i);
 
-        close(sockfd);
+        //close(sockfd);
     }
 }
 
@@ -263,7 +271,7 @@ int processAllMessages(int type, int r, int value, int fromProcess, int toProces
         roundsInfo[r].numMsg = roundsInfo[r].numMsg + 1;
         return -1;
     }
-    if (r < rnd) {
+    if (r < rnd) { // TODO make sure its not better to just process the msg and who cares 
         return -1;
     }
     if (type == 1) { // EST - BV broadcast
@@ -283,6 +291,19 @@ int main(int argc, char *argv[])
     if (argc != 3)
     {
         printf("Usage: %s <processId (0 to %d)> <initialValue (0 or 1)>\n", argv[0], N - 1);
+        exit(1);
+    }
+
+    sem = sem_open("/sem_bv_consensus", O_CREAT, 0644, 0);
+    if (sem == SEM_FAILED)
+    {
+        perror("[Process] Semaphore open failed");
+        exit(1);
+    }
+    sem_init_brd = sem_open("/sem_bv_consensus_init_brd", O_CREAT, 0644, 0);
+    if (sem_init_brd == SEM_FAILED)
+    {
+        perror("[Process] Semaphore open failed");
         exit(1);
     }
 
@@ -326,7 +347,10 @@ int main(int argc, char *argv[])
     }
 
     printf("Process %d with initial value %d listening on port %d...\n", processId, initialValue, PORT_BASE + processId);
-    sleep(5);
+    
+    sem_wait(sem);
+    printf("Process %d done waiting for sockets init\n", processId);
+    sem_close(sem);
 
     // Initialize estimate with the proposed value
     est = initialValue;
@@ -344,6 +368,12 @@ int main(int argc, char *argv[])
 
         // Broadcast the initial value
         BV_broadcast(est, rnd);
+
+        if (rnd == 0) {
+            sem_wait(sem_init_brd);
+            printf("Process %d done waiting for broadcast init\n", processId);
+            sem_close(sem_init_brd);
+        }
 
         int receivedMessage[5]; // format (est/aux, round, source, val, destination)
         int n = 0;
@@ -372,6 +402,8 @@ int main(int argc, char *argv[])
             }
             
             // Then accept new messages
+
+            /*
             connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
             if (connfd == -1)
@@ -379,8 +411,9 @@ int main(int argc, char *argv[])
                 perror("[Process] Accept failure");
                 exit(EXIT_FAILURE);
             } 
+            */
             
-            int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+            int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
             if (nbytes == -1)
             {
                 perror("[Process] Recv failure");
@@ -409,12 +442,12 @@ int main(int argc, char *argv[])
                 }
                 send(-1, &valuesCount, sizeof(valuesCount), 0);
 
-                if (err == -1) {
-                    close(connfd);
+                if (err == -1) { // TODO make sure its not better to just process the msg and who cares 
+                    //close(connfd);
                     continue;
                 }
             }
-            close(connfd);
+            //close(connfd);
         }
 
         printf("Out of EST loop\n");
@@ -458,6 +491,8 @@ int main(int argc, char *argv[])
             }
             
             // Then accept new messages
+
+            /*
             connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
             if (connfd == -1)
@@ -465,8 +500,9 @@ int main(int argc, char *argv[])
                 perror("[Process] Accept failure");
                 exit(EXIT_FAILURE);
             } 
+            */
             
-            int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+            int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
             if (nbytes == -1)
             {
                 perror("[Process] Recv failure");
@@ -495,12 +531,12 @@ int main(int argc, char *argv[])
                 }
                 send(-1, &valuesCount, sizeof(valuesCount), 0);
 
-                if (err == -1) {
-                    close(connfd);
+                if (err == -1) { // TODO make sure its not better to just process the msg and who cares 
+                    //close(connfd);
                     continue;
                 }
             }
-            close(connfd);
+            //close(connfd);
         }
 
         printf("Out of AUX loop\n");

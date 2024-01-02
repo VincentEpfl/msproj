@@ -19,8 +19,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 3 // Total number of processes
-#define T 0 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 // ALGO CHG
 // Message struct
@@ -611,15 +611,18 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
 {
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
-  int recmsg[3];
+  int forkId;
+  int msg[10][2][2];
+  char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
+  memcpy(&forkId, recmsg, sizeof(int));
+  memcpy(newProcessState, recmsg + sizeof(int), sizeof(msg));
+
   //printf("[Controller] state recovered\n");
-  int *newProcessStateInt = (int *)newProcessState;
-  newProcessStateInt[0] = recmsg[1];
-  newProcessStateInt[1] = recmsg[2];
+  
   int *forkInfoInt = (int *)forkInfo;
-  forkInfoInt[0] = recmsg[0];
+  forkInfoInt[0] = forkId;
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
   kill(forkInfoInt[0], SIGSTOP);
@@ -651,7 +654,7 @@ void duplicateState(int originState, int destState)
 }
 
 // AGLO CHG
-void updateState(int stateToUpdate, int forkid, int *newProcessState, int updatedProcess)
+void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int updatedProcess)
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
@@ -869,7 +872,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // do that here, also in the case where exploration (echo msg from p1/p3), same just
     // add the option to not deliver
     // also check kill state etc
-    int newProcessStateNoAction[2];
+    int newProcessStateNoAction[10][2][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -887,7 +890,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       */
 
      // ALGO CHG TODO
-      int messageNoAction[4] = {3, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
+      int messageNoAction[6] = {3, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
       sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
@@ -905,10 +908,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // Try to send the message
 
-    int newProcessState[2];
+    int newProcessState[10][2][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG TODO
-    int message[4] = {1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
+    int message[6] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
     sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
     int forkid0 = forkInfo[0];
     int forkid0_index = forkInfo[1];
@@ -922,8 +925,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       //printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG TODO
-      int messageOp[4] = {1, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
-      int newProcessStateOp[2];
+      int messageOp[6] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
+      int newProcessStateOp[10][2][2]; // ALGO CHG
       int forkInfoOp[2];
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
@@ -935,7 +938,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
         //printf("[Controller] Same result: kill a child\n");
         // ALGO CHG TODO
-        int killMessage[4] = {2, -1, -1, -1};
+        int killMessage[6] = {2, -1, -1, -1, -1, -1};
         if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
         {
           perror("[Controller] send fail");
@@ -1321,10 +1324,10 @@ int main()
     ;
 
   sem_close(sem);
-  sem_unlink("/sem_bv_broadcast"); // Cleanup the semaphore
+  sem_unlink("/sem_bv_consensus"); // Cleanup the semaphore
 
   sem_close(sem_init_brd);
-  sem_unlink("/sem_bv_broadcast_init_brd"); // Cleanup the semaphore
+  sem_unlink("/sem_bv_consensus_init_brd"); // Cleanup the semaphore
 
   return 0;
 }

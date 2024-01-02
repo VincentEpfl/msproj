@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "dlfcn.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "socket.h": "c",
+        "semaphore.h": "c"
     }
 }

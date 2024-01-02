@@ -24,7 +24,7 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
 
-#define N 3 // Total number of processes
+#define N 4 // Total number of processes
 
 int forkId = 0; // Only 0 at first for each process
 
@@ -67,21 +67,12 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send feedback message to the controller
   //printf("[Intercept] Send feedback\n");
-  int *intBuf = (int *)buf; 
-  int feedbackMessagePrev[3]; // TODO check that this cast is ok for [][][]
-  feedbackMessagePrev[0] = forkId;     // TODO check how to add the forkid correctly to [][][][]    
-  feedbackMessagePrev[1] = intBuf[0]; 
-  feedbackMessagePrev[2] = intBuf[1]; 
 
   // ALGO CHG
-  int feedbackMessage[10][2][2];
-  for (int r = 0; r < 10; r++) {
-    for (int t = 0; t < 2; t++) {
-        feedbackMessage[r][t][0] = intBuf[r][t][0];
-        feedbackMessage[r][t][1] = intBuf[r][t][1];
-    }
-  }
-  // TODO add forkId
+  int message[10][2][2];
+  char feedbackMessage[sizeof(forkId) + sizeof(message)];
+  memcpy(feedbackMessage, &forkId, sizeof(forkId));
+  memcpy(feedbackMessage + sizeof(forkId), buf, sizeof(message));
 
   ssize_t bytes_sent = real_send(feedback_socket, &feedbackMessage, sizeof(feedbackMessage), 0);
 
