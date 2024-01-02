@@ -625,15 +625,17 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
 {
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
-  int recmsg[3];
+  int forkId;
+  int msg[10][3][N][2];
+  char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
+  memcpy(&forkId, recmsg, sizeof(int));
+  memcpy(newProcessState, recmsg + sizeof(int), sizeof(msg));
+
   //printf("[Controller] state recovered\n");
-  int *newProcessStateInt = (int *)newProcessState;
-  newProcessStateInt[0] = recmsg[1];
-  newProcessStateInt[1] = recmsg[2];
   int *forkInfoInt = (int *)forkInfo;
-  forkInfoInt[0] = recmsg[0];
+  forkInfoInt[0] = forkId;
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
   kill(forkInfoInt[0], SIGSTOP);
@@ -667,7 +669,7 @@ void duplicateState(int originState, int destState)
 }
 
 // ALGO CHG
-void updateState(int stateToUpdate, int forkid, int *newProcessState, int updatedProcess)
+void updateState(int stateToUpdate, int forkid, int newProcessState[][3][N][2], int updatedProcess)
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
@@ -891,7 +893,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // do that here, also in the case where exploration (echo msg from p1/p3), same just
     // add the option to not deliver
     // also check kill state etc
-    int newProcessStateNoAction[2];
+    int newProcessStateNoAction[10][3][N][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -909,7 +911,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       */
 
      // ALGO CHG TODO
-      int messageNoAction[4] = {3, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
+      int messageNoAction[8] = {3, msgbuffer[sendIndex].round, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].dval, msgbuffer[sendIndex].to};
       sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
@@ -927,10 +929,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // Try to send the message
 
-    int newProcessState[2];
+    int newProcessState[10][3][N][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG TODO
-    int message[4] = {1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
+    int message[8] = {1, msgbuffer[sendIndex].round, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].dval, msgbuffer[sendIndex].to};
     sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
     int forkid0 = forkInfo[0];
     int forkid0_index = forkInfo[1];
@@ -938,14 +940,14 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG TODO
-      int messageOp[4] = {1, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
-      int newProcessStateOp[2];
+      int messageOp[8] = {1, msgbuffer[sendIndex].round, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].dval, msgbuffer[sendIndex].to};
+      int newProcessStateOp[10][3][N][2]; // ALGO CHG
       int forkInfoOp[2];
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
@@ -1344,10 +1346,10 @@ int main()
     ;
 
   sem_close(sem);
-  sem_unlink("/sem_bv_broadcast"); // Cleanup the semaphore
+  sem_unlink("/sem_bracha_consensus"); // Cleanup the semaphore
 
   sem_close(sem_init_brd);
-  sem_unlink("/sem_bv_broadcast_init_brd"); // Cleanup the semaphore
+  sem_unlink("/sem_bracha_consensus_init_brd"); // Cleanup the semaphore
 
   return 0;
 }

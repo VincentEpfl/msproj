@@ -16,6 +16,9 @@
 void Bracha_broadcast(int originProcess, int value, int tag, int round, int dval);
 void brachaProcessMessages(int originProcess, int value, int fromProcess, int tag, int round, int dval);
 
+sem_t *sem;
+sem_t *sem_init_brd;
+
 // Message type
 // format (round, tag, source, val, destination, dval)
 typedef struct 
@@ -172,7 +175,7 @@ void Bracha_broadcast(int originProcess, int value, int tag, int round, int dval
 
         int message[7] = {round, originProcess, tag, processId, value, i, dval}; // format [round, origin, tag, from, value, to, dval] | tag 0:initial,1:echo,2:ready
 
-        
+        /*
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
@@ -183,13 +186,15 @@ void Bracha_broadcast(int originProcess, int value, int tag, int round, int dval
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
+        */
+       sockfd = 1;
         
 
         send(sockfd, &message, sizeof(message), 0);
 
         printf("Process %d, round %d : Value %d sent to process %d with tag %d\n", processId, round, value, i, tag);
 
-        close(sockfd);
+        //close(sockfd);
     }
 }
 
@@ -288,6 +293,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    sem = sem_open("/sem_bracha_consensus", O_CREAT, 0644, 0);
+    if (sem == SEM_FAILED)
+    {
+        perror("[Process] Semaphore open failed");
+        exit(1);
+    }
+    sem_init_brd = sem_open("/sem_bracha_consensus_init_brd", O_CREAT, 0644, 0);
+    if (sem_init_brd == SEM_FAILED)
+    {
+        perror("[Process] Semaphore open failed");
+        exit(1);
+    }
+
 
     processId = atoi(argv[1]);
     int initialValue = atoi(argv[2]);
@@ -322,7 +340,10 @@ int main(int argc, char *argv[])
     }
 
     printf("Process %d with initial value %d listening on port %d...\n", processId, initialValue, PORT_BASE + processId);
-    sleep(5);
+    
+    sem_wait(sem);
+    printf("Process %d done waiting for sockets init\n", processId);
+    sem_close(sem);
 
 
     while(1) {
@@ -336,6 +357,8 @@ int main(int argc, char *argv[])
             
             while(1) {
                 int receivedMessage[7]; 
+
+                /*
                 connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
                 if (connfd == -1)
@@ -343,8 +366,9 @@ int main(int argc, char *argv[])
                     perror("[Process] Accept failure");
                     exit(EXIT_FAILURE);
                 } 
+                */
                 
-                int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+                int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
                 if (nbytes == -1)
                 {
                     perror("[Process] Recv failure");
@@ -364,7 +388,7 @@ int main(int argc, char *argv[])
                 { // Ignore special signals
                     processMessage(originProcess, r, tag, receivedValue, senderId, destinationId, rnd, dval);
                 }
-                close(connfd);
+                //close(connfd);
             }
         }
         
@@ -380,6 +404,12 @@ int main(int argc, char *argv[])
         
         value = initialValue;
         Bracha_broadcast(processId, value, 0, rnd, dval);
+
+        if (rnd == 1) {
+            sem_wait(sem_init_brd);
+            printf("Process %d done waiting for broadcast init\n", processId);
+            sem_close(sem_init_brd);
+        }
 
         int receivedMessage[7]; 
         int n = 0;
@@ -405,6 +435,8 @@ int main(int argc, char *argv[])
             }
             
             // Then accept new messages
+
+            /*
             connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
             if (connfd == -1)
@@ -412,8 +444,9 @@ int main(int argc, char *argv[])
                 perror("[Process] Accept failure");
                 exit(EXIT_FAILURE);
             } 
+            */
             
-            int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+            int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
             if (nbytes == -1)
             {
                 perror("[Process] Recv failure");
@@ -446,7 +479,7 @@ int main(int argc, char *argv[])
                 }
                 send(-1, &valuesCount, sizeof(valuesCount), 0);
             }
-            close(connfd);
+            //close(connfd);
         }
         // #####################
 
@@ -493,6 +526,8 @@ int main(int argc, char *argv[])
             }
             
             // Then accept new messages
+
+            /*
             connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
             if (connfd == -1)
@@ -500,8 +535,9 @@ int main(int argc, char *argv[])
                 perror("[Process] Accept failure");
                 exit(EXIT_FAILURE);
             } 
+            */
             
-            int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+            int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
             if (nbytes == -1)
             {
                 perror("[Process] Recv failure");
@@ -534,7 +570,7 @@ int main(int argc, char *argv[])
                 }
                 send(-1, &valuesCount, sizeof(valuesCount), 0);
             }
-            close(connfd);
+            //close(connfd);
         }
         // #####################
 
@@ -578,6 +614,8 @@ int main(int argc, char *argv[])
             }
             
             // Then accept new messages
+
+            /*
             connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
             
             if (connfd == -1)
@@ -585,8 +623,9 @@ int main(int argc, char *argv[])
                 perror("[Process] Accept failure");
                 exit(EXIT_FAILURE);
             } 
+            */
             
-            int nbytes = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+            int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
             if (nbytes == -1)
             {
                 perror("[Process] Recv failure");
@@ -619,7 +658,7 @@ int main(int argc, char *argv[])
                 }
                 send(-1, &valuesCount, sizeof(valuesCount), 0);
             }
-            close(connfd);
+            //close(connfd);
         }
         // #####################
 

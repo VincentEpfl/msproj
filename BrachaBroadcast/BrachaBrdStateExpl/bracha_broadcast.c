@@ -63,16 +63,16 @@ void Bracha_broadcast(int originProcess, int value, int tag)
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(PORT_BASE + i);
         inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-        */
-       sockfd = 1;
         
-        /*
+        
         if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
         {
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
         */
+
+       sockfd = 1;
         
 
         send(sockfd, &message, sizeof(message), 0);
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
             processMessages(originProcess, receivedValue, senderId, tag);
             // This is where it registers its state to the controller 
             // TODO check if ok to do it here 
-            int valuesCount[3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
+            int valuesCount[3][N][2]; // TODO cast to char * ???
             for (int t = 0; t < 3; t++) {
                 for (int op = 0; op < N; op++) {
                     valuesCount[t][op][0] = countDistinctProcessesForValue(op, 0, t);
