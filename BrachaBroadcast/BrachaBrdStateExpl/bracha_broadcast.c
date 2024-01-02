@@ -66,11 +66,13 @@ void Bracha_broadcast(int originProcess, int value, int tag)
         */
        sockfd = 1;
         
+        /*
         if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
         {
             perror("[Process] Connect failure");
             exit(EXIT_FAILURE);
         }
+        */
         
 
         send(sockfd, &message, sizeof(message), 0);
