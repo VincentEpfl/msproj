@@ -22,10 +22,13 @@
 #define N 3 // Total number of processes
 #define T 0 // Maximum number of Byzantine processes
 
+// ALGO CHG
 // Message struct
 typedef struct
 {
   int type;   // send:0 or recv:1
+  int round;
+  int tag;
   int from;   // -1 for recv msg, because can recv from any process
   int to;     // for recv msg this is the process that wants to recv
   int msg;    // for recv put -1
@@ -50,11 +53,16 @@ typedef struct
   int len;             // len of forkPath
   pid_t forkPath[500]; // what should be max length ?
 
+// ALGO CHG
   // received value format :
-  // { process i :
-  //     {#0s i recv from different processes, #1s i recv from different processes},
+  // { for each process :
+  //   { at round :
+  //    { tag (EST/AUX):
+  //      {#0s recv from different processes, #1s recv from different processes},
+  //    },
+  //  },
   // }
-  int valuesCount[N][2];
+  int valuesCount[N][10][2][2];
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
 
@@ -78,7 +86,7 @@ State systemStates[1000] = {
     {
         0,
         {0},
-        {{0, 0}},
+        {{{{0, 0}}}},
         0},
 };
 
@@ -127,15 +135,18 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
   return 0;
 }
 
+// ALGO CHG
 void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
-  msgbuffer[index].from = receivedMessage[1];
-  msgbuffer[index].to = receivedMessage[2];
-  msgbuffer[index].msg = receivedMessage[3];
+  msgbuffer[index].round = receivedMessage[1];
+  msgbuffer[index].tag = receivedMessage[2];
+  msgbuffer[index].from = receivedMessage[3];
+  msgbuffer[index].to = receivedMessage[4];
+  msgbuffer[index].msg = receivedMessage[5];
   msgbuffer[index].connfd = -1;
-  msgbuffer[index].forkId = receivedMessage[4];
-  msgbuffer[index].echo = receivedMessage[5];
+  msgbuffer[index].forkId = receivedMessage[6];
+  msgbuffer[index].echo = receivedMessage[7];
   msgbuffer[index].numDelivered = 0;
   for (int d = 0; d < 500; d++)
   {
@@ -230,7 +241,8 @@ void spawnProcesses()
 
       // Replace child process with BV-broadcast process
       setenv("LD_PRELOAD", "./redirect.so", 1);
-      execl("./bv_broadcast", "bv_broadcast", processIdStr, initialValueStr, (char *)NULL);
+      // ALGO CHG
+      execl("./bv_consensus", "bv_consensus", processIdStr, initialValueStr, (char *)NULL);
       perror("execl failed");
       exit(EXIT_FAILURE); // Exit if execl fails
     }
@@ -282,20 +294,21 @@ void init()
   systemStates[0].len = 1;
   systemStates[0].forkPath[0] = 0;
 
+// ALGO CHG
   // Create the semaphore
-  sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 0);
+  sem = sem_open("/sem_bv_consensus", O_CREAT, 0644, 0);
   if (sem == SEM_FAILED)
   {
     if (errno == EEXIST)
     {
       // Semaphore already exists, try to unlink and create again
       printf("Semaphore already exists, trying to recreate it.\n");
-      if (sem_unlink("/sem_bv_broadcast") == -1)
+      if (sem_unlink("/sem_bv_consensus") == -1)
       {
         perror("Error unlinking semaphore");
         exit(EXIT_FAILURE);
       }
-      sem = sem_open("/sem_bv_broadcast", O_CREAT, 0644, 1);
+      sem = sem_open("/sem_bv_consensus", O_CREAT, 0644, 1);
       if (sem == SEM_FAILED)
       {
         perror("Error creating semaphore after unlinking");
@@ -311,19 +324,19 @@ void init()
   }
 
   // Create the semaphore init brd
-  sem_init_brd = sem_open("/sem_bv_broadcast_init_brd", O_CREAT, 0644, 0);
+  sem_init_brd = sem_open("/sem_bv_consensus_init_brd", O_CREAT, 0644, 0);
   if (sem_init_brd == SEM_FAILED)
   {
     if (errno == EEXIST)
     {
       // Semaphore already exists, try to unlink and create again
       printf("Semaphore already exists, trying to recreate it.\n");
-      if (sem_unlink("/sem_bv_broadcast_init_brd") == -1)
+      if (sem_unlink("/sem_bv_consensus_init_brd") == -1)
       {
         perror("Error unlinking semaphore");
         exit(EXIT_FAILURE);
       }
-      sem_init_brd = sem_open("/sem_bv_broadcast_init_brd", O_CREAT, 0644, 1);
+      sem_init_brd = sem_open("/sem_bv_consensus_init_brd", O_CREAT, 0644, 1);
       if (sem == SEM_FAILED)
       {
         perror("Error creating semaphore after unlinking");
@@ -357,98 +370,53 @@ void schedule_new_process()
   // printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
+// ALGO CHG
 // Compares the state of the system
 // Returns false if state1 != state2
-bool compareState(int state1[N][2], int state2[N][2])
+bool compareState(int state1[N][10][2][2], int state2[N][10][2][2])
 {
-  for (int i = 0; i < N; i++)
-  {
-    for (int j = 0; j < 2; j++)
-    {
-      if (state1[i][j] != state2[i][j])
-      {
-        return false;
+  for (int p = 0; p < N; p++) {
+    for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+      for (int t = 0; t < 2; t++) {
+          for (int v = 0; v < 2; v++)
+          {
+            if (state1[p][r][t][v] != state2[p][r][t][v])
+            {
+              return false;
+            }
+          }
+        }
       }
     }
-  }
+  
   return true;
 }
 
+// ALGO CHG
 // Compares the state of 2 processes
 // Returns false if processState1 != processState2
-bool compareProcessState(int processState1[2], int processState2[2])
+bool compareProcessState(int processState1[10][2][2], int processState2[10][2][2])
 {
-  for (int i = 0; i < 2; i++)
-  {
-    if (processState1[i] != processState2[i])
-    {
-      return false;
+  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+    for (int t = 0; t < 2; t++) {
+        for (int v = 0; v < 2; v++)
+        {
+          if (processState1[r][t][v] != processState2[r][t][v])
+          {
+            return false;
+          }
+        }
+      
     }
   }
   return true;
 }
 
+// ALGO CHG
+// TODO check properties
 bool checkStateValid(int state[N][2])
 {
-  // TODO do that except for the byzantines processes (technically that's the property)
-  // TODO check the other properties
-  int committed_values[N][2];
-  for (int i = 0; i < N; i++)
-  {
-    for (int j = 0; j < 2; j++)
-    {
-      if (state[i][j] > 2 * T)
-      { // Have to modify for bug
-        committed_values[i][j] = 1;
-      }
-      else
-      {
-        committed_values[i][j] = 0;
-      }
-    }
-  }
-  bool valid = true;
-  if (committed_values[0][0] == 0)
-  {
-    for (int i = 1; i < N; i++)
-    {
-      if (committed_values[i][0] != 0)
-      {
-        valid = false;
-      }
-    }
-  }
-  else
-  {
-    for (int i = 1; i < N; i++)
-    {
-      if (committed_values[i][0] != 1)
-      {
-        valid = false;
-      }
-    }
-  }
-  if (committed_values[0][1] == 0)
-  {
-    for (int i = 1; i < N; i++)
-    {
-      if (committed_values[i][1] != 0)
-      {
-        valid = false;
-      }
-    }
-  }
-  else
-  {
-    for (int i = 1; i < N; i++)
-    {
-      if (committed_values[i][1] != 1)
-      {
-        valid = false;
-      }
-    }
-  }
-  return valid;
+  return true;
 }
 
 bool checkAllStates()
@@ -473,13 +441,22 @@ bool checkAllStates()
         printf("%d/", systemStates[s].forkPath[f]);
       }
       printf("\n");
+      // ALGO CHG
       printf("values count: \n");
       for (int p = 0; p < N; p++)
       {
         printf("process %d : {", p);
-        for (int v = 0; v < 2; v++)
-        {
-          printf("%d, ", systemStates[s].valuesCount[p][v]);
+        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+          printf("round %d : {", r);
+          for (int t = 0; t < 2; t++) {
+            printf("tag %d : {", t);
+              for (int v = 0; v < 2; v++)
+              {
+                printf("%d, ", systemStates[s].valuesCount[p][t][v]);
+              }
+            printf("}");
+          }
+          printf("}\n");
         }
         printf("}\n");
       }
@@ -497,10 +474,11 @@ void deliver_message(int delivered, int to)
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
 
+// ALGO CHG
 void printMessage(int index)
 {
-  printf("msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
-         msgbuffer[index].type, msgbuffer[index].from, msgbuffer[index].to, msgbuffer[index].msg, msgbuffer[index].connfd,
+  printf("msg:[t:%d, round:%d, tag:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
+         msgbuffer[index].type, msgbuffer[index].round, msgbuffer[index].tag, msgbuffer[index].from, msgbuffer[index].to, msgbuffer[index].msg, msgbuffer[index].connfd,
          msgbuffer[index].forkId, msgbuffer[index].numDelivered);
   if (msgbuffer[index].numDelivered > 0)
   {
@@ -628,6 +606,7 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
   }
 }
 
+// ALGO CHG TODO
 void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
 {
   // format fork: [1, from:processId, value:0/1]
@@ -647,14 +626,19 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   //printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
 }
 
+// ALGO CHG
 void duplicateState(int originState, int destState)
 {
   // Copies the state to update into a new state object in the array of states
-  for (int l = 0; l < N; l++)
+  for (int p = 0; p < N; p++)
   {
-    for (int m = 0; m < 2; m++)
-    {
-      systemStates[destState].valuesCount[l][m] = systemStates[originState].valuesCount[l][m];
+    for (int r = 0; r < 10; r++) {
+      for (int t = 0; t < 2; t++) {
+          for (int v = 0; v < 2; v++)
+          {
+            systemStates[destState].valuesCount[p][r][t][v] = systemStates[originState].valuesCount[p][r][t][v];
+          }
+      }
     }
   }
 
@@ -666,13 +650,18 @@ void duplicateState(int originState, int destState)
   systemStates[destState].len = systemStates[originState].len;
 }
 
+// AGLO CHG
 void updateState(int stateToUpdate, int forkid, int *newProcessState, int updatedProcess)
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
-  for (int l = 0; l < 2; l++)
-  {
-    systemStates[stateToUpdate].valuesCount[updatedProcess][l] = newProcessState[l];
+  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+    for (int t = 0; t < 2; t++) {
+        for (int v = 0; v < 2; v++)
+        {
+          systemStates[stateToUpdate].valuesCount[updatedProcess][r][t][v] = newProcessState[r][t][v];
+        }
+    }
   }
 }
 
@@ -721,15 +710,24 @@ void printControllerState(State *systemStates, int numStates)
     }
     printf("\n");
     printf("[Controller] values count: \n");
+    // ALGO CHG
     for (int p = 0; p < N; p++)
-    {
-      printf("process %d : {", p);
-      for (int v = 0; v < 2; v++)
       {
-        printf("%d, ", systemStates[s].valuesCount[p][v]);
+        printf("process %d : {", p);
+        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+          printf("round %d : {", r);
+          for (int t = 0; t < 2; t++) {
+            printf("tag %d : {", t);
+              for (int v = 0; v < 2; v++)
+              {
+                printf("%d, ", systemStates[s].valuesCount[p][r][t][v]);
+              }
+            printf("}");
+          }
+          printf("}\n");
+        }
+        printf("}\n");
       }
-      printf("}\n");
-    }
     printf("[Controller] messages exchanged: \n");
     for (int f = 0; f < systemStates[s].len; f++)
     {
@@ -887,6 +885,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       printf("]\n");
       */
+
+     // ALGO CHG TODO
       int messageNoAction[4] = {3, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
       sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
       forkidNoAction = forkInfoNoAction[0];
@@ -907,6 +907,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     int newProcessState[2];
     int forkInfo[2];
+    // ALGO CHG TODO
     int message[4] = {1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
     sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
     int forkid0 = forkInfo[0];
@@ -920,6 +921,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
+      // ALGO CHG TODO
       int messageOp[4] = {1, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
       int newProcessStateOp[2];
       int forkInfoOp[2];
@@ -932,6 +934,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         // Here I consider that I kill forkid1 by default
 
         //printf("[Controller] Same result: kill a child\n");
+        // ALGO CHG TODO
         int killMessage[4] = {2, -1, -1, -1};
         if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
         {

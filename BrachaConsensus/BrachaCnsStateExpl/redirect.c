@@ -67,11 +67,23 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // Send feedback message to the controller
   //printf("[Intercept] Send feedback\n");
-  int *intBuf = (int *)buf; 
-  int feedbackMessage[3];
-  feedbackMessage[0] = forkId;         
-  feedbackMessage[1] = intBuf[0]; 
-  feedbackMessage[2] = intBuf[1]; 
+  int *intBuf = (int *)buf; // TODO check that this cast is ok for [][][]
+  int feedbackMessagePrev[3];
+  feedbackMessagePrev[0] = forkId;  // TODO check how to add the forkid correctly to [][][][]       
+  feedbackMessagePrev[1] = intBuf[0]; 
+  feedbackMessagePrev[2] = intBuf[1]; 
+
+// ALGO CHG
+  int feedbackMessage[10][3][N][2];
+  for (int r = 0; r < 10; r++) {
+    for (int t = 0; t < 3; t++) {
+      for (int op = 0; op < N; op++) {
+        feedbackMessage[r][t][op][0] = intBuf[r][t][op][0];
+        feedbackMessage[r][t][op][1] = intBuf[r][t][op][1];
+      }
+    }
+  }
+  // TODO add forkId
 
   ssize_t bytes_sent = real_send(feedback_socket, &feedbackMessage, sizeof(feedbackMessage), 0);
 
@@ -110,18 +122,23 @@ send(int sockfd, const void *buf, size_t len, int flags)
   // Send (redirect) the message to the controller
   //printf("[Intercept] Send\n");
   
-  int sendMessage[6];
+  // ALGO CHG
+  int sendMessage[10];
   sendMessage[0] = 0;         // type = send
-  sendMessage[1] = intBuf[0]; // from = first elem of msg
+  sendMessage[1] = intBuf[0]; // round
+  sendMessage[2] = intBuf[1]; // origin = first elem of msg
+  sendMessage[3] = intBuf[2]; // tag = sec elem of msg
+  sendMessage[4] = intBuf[3]; // from = third elem of msg
   //sendMessage[2] = processId; // to = determine from sock fd dest port
-  sendMessage[2] = intBuf[2]; 
-  sendMessage[3] = intBuf[1]; // msg = second elem of msg
-  sendMessage[4] = forkId;    // forkId
+  sendMessage[5] = intBuf[5]; 
+  sendMessage[6] = intBuf[4]; // msg = 4th elem of msg
+  sendMessage[7] = intBuf[6]; // dval
+  sendMessage[8] = forkId;    // forkId
 
-  if (sendMsgCounter > N - 1) { // if echo message
-    sendMessage[5] = 1; // set the echo tag
+  if (intBuf[1] > 0) { // if echo message
+    sendMessage[9] = 1; // set the echo tag
   } else {
-    sendMessage[5] = 0; // not an echo message
+    sendMessage[9] = 0; // not an echo message
   }
 
   ssize_t bytes_sent = real_send(controller_socket, &sendMessage, sizeof(sendMessage), 0);
@@ -184,13 +201,19 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
   // Send a message to the controller that this process is ready to receive
   //printf("[Intercept] send to controller\n");
-  int sendMessage[6];
+
+  // ALGO CHG
+  int sendMessage[10];
   sendMessage[0] = 1;         // type = recv
-  sendMessage[1] = -1;        // from = first elem of msg
-  sendMessage[2] = processId; // to = determine from sock fd port IF NO do trick osef put param or put serv address in global and access here whatev... no energy for this shit
-  sendMessage[3] = -1;        // msg = -1 recv msg
-  sendMessage[4] = forkId;    // forkId
-  sendMessage[5] = -1; // echo tag
+  sendMessage[1] = -1;         // round
+  sendMessage[2] = -1;         // origin
+  sendMessage[3] = -1;         // tag
+  sendMessage[4] = -1;        // from = first elem of msg
+  sendMessage[5] = processId; // to = determine from sock fd port IF NO do trick osef put param or put serv address in global and access here whatev... no energy for this shit
+  sendMessage[6] = -1;        // msg = -1 recv msg
+  sendMessage[7] = -1;        // dval
+  sendMessage[8] = forkId;    // forkId
+  sendMessage[9] = -1; // echo tag
 
 
   ssize_t bytes_sent = real_send(controller_socket, sendMessage, sizeof(sendMessage), 0);
@@ -207,7 +230,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   // reliable and no reorder) instead of SOCK_STREAM (TCP like)
 
   // Message format
-  int receivedMessage[4];
+  int receivedMessage[8];
 
   pid_t children[100]; // how many max ?
   int i = 0;
@@ -228,11 +251,16 @@ recv(int sockfd, void *buf, size_t len, int flags)
       exit(EXIT_SUCCESS);
     }
 
+// ALGO CHG
     int instruction = receivedMessage[0];
-    int from = receivedMessage[1];
-    int value = receivedMessage[2];
-    int to = receivedMessage[3];
-    printf("[Intercept in p%d] recv from controller, instr %d : {from:%d, value:%d, to:%d}\n", processId, instruction, from, value, to);
+    int round = receivedMessage[1];
+    int originProcess = receivedMessage[2];
+    int tag = receivedMessage[3];
+    int from = receivedMessage[4];
+    int value = receivedMessage[5];
+    int dval = receivedMessage[6];
+    int to = receivedMessage[7];
+    printf("[Intercept in p%d] recv from controller, instr %d : {round:%d, from:%d, value:%d, dval:%d, to:%d, origin:%d, tag:%d}\n", round, processId, instruction, from, value, dval, to, originProcess, tag);
     if (!(instruction == 1 || instruction == 2 || instruction == 3)) {
       perror("[Intercept] Bad instruction from controller");
       exit(EXIT_FAILURE);
@@ -254,11 +282,16 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
         forkId = getpid();
 
+// ALGO CHG
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
-        intBuf[0] = from;
-        intBuf[1] = value;
-        intBuf[2] = to;
+        intBuf[0] = round; 
+        intBuf[1] = originProcess;
+        intBuf[2] = tag;
+        intBuf[3] = from;
+        intBuf[4] = value;
+        intBuf[5] = to;
+        intBuf[6] = dval;
 
         close(controller_socket); // verify ok
         return bytes_received;
@@ -279,11 +312,16 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
         forkId = getpid();
 
+// ALGO CHG
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
-        intBuf[0] = processId; // from this process id
-        intBuf[1] = initValue; // the initial value of this process HARDCODE 0 TODO change for other cases
-        intBuf[2] = to;
+        intBuf[0] = round; 
+        intBuf[1] = originProcess;
+        intBuf[2] = 0; // TODO verify that this doesnt bloock or anything
+        intBuf[3] = processId;
+        intBuf[4] = initValue;
+        intBuf[5] = to;
+        intBuf[6] = 0; // init value dval always 0
 
         close(controller_socket); // verify ok
         return bytes_received;

@@ -10,15 +10,19 @@
 #define T 0 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
-int received_values[N][2] = {{0, 0}}; // Using an array to store the binary values (0 and 1)
-int processId;
+int received_values[N][2] = {{0, 0}}; // Values received by each process
 int hasBroadcasted[2] = {0, 0};  // Flags to check if the process has already broadcasted the values 0 and 1
 int committedValues[2] = {0, 0}; // Flags to check if the process has committed the values 0 and 1
 // actually this should be bin_values
 
+// This process id
+int processId;
+
 sem_t *sem;
 sem_t *sem_init_brd;
 
+// How many different processes sent a certain value 
+// to this process
 int countDistinctProcessesForValue(int value)
 {
     int count = 0;
@@ -32,6 +36,7 @@ int countDistinctProcessesForValue(int value)
     return count;
 }
 
+// BV broadcast
 void BV_broadcast(int value)
 {
     int sockfd;
@@ -88,6 +93,7 @@ void BV_broadcast(int value)
     }
 }
 
+// Process a received message 
 void processMessages(int value, int fromProcess)
 {
     received_values[fromProcess][value] = 1;
@@ -181,7 +187,7 @@ int main(int argc, char *argv[])
         sleep(5);
     }
 
-    // Now, broadcast the initial value
+    // Broadcast the initial value
     BV_broadcast(initialValue);
 
     // Something like that to be sure that all "normal" send messages are in the buffer first
@@ -193,7 +199,7 @@ int main(int argc, char *argv[])
     printf("Process %d done waiting for broadcast init\n", processId);
     sem_close(sem_init_brd);
 
-    int receivedMessage[3]; // To store both the sender's process ID and the value
+    int receivedMessage[3]; 
 
     // Listening loop
     while (1)
