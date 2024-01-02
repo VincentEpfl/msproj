@@ -235,7 +235,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", -1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
 // ALGO CHG
