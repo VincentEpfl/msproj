@@ -362,7 +362,7 @@ void init()
 
 void schedule_new_process()
 {
-  usleep(100000);
+  //usleep(100000);
   kill(current_process, SIGSTOP);
   current_process_index = (current_process_index + 1) % numProcesses;
   current_process = processes[current_process_index];
@@ -834,7 +834,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       printf("]\n");
     } 
     */
-    usleep(100000);
+    //usleep(100000);
     kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
 
     //msg_was_delivered = true; TODO handle with return value
@@ -971,7 +971,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         }
         else
         { // to be fair maybe also use schedule
-          usleep(100000);
+          //usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
@@ -1018,7 +1018,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           numProcesses = numProcesses - 1;
           processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
           processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
-          usleep(100000);
+          //usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid1;
@@ -1031,7 +1031,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         {
           numProcesses = numProcesses - 1;
           processes[numProcesses] = -1; // "delete" forkid1
-          usleep(100000);
+          //usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
@@ -1042,7 +1042,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         }
         else
         { // both are alive, just chose 1
-          usleep(100000);
+          //usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
