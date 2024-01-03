@@ -249,6 +249,13 @@ recv(int sockfd, void *buf, size_t len, int flags)
       perror("[Intercept] Bad instruction from controller");
       exit(EXIT_FAILURE);
     }
+
+    if (initValue == -1) {
+      if (tag == 0) {
+        initValue = value;
+      }
+    }
+
     // Say instruction 1 is fork
     if (instruction == 1)
     {
@@ -297,7 +304,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
 // ALGO CHG
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
-        intBuf[0] = originProcess;
+        intBuf[0] = processId;
         intBuf[1] = 0; // TODO check ok
         intBuf[2] = processId; // from this process id
         intBuf[3] = initValue; // the initial value of this process HARDCODE 0 TODO change for other cases
