@@ -83,7 +83,7 @@ void BV_broadcast(int value)
         */
         sockfd = 1;
         //sleep(1); // 
-        usleep(100000);
+        //usleep(100000);
 
         send(sockfd, &message, sizeof(message), 0);
 
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         //sleep(3); //
-        usleep(500000);
+        //usleep(500000);
         int senderId = receivedMessage[0];
         int receivedValue = receivedMessage[1];
         int destinationId = receivedMessage[2];

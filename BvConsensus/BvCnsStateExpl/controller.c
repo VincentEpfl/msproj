@@ -367,6 +367,7 @@ void schedule_new_process()
   current_process_index = (current_process_index + 1) % numProcesses;
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
+  usleep(10000);
   // printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
@@ -863,6 +864,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
     }
     kill(current_process, SIGCONT);
+    usleep(10000);
     // printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
     // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
@@ -971,6 +973,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(10000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
       }
@@ -1016,6 +1019,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           current_process = forkid1;
           current_process_index = forkid1_index - 1;
           kill(forkid1, SIGCONT);
+          usleep(10000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
         }
         else if (forkid1_killed)
@@ -1027,6 +1031,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(10000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
         else
@@ -1036,6 +1041,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(10000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
       }
