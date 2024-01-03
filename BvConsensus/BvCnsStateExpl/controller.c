@@ -1133,9 +1133,9 @@ int main()
       }
       if (len > 0)
       {
-        printf("[Controller] Something received : [t:%d, from:%d, to:%d, val:%d, forkid:%d]\n",
-               receivedMessage[0], receivedMessage[1], receivedMessage[2], receivedMessage[3],
-               receivedMessage[4]);
+        printf("[Controller] Something received : [t:%d, tag:%d, round:%d, from:%d, to:%d, val:%d, forkid:%d]\n",
+               receivedMessage[0], receivedMessage[1], receivedMessage[2],receivedMessage[3], receivedMessage[5], receivedMessage[4],
+               receivedMessage[6]);
 
         // Store received message in the message array
         put_msg_in_buffer(i, receivedMessage);
