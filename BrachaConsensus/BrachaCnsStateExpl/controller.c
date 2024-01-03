@@ -19,8 +19,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 3 // Total number of processes
-#define T 0 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 // ALGO CHG
 // Message struct
