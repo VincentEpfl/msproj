@@ -113,10 +113,10 @@ int countDistinctProcessesForValueAux(int value, int roundNumber)
 
 // Condition to get out of the AUX waiting loop
 bool waitcondition(int * values, int roundNumber) {
-    printf("#distinct 0 from AUX msg : %d\n", countDistinctProcessesForValueAux(0, roundNumber));
-    printf("#distinct 1 from AUX msg : %d\n", countDistinctProcessesForValueAux(1, roundNumber));
-    printf("committed value 0 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[0]);
-    printf("committed value 1 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[1]);
+    //printf("#distinct 0 from AUX msg : %d\n", countDistinctProcessesForValueAux(0, roundNumber));
+    //printf("#distinct 1 from AUX msg : %d\n", countDistinctProcessesForValueAux(1, roundNumber));
+    //printf("committed value 0 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[0]);
+    //printf("committed value 1 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[1]);
     bool cond = false;
     // BUG N - T -> N - T - 1 
     if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[0] == 1) {
@@ -142,7 +142,7 @@ void broadcast(int value, int roundNumber) {
         if (i == processId)
         {
             // Send value to itself + receive
-            printf("Process %d, Round %d : Value %d sent to myself with tag AUX\n", processId, rnd, value);
+            //printf("Process %d, Round %d : Value %d sent to myself with tag AUX\n", processId, rnd, value);
             roundsInfo[roundNumber].received_values_aux[processId][value] = 1;
             continue;
         }
@@ -167,7 +167,7 @@ void broadcast(int value, int roundNumber) {
         // TO HELP TRIGGER BUG
         usleep(100000);
         send(sockfd, &message, sizeof(message), 0);
-        printf("Process %d, Round %d : Value %d sent to process %d with tag AUX\n", processId, rnd, value, i);
+        //printf("Process %d, Round %d : Value %d sent to process %d with tag AUX\n", processId, rnd, value, i);
         //close(sockfd);
     }
 }
@@ -196,14 +196,14 @@ void BV_broadcast(int value, int roundNumber)
         if (i == processId)
         {
             // Send value to itself + receive
-            printf("Process %d, Round %d : Value %d sent to myself with tag EST\n", processId, rnd, value);
+            //printf("Process %d, Round %d : Value %d sent to myself with tag EST\n", processId, rnd, value);
             roundsInfo[roundNumber].received_values[processId][value] = 1;
             int distinctCount = countDistinctProcessesForValue(value, roundNumber);
-            printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+            //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // BUG Introduce bug 2T -> 2T - 1
             if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
             {
-                printf("Process %d commits value %d\n", processId, value);
+                //printf("Process %d commits value %d\n", processId, value);
                 roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
             }
             
@@ -233,7 +233,7 @@ void BV_broadcast(int value, int roundNumber)
         usleep(100000);
         send(sockfd, &message, sizeof(message), 0);
 
-        printf("Process %d, Round %d : Value %d sent to process %d with tag EST\n", processId, rnd, value, i);
+        //printf("Process %d, Round %d : Value %d sent to process %d with tag EST\n", processId, rnd, value, i);
 
         //close(sockfd);
     }
@@ -244,11 +244,11 @@ void BVprocessMessages(int value, int fromProcess, int roundNumber)
 {
     roundsInfo[roundNumber].received_values[fromProcess][value] = 1;
     int distinctCount = countDistinctProcessesForValue(value, roundNumber);
-    printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
+    //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // BUG Introduce bug 2T -> 2T - 1
     if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
     {
-        printf("Process %d commits value %d\n", processId, value);
+        //printf("Process %d commits value %d\n", processId, value);
         roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
         
     }
@@ -262,7 +262,7 @@ void BVprocessMessages(int value, int fromProcess, int roundNumber)
 // Process any received message
 int processAllMessages(int type, int r, int value, int fromProcess, int toProcess, int roundNumber) {
     if (r > rnd) { 
-        printf("Store msg in buffer\n");
+        //printf("Store msg in buffer\n");
         roundsInfo[r].msgbuffer[roundsInfo[r].numMsg].type = type;
         roundsInfo[r].msgbuffer[roundsInfo[r].numMsg].roundNum = r;
         roundsInfo[r].msgbuffer[roundsInfo[r].numMsg].senderId = fromProcess;
@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
             break;
         }
         
-        printf("Process %d : Round %d, est = %d\n", processId, rnd, est);
+        //printf("Process %d : Round %d, est = %d\n", processId, rnd, est);
 
         // BV broadcast
 
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
         int receivedMessage[5]; // format (est/aux, round, source, val, destination)
         int n = 0;
 
-        printf("Enter EST loop\n");
+        //printf("Enter EST loop\n");
 
         // EST waiting loop
         while (roundsInfo[rnd].committedValues[0] == 0 && roundsInfo[rnd].committedValues[1] == 0)
@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
             int senderId = receivedMessage[2];
             int receivedValue = receivedMessage[3];
             int destinationId = receivedMessage[4];
-            printf("Process %d: Value %d received from process %d, round %d, type %d (1=EST)\n", processId, receivedValue, senderId, r, type);
+            //printf("Process %d: Value %d received from process %d, round %d, type %d (1=EST)\n", processId, receivedValue, senderId, r, type);
             if (receivedValue >= 0)
             { // Ignore special signals
                 int err = processAllMessages(type, r, receivedValue, senderId, destinationId, rnd);
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
             //close(connfd);
         }
 
-        printf("Out of EST loop\n");
+        //printf("Out of EST loop\n");
 
         // Broadcast
 
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 
         broadcast(w, rnd);
 
-        printf("Enter AUX loop\n");
+        //printf("Enter AUX loop\n");
 
         int values[2] = {0, 0};
         int n2 = 0;
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
             int senderId = receivedMessage[2];
             int receivedValue = receivedMessage[3];
             int destinationId = receivedMessage[4];
-            printf("Process %d: Value %d received from process %d, round %d, type %d (1=EST)\n", processId, receivedValue, senderId, r, type);
+            //printf("Process %d: Value %d received from process %d, round %d, type %d (1=EST)\n", processId, receivedValue, senderId, r, type);
             if (receivedValue >= 0)
             { // Ignore special signals
                 int err = processAllMessages(type, r, receivedValue, senderId, destinationId, rnd);
@@ -539,11 +539,11 @@ int main(int argc, char *argv[])
             //close(connfd);
         }
 
-        printf("Out of AUX loop\n");
-        printf("values = [%d, %d]\n", values[0], values[1]);
+        //printf("Out of AUX loop\n");
+        //printf("values = [%d, %d]\n", values[0], values[1]);
 
         int s = randomBit(); // Get the common coin value for this round
-        printf("s = %d\n", s);
+        //printf("s = %d\n", s);
 
         // Decision logic based on received values and common coin
         if (values[0] && values[1]) {
@@ -553,9 +553,9 @@ int main(int argc, char *argv[])
             if (!decided) {
                 // Decide on the value if it matches the common coin
                 decided = true;
-                printf("#############################################\n");
+                //printf("#############################################\n");
                 printf("Process %d decides on value %d\n", processId, s);
-                printf("#############################################\n");
+                //printf("#############################################\n");
             }
             est = s;
         } else {

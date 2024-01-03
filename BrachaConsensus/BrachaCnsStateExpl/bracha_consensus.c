@@ -192,7 +192,7 @@ void Bracha_broadcast(int originProcess, int value, int tag, int round, int dval
 
         send(sockfd, &message, sizeof(message), 0);
 
-        printf("Process %d, round %d : Value %d sent to process %d with tag %d\n", processId, round, value, i, tag);
+        //printf("Process %d, round %d : Value %d sent to process %d with tag %d\n", processId, round, value, i, tag);
 
         //close(sockfd);
     }
@@ -204,38 +204,38 @@ void brachaProcessMessages(int originProcess, int value, int fromProcess, int ta
 {
     roundsInfo[round].received_values[originProcess][tag][fromProcess][value] = 1;
     int distinctCount = countDistinctProcessesForValue(originProcess, value, tag, round);
-    printf("Process %d, round %d : Value %d from p%d Tag %d distinct count: %d\n", processId, round, 
-    value, originProcess, tag, distinctCount);
+    //printf("Process %d, round %d : Value %d from p%d Tag %d distinct count: %d\n", processId, round, 
+    //value, originProcess, tag, distinctCount);
 
     // BUG in broadcast ?
     
     if (roundsInfo[round].step[originProcess][value] == 0 && ( countDistinctProcessesForValue(originProcess, value, 0, round) >= 1 
     || countDistinctProcessesForValue(originProcess, value, 1, round) >= (N+T)/2 + 1
     || countDistinctProcessesForValue(originProcess, value, 2, round) >= T+1 )) {
-        printf("Process %d, round %d : goes from step 0 to step 1 for value %d (origin p%d)\n", 
-        processId, round, value, originProcess);
+        //printf("Process %d, round %d : goes from step 0 to step 1 for value %d (origin p%d)\n", 
+        //processId, round, value, originProcess);
         roundsInfo[round].step[originProcess][value] = roundsInfo[round].step[originProcess][value] + 1;
         Bracha_broadcast(originProcess, value, roundsInfo[round].step[originProcess][value], round, dval);
     }
     if (roundsInfo[round].step[originProcess][value] == 1 && ( countDistinctProcessesForValue(originProcess, value, 1, round) >= (N+T)/2 + 1 
     || countDistinctProcessesForValue(originProcess, value, 2, round) >= T+1 )) {
-        printf("Process %d, round %d : goes from step 1 to step 2 for value %d (origin p%d)\n", 
-        processId, round, value, originProcess);
+        //printf("Process %d, round %d : goes from step 1 to step 2 for value %d (origin p%d)\n", 
+        //processId, round, value, originProcess);
         roundsInfo[round].step[originProcess][value] = roundsInfo[round].step[originProcess][value] + 1;
         Bracha_broadcast(originProcess, value, roundsInfo[round].step[originProcess][value], round, dval);
     }
     if (roundsInfo[round].step[originProcess][value] == 2 && countDistinctProcessesForValue(originProcess, value, 2, round) >= (2*T+1)) {
-        printf("Process %d, round %d : goes from step 2 to step 3 for value %d (origin p%d)\n", 
-        processId, round, value, originProcess);
+        //printf("Process %d, round %d : goes from step 2 to step 3 for value %d (origin p%d)\n", 
+        //processId, round, value, originProcess);
         roundsInfo[round].step[originProcess][value] = roundsInfo[round].step[originProcess][value] + 1;
         // Accept value
         roundsInfo[round].acceptedValue[originProcess] = value;
-        printf("###############################\n");
-        printf("Process %d, round %d: Value %d accepted from process %d.\n", processId, round, value, originProcess);
-        printf("###############################\n");
+        //printf("###############################\n");
+        //printf("Process %d, round %d: Value %d accepted from process %d.\n", processId, round, value, originProcess);
+        //printf("###############################\n");
         if (round == 1 && (value == 0 || value == 1)) { // TODO check init round is 0 or 1
             // add this msg to valid set
-            printf("Add this message to the valid set\n");
+            //printf("Add this message to the valid set\n");
             roundsInfo[round].validMsg[roundsInfo[round].numValid].originProcess = originProcess;
             roundsInfo[round].validMsg[roundsInfo[round].numValid].destinationId = processId;
             roundsInfo[round].validMsg[roundsInfo[round].numValid].receivedValue = value;
@@ -247,7 +247,7 @@ void brachaProcessMessages(int originProcess, int value, int fromProcess, int ta
         }
         if (round > 1 && (value == 0 || value == 1)) { // checkValidCond(value, round)
             // add this msg to valid set
-            printf("Add this message to the valid set\n");
+            //printf("Add this message to the valid set\n");
             roundsInfo[round].validMsg[roundsInfo[round].numValid].originProcess = originProcess;
             roundsInfo[round].validMsg[roundsInfo[round].numValid].destinationId = processId;
             roundsInfo[round].validMsg[roundsInfo[round].numValid].receivedValue = value;
@@ -265,7 +265,7 @@ void brachaProcessMessages(int originProcess, int value, int fromProcess, int ta
 // Process a received message
 int processMessage(int originProcess, int msgRound, int tag, int value, int fromProcess, int toProcess, int round, int dval) {
     if (msgRound > round) { 
-        printf("Store msg in buffer\n");
+        //printf("Store msg in buffer\n");
         roundsInfo[msgRound].msgbuffer[roundsInfo[msgRound].numMsg].originProcess = originProcess;
         roundsInfo[msgRound].msgbuffer[roundsInfo[msgRound].numMsg].tag = tag;
         roundsInfo[msgRound].msgbuffer[roundsInfo[msgRound].numMsg].roundNum = msgRound;
@@ -352,8 +352,8 @@ int main(int argc, char *argv[])
             printf("\n");
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             printf("\n");
-            printf("###############################\n");
-            printf("###############################\n");
+            //printf("###############################\n");
+            //printf("###############################\n");
             
             while(1) {
                 int receivedMessage[7]; 
@@ -382,8 +382,8 @@ int main(int argc, char *argv[])
                 int receivedValue = receivedMessage[4];
                 int destinationId = receivedMessage[5];
                 int dval = receivedMessage[6];
-                printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
-                rnd, receivedValue, dval, senderId, originProcess, tag, r);
+                //printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
+                //rnd, receivedValue, dval, senderId, originProcess, tag, r);
                 if (receivedValue >= 0)
                 { // Ignore special signals
                     processMessage(originProcess, r, tag, receivedValue, senderId, destinationId, rnd, dval);
@@ -392,13 +392,13 @@ int main(int argc, char *argv[])
             }
         }
         
-        printf("Process %d : Phase %d, \n", processId, phase);
+        //printf("Process %d : Phase %d, \n", processId, phase);
 
         // #####################
         // 1st broadcast
 
         rnd = 3*phase + 1;
-        printf("Process %d : Round %d, \n", processId, rnd);
+        //printf("Process %d : Round %d, \n", processId, rnd);
 
         // Broadcast the initial value
         
@@ -460,8 +460,8 @@ int main(int argc, char *argv[])
             int receivedValue = receivedMessage[4];
             int destinationId = receivedMessage[5];
             int dval = receivedMessage[6];
-            printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
-            rnd, receivedValue, dval, senderId, originProcess, tag, r);
+            //printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
+            //rnd, receivedValue, dval, senderId, originProcess, tag, r);
             if (receivedValue >= 0)
             { // Ignore special signals
                 processMessage(originProcess, r, tag, receivedValue, senderId, destinationId, rnd, dval);
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
         // #####################
         // 2nd broadcast
         rnd = 3*phase + 2;
-        printf("Process %d : Round %d, \n", processId, rnd);
+        //printf("Process %d : Round %d, \n", processId, rnd);
 
         // Broadcast value
         Bracha_broadcast(processId, value, 0, rnd, dval);
@@ -551,8 +551,8 @@ int main(int argc, char *argv[])
             int receivedValue = receivedMessage[4];
             int destinationId = receivedMessage[5];
             int dval = receivedMessage[6];
-            printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
-            rnd, receivedValue, dval, senderId, originProcess, tag, r);
+            //printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
+            //rnd, receivedValue, dval, senderId, originProcess, tag, r);
             if (receivedValue >= 0)
             { // Ignore special signals
                 processMessage(originProcess, r, tag, receivedValue, senderId, destinationId, rnd, dval);
@@ -586,7 +586,7 @@ int main(int argc, char *argv[])
         // #####################
         // 3rd broadcast
         rnd = 3*phase + 3;
-        printf("Process %d : Round %d, \n", processId, rnd);
+        //printf("Process %d : Round %d, \n", processId, rnd);
 
         // Broadcast value
         Bracha_broadcast(processId, value, 0, rnd, dval);
@@ -639,8 +639,8 @@ int main(int argc, char *argv[])
             int receivedValue = receivedMessage[4];
             int destinationId = receivedMessage[5];
             int dval = receivedMessage[6];
-            printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
-            rnd, receivedValue, dval, senderId, originProcess, tag, r);
+            //printf("Process %d Round %d : Value %d (dval %d) received from process %d (origin %d) with tag %d in round %d\n", processId, 
+            //rnd, receivedValue, dval, senderId, originProcess, tag, r);
             if (receivedValue >= 0)
             { // Ignore special signals
                 processMessage(originProcess, r, tag, receivedValue, senderId, destinationId, rnd, dval);
@@ -686,13 +686,13 @@ int main(int argc, char *argv[])
         // Process decided
         if (decision != -1) {
             printf("\n");
-            printf("###############################\n");
-            printf("###############################\n");
-            printf("\n");
+            //printf("###############################\n");
+            //printf("###############################\n");
+            //printf("\n");
             printf("Process %d: Value %d decided.\n", processId, decision);
             printf("\n");
-            printf("###############################\n");
-            printf("###############################\n");
+            //printf("###############################\n");
+            //printf("###############################\n");
         }
 
         phase++;
