@@ -218,7 +218,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   // Message format
   int receivedMessage[6];
 
-  pid_t children[100]; // how many max ?
+  pid_t children[1000]; // how many max ?
   int i = 0;
 
   //printf("[Intercept] wait for controller instructions\n");

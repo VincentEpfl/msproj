@@ -35,7 +35,7 @@ typedef struct
   int forkId;
   int echo;           // 0 if not an echo msg, 1 if echo msg, -1 for recv msg
   int numDelivered;   // number of times it was delivered, always 0 or 1 for recv
-  int delivered[500]; // forkIds where it was delivered
+  int delivered[10000]; // forkIds where it was delivered
 } Message;
 
 // Message struct
@@ -50,7 +50,7 @@ typedef struct
 typedef struct
 {
   int len;             // len of forkPath
-  pid_t forkPath[500]; // what should be max length ?
+  pid_t forkPath[10000]; // what should be max length ?
 
   // received value format :
   // { for each process :
@@ -68,8 +68,8 @@ sem_t *sem;
 sem_t *sem_init_brd;
 
 // Array to store messages
-Message msgbuffer[1000];
-MessageTrace msghistory[1000];
+Message msgbuffer[10000];
+MessageTrace msghistory[10000];
 int nummsg = 0;
 
 // Array to store processes
@@ -79,7 +79,7 @@ pid_t current_process;
 int current_process_index;
 
 // What should be max number of system state that we can track in parallel ?
-State systemStates[1000] = {
+State systemStates[10000] = {
     // good or need init all inside ?
     {
         0,
@@ -146,7 +146,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
   msgbuffer[index].forkId = receivedMessage[6];
   msgbuffer[index].echo = receivedMessage[7];
   msgbuffer[index].numDelivered = 0;
-  for (int d = 0; d < 500; d++)
+  for (int d = 0; d < 10000; d++)
   {
     msgbuffer[index].delivered[d] = 0;
   }
@@ -210,7 +210,7 @@ int initSocket(bool feedback)
     exit(EXIT_FAILURE);
   }
 
-  if (listen(sockfd, 1000) == -1) // max queue capacity might be an issue ?
+  if (listen(sockfd, 10000) == -1) // max queue capacity might be an issue ?
   {
     perror("[Controller] listen");
     close(sockfd);
