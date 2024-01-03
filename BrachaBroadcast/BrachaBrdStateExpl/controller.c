@@ -612,9 +612,11 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 }
 
 // ALGO CHG
-void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
+void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo, int recvIndex)
 {
   printf("[Controller] sendMsgAndRecvState\n");
+  printf("[Controller] send_msg_index:%d\n", send_msg_index);
+  printf("[Controller] recvIndex:%d\n", recvIndex);
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int forkId;
@@ -907,7 +909,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
      // ALGO CHG
       int messageNoAction[6] = {3, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
-      sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
+      sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction, recvIndex); // TODO remove recvIndex
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
 
@@ -929,7 +931,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkInfo[2];
     // ALGO CHG
     int message[6] = {1, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
-    sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
+    sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo, recvIndex); // TODO remove recvIndex
     int forkid0 = forkInfo[0];
     int forkid0_index = forkInfo[1];
 
@@ -946,7 +948,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       int messageOp[6] = {1, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag,  msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
       int newProcessStateOp[3][N][2]; // ALGO CHG
       int forkInfoOp[2];
-      sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
+      sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp, recvIndex); // TODO remove recvIndex
       int forkid1 = forkInfoOp[0];
       int forkid1_index = forkInfoOp[1];
 
@@ -1229,7 +1231,7 @@ int main()
             printf("[Controller] Number of states we went through : %d\n", numStates);
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
             if (i % 20 == 0) {
-              printControllerState(systemStates, numStates);
+              //printControllerState(systemStates, numStates);
             }
           }
           close(connfd);
