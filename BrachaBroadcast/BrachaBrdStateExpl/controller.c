@@ -452,7 +452,7 @@ bool checkAllStates()
             }
             printf("}");
           }
-          printf("}");
+          printf("}\n");
         }
         
         printf("}\n");
@@ -725,7 +725,7 @@ void printControllerState(State *systemStates, int numStates)
               }
               printf("}");
             }
-            printf("}");
+            printf("}\n");
           }
         printf("}\n");
       }
