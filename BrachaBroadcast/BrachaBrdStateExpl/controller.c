@@ -579,6 +579,7 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
+  printf("[Controller] sendMsgToProcess\n");
   int *messageint = (int *)message;
   // printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
   if (send(connfd, message, msglen, 0) == -1)
@@ -610,6 +611,7 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 // ALGO CHG
 void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
 {
+  printf("[Controller] sendMsgAndRecvState\n");
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int forkId;
