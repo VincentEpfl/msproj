@@ -362,10 +362,12 @@ void init()
 
 void schedule_new_process()
 {
+  usleep(100000);
   kill(current_process, SIGSTOP);
   current_process_index = (current_process_index + 1) % numProcesses;
   current_process = processes[current_process_index];
   kill(current_process, SIGCONT);
+  usleep(100000);
   // printf("[Controller] scheduling process %d on forkId %d\n", current_process_index, current_process);
 }
 
@@ -832,7 +834,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       printf("]\n");
     } 
     */
-
+    usleep(100000);
     kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
 
     //msg_was_delivered = true; TODO handle with return value
@@ -863,6 +865,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
     }
     kill(current_process, SIGCONT);
+    usleep(100000);
     // printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
     // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
@@ -968,11 +971,13 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         }
         else
         { // to be fair maybe also use schedule
+          usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(100000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
       }
@@ -1013,31 +1018,37 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           numProcesses = numProcesses - 1;
           processes[numProcesses - 1] = processes[numProcesses]; // copy forkid1 in forkid0 place (overwrite forkid0)
           processes[numProcesses] = -1;                          // "delete" forkid1 : delete forkid0
+          usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid1;
           current_process_index = forkid1_index - 1;
           kill(forkid1, SIGCONT);
+          usleep(100000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid1);
         }
         else if (forkid1_killed)
         {
           numProcesses = numProcesses - 1;
           processes[numProcesses] = -1; // "delete" forkid1
+          usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(100000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
         else
         { // both are alive, just chose 1
+          usleep(100000);
           kill(current_process, SIGSTOP);
           // waiting_processes[num_waiting_processes++] = current_process;
           current_process = forkid0;
           current_process_index = forkid0_index;
           kill(forkid0, SIGCONT);
+          usleep(100000);
           // printf("[Controller] scheduling process %d on forkId %d\n", msgbuffer[j].to, forkid0);
         }
       }
