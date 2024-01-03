@@ -587,6 +587,7 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
     perror("[Controller] send failure");
     exit(EXIT_FAILURE);
   }
+  printf("[Controller] send to process\n");
 
   // Recover the resulting state
   // format [forkid, processState]
@@ -594,11 +595,13 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
   int feedback_connfd;
   if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
   {
+    printf("[Controller] accept feedback co\n");
     if (recv(feedback_connfd, recmsg, recmsglen, 0) == -1)
     {
       perror("[Controller] recv state feedback socket failure");
       exit(EXIT_FAILURE);
     }
+    printf("[Controller] recv feedback\n");
     close(feedback_connfd);
   }
   else
