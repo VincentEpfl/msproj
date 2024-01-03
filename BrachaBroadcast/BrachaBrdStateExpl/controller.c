@@ -95,6 +95,7 @@ int numStatesKilled = 0;
 
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
+  printf("[Controller] get_states_to_update\n");
   int numStatesToUpdate = 0;
   int posInForkPath = 0;
 
@@ -136,6 +137,7 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 // ALGO CHG
 void put_msg_in_buffer(int index, int *receivedMessage)
 {
+  printf("[Controller] put_msg_in_buffer\n");
   msgbuffer[index].type = receivedMessage[0];
   msgbuffer[index].originProcess = receivedMessage[1];
   msgbuffer[index].tag = receivedMessage[2];
@@ -618,7 +620,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   memcpy(&forkId, recmsg, sizeof(int));
   memcpy(newProcessState, recmsg + sizeof(int), sizeof(msg));
 
-  //printf("[Controller] state recovered\n");
+  printf("[Controller] state recovered\n");
   
   int *forkInfoInt = (int *)forkInfo;
   forkInfoInt[0] = forkId; 
@@ -765,6 +767,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     connfd = msgbuffer[recvIndex].connfd;
   }
 
+  printf("[Controller] handleMessagePair \n");
+
   // Look through the message array if the message it wants is
   // already there
 
@@ -788,6 +792,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
     }
   }
+  printf("[Controller] canDeliverRecvState\n");
 
   int statesToUpdate[numStatesToUpdateTemp2];
   int numStatesToUpdate = 0;
@@ -804,6 +809,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
     }
   }
+
+  printf("[Controller] canDeliverState\n");
 
   if (numStatesToUpdate != 0)
   // if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
@@ -866,7 +873,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     }
     kill(current_process, SIGCONT);
     usleep(10000);
-    // printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
+    printf("[Controller] Schedule process %d on forkId %d to send instructions\n", current_process_index, current_process);
 
     // If send message is an echo message (first check forkid != 0 then check echo tag I guess)
     //  send(connfd, msg[instr:delivernothing])
@@ -881,8 +888,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkidNoAction_index;
     if (msgbuffer[sendIndex].echo == 1 && numStatesNoAction > 0)
     {
-      /*
+      
       printf("[Controller] Received an echo message, try this\n");
+      /*
       printf("[Controller] States with no action :");
       printf("[");
       for (int s = 0; s < numStatesNoAction; s++)
@@ -905,6 +913,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to);
         // actual state should not change so no need to kill
       }
+      printf("[Controller] updateState\n");
 
       // here no need to update msghistory because for this id no message was received
     }
@@ -926,7 +935,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
-      //printf("[Controller] send opposite msg to receiver\n");
+      printf("[Controller] send opposite msg to receiver\n");
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG 
       int messageOp[6] = {1, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag,  msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
@@ -940,7 +949,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       {
         // Here I consider that I kill forkid1 by default
 
-        //printf("[Controller] Same result: kill a child\n");
+        printf("[Controller] Same result: kill a child\n");
 
         // ALGO CHG
         int killMessage[6] = {2, -1, -1, -1, -1, -1}; 
@@ -982,6 +991,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       else
       {
+        printf("[Controller] Diff result: duplicate\n");
         // add op msg to history
         addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue);
 
@@ -1149,7 +1159,7 @@ int main()
         if (receivedMessage[0] == 1)
         {
           // Recv message = a process wants to receive a message from another
-          //printf("[Controller] This is a recv message\n");
+          printf("[Controller] This is a recv message\n");
           // kill(current_process, SIGSTOP); //*
           msgbuffer[i].connfd = connfd;
           int r = 0;
@@ -1184,7 +1194,7 @@ int main()
         if (receivedMessage[0] == 0)
         {
           // This is a send message : a process sends some data to another
-          //printf("[Controller] This is a send message\n");
+          printf("[Controller] This is a send message\n");
           // kill(current_process, SIGSTOP);
           //  Go through the message buffer to see if the process waiting for this
           //  data is already there
