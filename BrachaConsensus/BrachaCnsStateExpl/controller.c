@@ -1105,7 +1105,7 @@ int main()
   // = msg recveived : stop process that sent, exec/continue a process in array
 
   // format : [send:0/recv:1, from:processId/-1, to:processId, value:0/1, forkid]
-  int receivedMessage[6];
+  int receivedMessage[10];
   int connfd;
   int i = 0;
   int noNewConnection = 0;
