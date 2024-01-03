@@ -192,11 +192,11 @@ recv(int sockfd, void *buf, size_t len, int flags)
   // ALGO CHG
   int sendMessage[8];
   sendMessage[0] = 1;         // type = recv
-  sendMessage[1] = -1;         // round
-  sendMessage[2] = -1;         // tag
+  sendMessage[1] = -1;         // tag
+  sendMessage[2] = -1;         // round
   sendMessage[3] = -1;        // from = first elem of msg
-  sendMessage[4] = processId; // to = determine from sock fd port IF NO do trick osef put param or put serv address in global and access here whatev... no energy for this shit
-  sendMessage[5] = -1;        // msg = -1 recv msg
+  sendMessage[4] = -1;        // msg = -1 recv msg
+  sendMessage[5] = processId; // to = determine from sock fd port IF NO do trick osef put param or put serv address in global and access here whatev... no energy for this shit
   sendMessage[6] = forkId;    // forkId
   sendMessage[7] = -1; // echo tag
 
@@ -297,7 +297,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         int *intBuf = (int *)buf;
 
         intBuf[0] = 0; // TODO verify that this doesnt block or anything
-        intBuf[1] = round; 
+        intBuf[1] = 0; // TODO verify that this doesnt block or anything
         intBuf[2] = processId; // from this process id
         intBuf[3] = initValue; // the initial value of this process HARDCODE 0 TODO change for other cases
         intBuf[4] = to;

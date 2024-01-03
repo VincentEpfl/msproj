@@ -139,11 +139,11 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
-  msgbuffer[index].round = receivedMessage[1];
-  msgbuffer[index].tag = receivedMessage[2]; // TODO attention index
+  msgbuffer[index].round = receivedMessage[2];
+  msgbuffer[index].tag = receivedMessage[1]; // TODO attention index
   msgbuffer[index].from = receivedMessage[3];
-  msgbuffer[index].to = receivedMessage[4];
-  msgbuffer[index].msg = receivedMessage[5];
+  msgbuffer[index].to = receivedMessage[5];
+  msgbuffer[index].msg = receivedMessage[4];
   msgbuffer[index].connfd = -1;
   msgbuffer[index].forkId = receivedMessage[6];
   msgbuffer[index].echo = receivedMessage[7];

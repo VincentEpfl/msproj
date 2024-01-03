@@ -139,7 +139,7 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
   return 0;
 }
 
-// ALGO CHG
+// ALGO CHG TODO verify indices with redirect + algo !!
 void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
