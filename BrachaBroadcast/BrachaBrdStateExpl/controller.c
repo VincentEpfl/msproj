@@ -731,7 +731,7 @@ void printControllerState(State *systemStates, int numStates)
         printf("}\n");
       }
 
-
+/*
     printf("[Controller] messages exchanged: \n");
     for (int f = 0; f < systemStates[s].len; f++)
     {
@@ -744,6 +744,7 @@ void printControllerState(State *systemStates, int numStates)
       }
       
     }
+    */
   }
 }
 
@@ -1212,6 +1213,9 @@ int main()
             nothingDelivered = 0;
             printf("[Controller] Number of states we went through : %d\n", numStates);
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
+            if (i % 20 == 0) {
+              printControllerState(systemStates, numStates);
+            }
           }
           close(connfd);
         }

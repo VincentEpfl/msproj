@@ -140,7 +140,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
   msgbuffer[index].round = receivedMessage[1];
-  msgbuffer[index].tag = receivedMessage[2];
+  msgbuffer[index].tag = receivedMessage[2]; // TODO attention index
   msgbuffer[index].from = receivedMessage[3];
   msgbuffer[index].to = receivedMessage[4];
   msgbuffer[index].msg = receivedMessage[5];
