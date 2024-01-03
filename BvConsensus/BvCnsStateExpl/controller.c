@@ -415,7 +415,7 @@ bool compareProcessState(int processState1[10][2][2], int processState2[10][2][2
 
 // ALGO CHG
 // TODO check properties
-bool checkStateValid(int state[N][2])
+bool checkStateValid(int state[N][10][2][2])
 {
   return true;
 }
@@ -453,7 +453,7 @@ bool checkAllStates()
             printf("tag %d : {", t);
               for (int v = 0; v < 2; v++)
               {
-                printf("%d, ", systemStates[s].valuesCount[p][t][v]);
+                printf("%d, ", systemStates[s].valuesCount[p][r][t][v]);
               }
             printf("}");
           }

@@ -424,7 +424,7 @@ bool compareProcessState(int processState1[10][3][N][2], int processState2[10][3
 
 // ALGO CHG
 // TODO check properties
-bool checkStateValid(int state[N][2])
+bool checkStateValid(int state[N][10][3][N][2])
 {
   return true;
 }
