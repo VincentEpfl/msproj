@@ -370,8 +370,8 @@ int main(int argc, char *argv[])
                     exit(EXIT_FAILURE);
                 }
 
-                int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -453,8 +453,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -542,8 +542,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 

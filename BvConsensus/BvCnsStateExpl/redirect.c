@@ -69,7 +69,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   //printf("[Intercept] Send feedback\n");
 
   // ALGO CHG
-  int message[10][2][2];
+  int message[2][2][2];
   char feedbackMessage[sizeof(forkId) + sizeof(message)];
   memcpy(feedbackMessage, &forkId, sizeof(forkId));
   memcpy(feedbackMessage + sizeof(forkId), buf, sizeof(message));

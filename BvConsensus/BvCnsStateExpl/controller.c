@@ -374,7 +374,7 @@ void schedule_new_process()
 // ALGO CHG
 // Compares the state of the system
 // Returns false if state1 != state2
-bool compareState(int state1[N][10][2][2], int state2[N][10][2][2])
+bool compareState(int state1[N][2][2][2], int state2[N][2][2][2])
 {
   for (int p = 0; p < N; p++) {
     for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
@@ -396,7 +396,7 @@ bool compareState(int state1[N][10][2][2], int state2[N][10][2][2])
 // ALGO CHG
 // Compares the state of 2 processes
 // Returns false if processState1 != processState2
-bool compareProcessState(int processState1[10][2][2], int processState2[10][2][2])
+bool compareProcessState(int processState1[2][2][2], int processState2[2][2][2])
 {
   for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
     for (int t = 0; t < 2; t++) {
@@ -415,7 +415,7 @@ bool compareProcessState(int processState1[10][2][2], int processState2[10][2][2
 
 // ALGO CHG
 // TODO check properties
-bool checkStateValid(int state[N][10][2][2])
+bool checkStateValid(int state[N][2][2][2])
 {
   return true;
 }
@@ -613,7 +613,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int forkId;
-  int msg[10][2][2];
+  int msg[2][2][2];
   char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
@@ -874,7 +874,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // do that here, also in the case where exploration (echo msg from p1/p3), same just
     // add the option to not deliver
     // also check kill state etc
-    int newProcessStateNoAction[10][2][2]; // ALGO CHG
+    int newProcessStateNoAction[2][2][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -910,7 +910,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // Try to send the message
 
-    int newProcessState[10][2][2]; // ALGO CHG
+    int newProcessState[2][2][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG TODO
     int message[6] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
@@ -928,7 +928,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG TODO
       int messageOp[6] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
-      int newProcessStateOp[10][2][2]; // ALGO CHG
+      int newProcessStateOp[2][2][2]; // ALGO CHG
       int forkInfoOp[2];
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
