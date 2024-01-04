@@ -180,8 +180,8 @@ int initSocket(bool feedback)
     struct timeval tv; // timeval structure to set the timeout
 
     // Set the timeout value
-    tv.tv_sec = 1;       // 1 seconds timeout
-    tv.tv_usec = 0; // 500000 microseconds
+    tv.tv_sec = 0;       // 1 seconds timeout
+    tv.tv_usec = 10000; // 500000 microseconds 10000
 
     // Set the timeout option
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv))
