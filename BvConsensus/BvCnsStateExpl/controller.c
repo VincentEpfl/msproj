@@ -181,7 +181,9 @@ int initSocket(bool feedback)
 
     // Set the timeout value
     tv.tv_sec = 0;       // 1 seconds timeout
-    tv.tv_usec = 10000; // 500000 microseconds 10000
+    tv.tv_usec = 10000; // 500000 microseconds ok with 10000 it works it goes fast but the pb is we end the program too fast
+    // so that is a problem we dont got through as many states (24 vs 36 with 1sec) but on the other
+    // hand it should be possible to end the program but keeping this
 
     // Set the timeout option
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv))
@@ -1105,7 +1107,7 @@ int main()
         usleep(10000);
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 150)
+        if (noNewConnection > 300) //150
         {
           break;
         }
