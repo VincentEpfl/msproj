@@ -62,7 +62,7 @@ typedef struct
   //    },
   //  },
   // }
-  int valuesCount[N][10][2][2];
+  int valuesCount[N][2][2][2];
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
 
@@ -377,7 +377,7 @@ void schedule_new_process()
 bool compareState(int state1[N][10][2][2], int state2[N][10][2][2])
 {
   for (int p = 0; p < N; p++) {
-    for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+    for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
       for (int t = 0; t < 2; t++) {
           for (int v = 0; v < 2; v++)
           {
@@ -398,7 +398,7 @@ bool compareState(int state1[N][10][2][2], int state2[N][10][2][2])
 // Returns false if processState1 != processState2
 bool compareProcessState(int processState1[10][2][2], int processState2[10][2][2])
 {
-  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+  for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
     for (int t = 0; t < 2; t++) {
         for (int v = 0; v < 2; v++)
         {
@@ -447,7 +447,7 @@ bool checkAllStates()
       for (int p = 0; p < N; p++)
       {
         printf("process %d : {", p);
-        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+        for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
           printf("round %d : {", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);
@@ -636,7 +636,7 @@ void duplicateState(int originState, int destState)
   // Copies the state to update into a new state object in the array of states
   for (int p = 0; p < N; p++)
   {
-    for (int r = 0; r < 10; r++) {
+    for (int r = 0; r < 2; r++) {
       for (int t = 0; t < 2; t++) {
           for (int v = 0; v < 2; v++)
           {
@@ -659,7 +659,7 @@ void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
-  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+  for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
     for (int t = 0; t < 2; t++) {
         for (int v = 0; v < 2; v++)
         {
@@ -718,7 +718,7 @@ void printControllerState(State *systemStates, int numStates)
     for (int p = 0; p < N; p++)
       {
         printf("process %d : {", p);
-        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+        for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
           printf("round %d : {", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);

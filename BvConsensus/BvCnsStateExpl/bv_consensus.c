@@ -357,9 +357,30 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (rnd > 5) {
+        if (rnd > 0) {
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
-            break;
+            //break;
+            while (1) {
+
+                int receivedMessage[5];
+                int nbytes = recv(listenfd, &receivedMessage, sizeof(receivedMessage), 0); // connfd-listenfd
+                if (nbytes == -1)
+                {
+                    perror("[Process] Recv failure");
+                    exit(EXIT_FAILURE);
+                }
+
+                int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                    valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
+                    valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
+
+                    valuesCount[r][1][0] = countDistinctProcessesForValueAux(0, r);
+                    valuesCount[r][1][1] = countDistinctProcessesForValueAux(1, r);
+                }
+                send(-1, &valuesCount, sizeof(valuesCount), 0);
+
+            }
         }
         
         //printf("Process %d : Round %d, est = %d\n", processId, rnd, est);
