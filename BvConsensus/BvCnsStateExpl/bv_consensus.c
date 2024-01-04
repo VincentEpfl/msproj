@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (rnd > 1) {
+        if (rnd > 0) {
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             //break;
             while (1) {
