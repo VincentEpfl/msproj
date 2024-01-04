@@ -119,11 +119,11 @@ bool waitcondition(int * values, int roundNumber) {
     //printf("committed value 1 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[1]);
     bool cond = false;
     // BUG N - T -> N - T - 1 
-    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[0] == 1) {
+    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[0] == 1) {
         values[0] = 1;
         cond = true;
     }
-    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[1] == 1) {
+    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[1] == 1) {
         values[1] = 1;
         cond = true;
     }
@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
                 int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 1; r <= 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -522,7 +522,7 @@ int main(int argc, char *argv[])
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
                 int valuesCount[10][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 1; r <= 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                for (int r = 0; r < 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
