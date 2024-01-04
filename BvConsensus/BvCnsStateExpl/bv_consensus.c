@@ -147,6 +147,7 @@ void broadcast(int value, int roundNumber) {
             continue;
         }
 
+        // ATTENTION AuX tag 0 here but 1 in msg
         int message[5] = {0, rnd, processId, value, i}; // format (est/aux, round, source, val, destination)
 
         /*
@@ -458,6 +459,7 @@ int main(int argc, char *argv[])
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
+                    // ATTENTION AuX tag 1 here but 0 in msg
                     valuesCount[r][1][0] = countDistinctProcessesForValueAux(0, r);
                     valuesCount[r][1][1] = countDistinctProcessesForValueAux(1, r);
                 }
