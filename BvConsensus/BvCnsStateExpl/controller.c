@@ -1102,6 +1102,7 @@ int main()
       if (errno == EWOULDBLOCK || errno == EAGAIN)
       {
         // printf("[Controller] No connections within the timeout period.\n");
+        usleep(10000);
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
         if (noNewConnection > 150)
@@ -1167,6 +1168,7 @@ int main()
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] recv msg was not delivered\n");
             schedule_new_process();
+            usleep(10000);
           }
           else
           {
@@ -1202,6 +1204,7 @@ int main()
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] send msg was not delivered\n");
             schedule_new_process();
+            usleep(10000);
           }
           else
           {
