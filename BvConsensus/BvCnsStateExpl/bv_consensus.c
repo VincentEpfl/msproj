@@ -371,6 +371,9 @@ int main(int argc, char *argv[])
                     exit(EXIT_FAILURE);
                 }
 
+                // TODO maybe should still processs message dans tous les cas ca ferait pas plus de broadcast
+                // mais le state renvoye juste apres serait + correct
+
                 int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
                 for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
