@@ -45,7 +45,7 @@ Message validMsg[100]; // Messages that have been validated
 } RoundInfo;
 
 // State of all the rounds
-RoundInfo roundsInfo[100] = { // TODO init acceptedValues to -1 double loop ok...
+RoundInfo roundsInfo[10] = { // TODO init acceptedValues to -1 double loop ok...
     {
         {{{{0, 0}}}},
         {{0, 0}},
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (phase > 5) {
+        if (phase > 0) {
             printf("\n");
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             printf("\n");
@@ -468,12 +468,12 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[10][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 1; r <= 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[3][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 1; r <= 3; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     for (int t = 0; t < 3; t++) {
                         for (int op = 0; op < N; op++) {
-                            valuesCount[r][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
-                            valuesCount[r][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
+                            valuesCount[r-1][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
+                            valuesCount[r-1][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
                         }
                     }
                 }
@@ -559,12 +559,12 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[10][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 1; r <= 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[3][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 1; r <= 3; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     for (int t = 0; t < 3; t++) {
                         for (int op = 0; op < N; op++) {
-                            valuesCount[r][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
-                            valuesCount[r][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
+                            valuesCount[r-1][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
+                            valuesCount[r-1][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
                         }
                     }
                 }
@@ -647,12 +647,12 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[10][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 1; r <= 10; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[3][3][N][2]; // TODO maybe flatten array, but then again maybe it does that by default
+                for (int r = 1; r <= 3; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
                     for (int t = 0; t < 3; t++) {
                         for (int op = 0; op < N; op++) {
-                            valuesCount[r][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
-                            valuesCount[r][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
+                            valuesCount[r-1][t][op][0] = countDistinctProcessesForValue(op, 0, t, r);
+                            valuesCount[r-1][t][op][1] = countDistinctProcessesForValue(op, 1, t, r);
                         }
                     }
                 }

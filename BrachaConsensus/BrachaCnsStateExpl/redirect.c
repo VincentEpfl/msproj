@@ -304,7 +304,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
         intBuf[0] = 0; // TODO verify that this doesnt bloock or anything
-        intBuf[1] = originProcess;
+        intBuf[1] = processId; // TODO verify ok
         intBuf[2] = 0; // TODO verify that this doesnt bloock or anything
         intBuf[3] = processId;
         intBuf[4] = initValue;

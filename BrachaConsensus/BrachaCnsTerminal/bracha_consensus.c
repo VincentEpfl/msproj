@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (phase > 5) {
+        if (phase > 0) {
             printf("\n");
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             printf("\n");

@@ -381,10 +381,10 @@ void schedule_new_process()
 // ALGO CHG
 // Compares the state of the system
 // Returns false if state1 != state2
-bool compareState(int state1[N][10][3][N][2], int state2[N][10][3][N][2])
+bool compareState(int state1[N][3][3][N][2], int state2[N][3][3][N][2])
 {
   for (int p = 0; p < N; p++) {
-    for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+    for (int r = 0; r < 3; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
       for (int t = 0; t < 3; t++) {
         for (int op = 0; op < N; op++) {
           for (int v = 0; v < 2; v++)
@@ -404,9 +404,9 @@ bool compareState(int state1[N][10][3][N][2], int state2[N][10][3][N][2])
 // ALGO CHG
 // Compares the state of 2 processes
 // Returns false if processState1 != processState2
-bool compareProcessState(int processState1[10][3][N][2], int processState2[10][3][N][2])
+bool compareProcessState(int processState1[3][3][N][2], int processState2[3][3][N][2])
 {
-  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+  for (int r = 0; r < 3; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
     for (int t = 0; t < 3; t++) {
       for (int op = 0; op < N; op++) {
         for (int v = 0; v < 2; v++)
@@ -424,7 +424,7 @@ bool compareProcessState(int processState1[10][3][N][2], int processState2[10][3
 
 // ALGO CHG
 // TODO check properties
-bool checkStateValid(int state[N][10][3][N][2])
+bool checkStateValid(int state[N][3][3][N][2])
 {
   return true;
 }
@@ -456,7 +456,7 @@ bool checkAllStates()
       for (int p = 0; p < N; p++)
       {
         printf("process %d : {", p);
-        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+        for (int r = 0; r < 3; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
           printf("round %d : {", r);
           for (int t = 0; t < 3; t++) {
             printf("tag %d : {", t);
@@ -649,7 +649,7 @@ void duplicateState(int originState, int destState)
   // Copies the state to update into a new state object in the array of states
   for (int p = 0; p < N; p++)
   {
-    for (int r = 0; r < 10; r++) {
+    for (int r = 0; r < 3; r++) {
       for (int t = 0; t < 3; t++) {
         for (int op = 0; op < N; op++) {
           for (int v = 0; v < 2; v++)
@@ -674,7 +674,7 @@ void updateState(int stateToUpdate, int forkid, int newProcessState[][3][N][2], 
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
-  for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+  for (int r = 0; r < 3; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
     for (int t = 0; t < 3; t++) {
       for (int op = 0; op < N; op++) {
         for (int v = 0; v < 2; v++)
@@ -735,7 +735,7 @@ void printControllerState(State *systemStates, int numStates)
     for (int p = 0; p < N; p++)
       {
         printf("process %d : {", p);
-        for (int r = 0; r < 10; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+        for (int r = 0; r < 3; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
           printf("round %d : {", r);
           for (int t = 0; t < 3; t++) {
             printf("tag %d : {", t);
@@ -1154,9 +1154,9 @@ int main()
       }
       if (len > 0)
       {
-        printf("[Controller] Something received : [t:%d, from:%d, to:%d, val:%d, forkid:%d]\n",
-               receivedMessage[0], receivedMessage[1], receivedMessage[2], receivedMessage[3],
-               receivedMessage[4]);
+        printf("[Controller] Something received : [t:%d, round:%d, tag:%d, from:%d, origin:%d, to:%d, val:%d, dval:%d, forkid:%d]\n",
+               receivedMessage[0], receivedMessage[1], receivedMessage[3], receivedMessage[4], receivedMessage[2], receivedMessage[5],
+               receivedMessage[6], receivedMessage[7], receivedMessage[8]);
 
         // Store received message in the message array
         put_msg_in_buffer(i, receivedMessage);

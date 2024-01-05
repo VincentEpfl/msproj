@@ -1107,7 +1107,7 @@ int main()
         usleep(10000);
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 300) //150
+        if (noNewConnection > 300) //150 ok with 300 we have more states than with 150 (32vs24) and still faster than longer timeout
         {
           break;
         }
