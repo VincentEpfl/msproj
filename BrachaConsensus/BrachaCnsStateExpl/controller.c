@@ -66,7 +66,7 @@ typedef struct
   //    },
   //  },
   // }
-  int valuesCount[N][10][3][N][2]; 
+  int valuesCount[N][3][3][N][2]; 
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
 
@@ -627,7 +627,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   // format fork: [1, from:processId, value:0/1]
   // format kill: [2, -1, -1] maybe put which child to kill
   int forkId;
-  int msg[10][3][N][2];
+  int msg[3][3][N][2];
   char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
@@ -895,7 +895,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // do that here, also in the case where exploration (echo msg from p1/p3), same just
     // add the option to not deliver
     // also check kill state etc
-    int newProcessStateNoAction[10][3][N][2]; // ALGO CHG
+    int newProcessStateNoAction[3][3][N][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -931,7 +931,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // Try to send the message
 
-    int newProcessState[10][3][N][2]; // ALGO CHG
+    int newProcessState[3][3][N][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG TODO
     int message[8] = {1, msgbuffer[sendIndex].round, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].dval, msgbuffer[sendIndex].to};
@@ -949,7 +949,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG TODO
       int messageOp[8] = {1, msgbuffer[sendIndex].round, msgbuffer[sendIndex].originProcess, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].dval, msgbuffer[sendIndex].to};
-      int newProcessStateOp[10][3][N][2]; // ALGO CHG
+      int newProcessStateOp[3][3][N][2]; // ALGO CHG
       int forkInfoOp[2];
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
