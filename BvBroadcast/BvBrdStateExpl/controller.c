@@ -654,7 +654,7 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   forkInfoInt[1] = numProcesses;
   processes[numProcesses++] = forkInfoInt[0];
   kill(forkInfoInt[0], SIGSTOP);
-  //printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
+  printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
 }
 
 void duplicateState(int originState, int destState)
