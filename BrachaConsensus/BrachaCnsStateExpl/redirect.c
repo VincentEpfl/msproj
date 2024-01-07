@@ -113,7 +113,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   // ALGO CHG
   int sendMessage[10];
   sendMessage[0] = 0;         // type = send
-  sendMessage[1] = intBuf[0]; // round
+  sendMessage[1] = intBuf[0] - 1; // round
   sendMessage[2] = intBuf[1]; // origin = first elem of msg
   sendMessage[3] = intBuf[2]; // tag = sec elem of msg
   sendMessage[4] = intBuf[3]; // from = third elem of msg
@@ -273,7 +273,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
 // ALGO CHG
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
-        intBuf[0] = round; 
+        intBuf[0] = round + 1; 
         intBuf[1] = originProcess;
         intBuf[2] = tag;
         intBuf[3] = from;
