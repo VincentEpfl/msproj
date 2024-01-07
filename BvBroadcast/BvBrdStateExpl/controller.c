@@ -169,8 +169,8 @@ int initSocket(bool feedback)
     struct timeval tv; // timeval structure to set the timeout
 
     // Set the timeout value
-    tv.tv_sec = 1;       // 1 seconds timeout
-    tv.tv_usec = 0; // 500000 microseconds
+    tv.tv_sec = 0;       // 1 seconds timeout
+    tv.tv_usec = 10000; // 500000 microseconds
 
     // Set the timeout option
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv))
@@ -917,7 +917,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
@@ -1096,9 +1096,10 @@ int main()
       if (errno == EWOULDBLOCK || errno == EAGAIN)
       {
         // printf("[Controller] No connections within the timeout period.\n");
+        usleep(10000);
         schedule_new_process();
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 150)
+        if (noNewConnection > 300)
         {
           break;
         }
@@ -1161,6 +1162,7 @@ int main()
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] recv msg was not delivered\n");
             schedule_new_process();
+            usleep(10000);
           }
           else
           {
@@ -1196,6 +1198,7 @@ int main()
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] send msg was not delivered\n");
             schedule_new_process();
+            usleep(10000);
           }
           else
           {
