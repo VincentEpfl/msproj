@@ -87,6 +87,8 @@ int feedback_sockfd;
 int numStates = 1;
 int numStatesKilled = 0;
 
+int numOpenFd = 0;
+
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
   int numStatesToUpdate = 0;
@@ -1113,6 +1115,11 @@ int main()
     }
     else
     {
+      printf("[Controller] NUM PROCESSES %d:\n", numProcesses);
+      numOpenFd++;
+      printf("[Controller] NUM FD %d:\n", numOpenFd);
+
+
       printf("[Controller] New connection\n");
       noNewConnection = 0;
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
@@ -1207,6 +1214,7 @@ int main()
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
           close(connfd);
+          numOpenFd = numOpenFd - 1;
         }
         i++;
       }
