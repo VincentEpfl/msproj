@@ -1115,9 +1115,9 @@ int main()
     }
     else
     {
-      printf("[Controller] NUM PROCESSES %d:\n", numProcesses);
+      printf("[Controller] NUM PROCESSES : %d\n", numProcesses);
       numOpenFd++;
-      printf("[Controller] NUM FD %d:\n", numOpenFd);
+      printf("[Controller] NUM FD : %d\n", numOpenFd);
 
 
       printf("[Controller] New connection\n");
@@ -1125,8 +1125,10 @@ int main()
       ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
       if (len == 0)
       {
-        perror("[Controller] Recv failure len == 0");
-        exit(EXIT_FAILURE);
+        //perror("[Controller] Recv failure len == 0");
+        //exit(EXIT_FAILURE);
+        printf("[Controller] NOTHING MORE TO RECV\n");
+        break;
       }
       if (len == -1)
       {
