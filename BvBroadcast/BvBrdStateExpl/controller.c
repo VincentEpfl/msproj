@@ -1349,6 +1349,9 @@ int main()
   for (int f = 0; f < numOpenFd; f++) {
     close(fds[f]);
   }
+  for (int p = 0; p < numProcesses; p++) {
+    kill(processes[p], SIGTERM);
+  }
 
   close(sockfd);
   unlink(CONTROLLER_PATH);
