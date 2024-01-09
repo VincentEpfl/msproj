@@ -623,19 +623,23 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
   // format [forkid, processState]
 
   int feedback_connfd;
-  if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
+  if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) < 0)
   {
-    if (recv(feedback_connfd, recmsg, recmsglen, 0) < 0)
-    {
-      perror("[Controller] recv state feedback socket failure");
-      exit(EXIT_FAILURE);
-    }
-    close(feedback_connfd);
+    //close(feedback_connfd); TODO necessary ?
+    perror("[Controller] accept failure");
+    exit(EXIT_FAILURE);
   }
   else
   {
-    perror("[Controller] accept failure");
-    exit(EXIT_FAILURE);
+    int nb = recv(feedback_connfd, recmsg, recmsglen, 0);
+    if (nb < 0)
+    {
+      perror("[Controller] recv state feedback socket failure");
+      exit(EXIT_FAILURE);
+    } else if (nb == 0) {
+      printf("[Controller] ERROR FEEDBACK RECEIVE NOTHING\n");
+    }
+    close(feedback_connfd);
   }
 }
 
