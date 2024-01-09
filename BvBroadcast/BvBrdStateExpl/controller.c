@@ -961,7 +961,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
@@ -1394,14 +1394,16 @@ int main()
   unlink(CONTROLLER_PATH);
   unlink(CONTROLLER_FEEDBACK_PATH);
 
-  while (wait(NULL) != -1)
-    ;
-
   sem_close(sem);
   sem_unlink("/sem_bv_broadcast"); // Cleanup the semaphore
 
   sem_close(sem_init_brd);
   sem_unlink("/sem_bv_broadcast_init_brd"); // Cleanup the semaphore
+
+  while (wait(NULL) != -1)
+    ;
+
+  
 
   return 0;
 }
