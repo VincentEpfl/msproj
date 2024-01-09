@@ -296,7 +296,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       // Say instruction 2 is kill
 
       // Here I kill the last child (same because 2 and kill if =)
-      if (kill(children[i - 1], SIGTERM) < 0)
+      if (kill(children[i - 1], SIGTERM) < 0) // TODO SIGTERM OR SIGKILL
       {
         perror("[Intercept] kill");
         exit(EXIT_FAILURE);

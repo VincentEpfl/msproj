@@ -227,7 +227,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
       // Replace child process with BV-broadcast process
@@ -701,7 +701,7 @@ bool killStateAlreadyThere(int state, int numStates, int killHandle, bool forkid
 
       if (!forkid_killed_temp)
       {
-        kill(killHandle, SIGKILL);
+        kill(killHandle, SIGTERM); // TODO SIGTERM OR SIGKILL
         waitpid(killHandle, NULL, 0); // necessary ?
         forkid_killed_temp = true;
       }
