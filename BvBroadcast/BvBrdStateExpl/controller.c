@@ -90,6 +90,31 @@ int numStatesKilled = 0;
 int numOpenFd = 0;
 int fds[1000];
 
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        printf("\nCaught Ctrl+C! Cleaning up and exiting...\n");
+        
+        for (int f = 0; f < numOpenFd; f++) {
+          close(fds[f]);
+        }
+        for (int p = 0; p < numProcesses; p++) {
+          kill(processes[p], SIGTERM);
+        }
+
+        close(sockfd);
+        unlink(CONTROLLER_PATH);
+        unlink(CONTROLLER_FEEDBACK_PATH);
+
+        sem_close(sem);
+        sem_unlink("/sem_bv_broadcast"); // Cleanup the semaphore
+
+        sem_close(sem_init_brd);
+        sem_unlink("/sem_bv_broadcast_init_brd"); // Cleanup the semaphore
+
+        exit(EXIT_SUCCESS);
+    }
+}
+
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
   int numStatesToUpdate = 0;
@@ -1086,6 +1111,16 @@ return 0; // msg was not delivered
 
 int main()
 {
+
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0; // or SA_RESTART to restart system calls
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("sigaction");
+        return EXIT_FAILURE;
+    }
 
   init();
 
