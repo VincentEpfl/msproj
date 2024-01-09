@@ -610,7 +610,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 {
   bool recvDeliver = true;
-  /*
+  
   if (msgbuffer[recvIndex].numDelivered > 0)
   {
     for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
@@ -625,12 +625,14 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
       }
     }
   }
-  */
+  
 
  // RECV1
+ /*
   if (msgbuffer[recvIndex].numDelivered > 0) {
     recvDeliver = false;
   }
+  */
 
   return recvDeliver;
 }
@@ -959,7 +961,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
