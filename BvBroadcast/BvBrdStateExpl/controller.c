@@ -612,7 +612,7 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
   int *messageint = (int *)message;
-  printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
+  printf("[Controller] Send msg %d %d %d on connection %d\n", messageint[0], messageint[1], messageint[2], connfd);
   int nbs = send(connfd, message, msglen, 0);
   printf("[Controller] %d bytes sent\n", nbs);
   if (nbs < 0)

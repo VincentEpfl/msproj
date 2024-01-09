@@ -224,7 +224,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       exit(EXIT_FAILURE);
     }
     if (bytes_received == 0) { // When the connection is closed from the controller
-      printf("[Intercept in p%d] recv 0 = connection closed ...\n", processId);
+      printf("[Intercept in p%d] recv 0 = connection %d closed ...\n", processId, controller_socket);
       while (wait(NULL) != -1);
       exit(EXIT_SUCCESS);
     }
