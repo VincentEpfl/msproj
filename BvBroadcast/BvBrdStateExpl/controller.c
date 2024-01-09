@@ -613,7 +613,9 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 {
   int *messageint = (int *)message;
   printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
-  if (send(connfd, message, msglen, 0) < 0)
+  int nbs = send(connfd, message, msglen, 0);
+  printf("[Controller] %d bytes sent\n", nbs);
+  if (nbs < 0)
   {
     perror("[Controller] send failure");
     exit(EXIT_FAILURE);
