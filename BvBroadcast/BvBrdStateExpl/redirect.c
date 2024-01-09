@@ -218,7 +218,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   {
 
     ssize_t bytes_received = real_recv(controller_socket, &receivedMessage, sizeof(receivedMessage), 0);
-    if (bytes_received == -1)
+    if (bytes_received  < 0)
     {
       perror("Recv failure");
       exit(EXIT_FAILURE);

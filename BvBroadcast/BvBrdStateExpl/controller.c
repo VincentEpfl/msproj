@@ -613,7 +613,7 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 {
   int *messageint = (int *)message;
   printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
-  if (send(connfd, message, msglen, 0) == -1)
+  if (send(connfd, message, msglen, 0) < 0)
   {
     perror("[Controller] send failure");
     exit(EXIT_FAILURE);
@@ -625,7 +625,7 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
   int feedback_connfd;
   if ((feedback_connfd = accept(feedback_sockfd, NULL, NULL)) != -1)
   {
-    if (recv(feedback_connfd, recmsg, recmsglen, 0) == -1)
+    if (recv(feedback_connfd, recmsg, recmsglen, 0) < 0)
     {
       perror("[Controller] recv state feedback socket failure");
       exit(EXIT_FAILURE);
