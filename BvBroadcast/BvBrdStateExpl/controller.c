@@ -612,7 +612,7 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
 {
   int *messageint = (int *)message;
-  printf("[Controller] Send msg %d %d %d on connection %d\n", messageint[0], messageint[1], messageint[2], connfd);
+  printf("[Controller] Send msg %d %d %d\n", messageint[0], messageint[1], messageint[2]);
   int nbs = send(connfd, message, msglen, 0);
   printf("[Controller] %d bytes sent\n", nbs);
   if (nbs < 0)
@@ -1194,7 +1194,7 @@ int main()
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
           // RECV1
-          close(connfd);
+          //close(connfd); TODO TRY NO CLOSE OBVIOUSLY NOT OPTIMAL
           numOpenFd = numOpenFd - 1;
         }
 
@@ -1232,7 +1232,7 @@ int main()
             printf("[Controller] Number of states we went through : %d\n", numStates);
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
-          close(connfd);
+          //close(connfd); TODO TRY NO CLOSE OBVIOUSLY NOT OPTIMAL
           numOpenFd = numOpenFd - 1;
         }
         i++;
