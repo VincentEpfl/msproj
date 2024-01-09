@@ -88,7 +88,7 @@ int numStates = 1;
 int numStatesKilled = 0;
 
 int numOpenFd = 0;
-int fds[100];
+int fds[1000];
 
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
@@ -934,7 +934,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if (msgbuffer[sendIndex].from == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
