@@ -31,6 +31,23 @@ int forkId = 0; // Only 0 at first for each process
 int sendMsgCounter = 0;
 int initValue = -1; // Obviously should not be -1
 
+int feedback_socket;
+int controller_socket;
+
+void signal_handler(int signal) {
+    if (signal == SIGTERM) {
+        printf("\nCleaning up and exiting...\n");
+
+        close(feedback_socket);
+        close(controller_socket);
+        
+        unlink(CONTROLLER_PATH);
+        unlink(CONTROLLER_FEEDBACK_PATH);
+
+        exit(EXIT_SUCCESS);
+    }
+}
+
 // send override
 ssize_t
 send(int sockfd, const void *buf, size_t len, int flags)
@@ -46,7 +63,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   if (sockfd == -1) { // this is a send to the feedback socket TODO -1 probablement pas le + intelligent
 
   struct sockaddr_un address;
-  int feedback_socket;
+  
   if ((feedback_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
     perror("[Intercept] socket");
@@ -88,7 +105,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   
 
   struct sockaddr_un address;
-  int controller_socket;
+  
   if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
     perror("[Intercept] socket");
@@ -150,8 +167,18 @@ recv(int sockfd, void *buf, size_t len, int flags)
     real_send = dlsym(RTLD_NEXT, "send");
   }
 
+  struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0; // or SA_RESTART to restart system calls
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("sigaction");
+        return EXIT_FAILURE;
+    }
+
   struct sockaddr_un address;
-  int controller_socket;
+  //int controller_socket;
 
   // Create a socket to the controller
 
