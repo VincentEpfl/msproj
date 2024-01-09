@@ -1195,7 +1195,7 @@ int main()
           }
           // RECV1
           //close(connfd); TODO TRY NO CLOSE OBVIOUSLY NOT OPTIMAL
-          numOpenFd = numOpenFd - 1;
+          //numOpenFd = numOpenFd - 1;
         }
 
         if (receivedMessage[0] == 0)
@@ -1233,7 +1233,7 @@ int main()
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
           //close(connfd); TODO TRY NO CLOSE OBVIOUSLY NOT OPTIMAL
-          numOpenFd = numOpenFd - 1;
+          //numOpenFd = numOpenFd - 1;
         }
         i++;
       }

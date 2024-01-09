@@ -126,7 +126,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   ssize_t bytes_sent = real_send(controller_socket, &sendMessage, sizeof(sendMessage), 0);
 
-  close(controller_socket);
+  //close(controller_socket);
 
   return bytes_sent;
 }
@@ -262,7 +262,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         intBuf[1] = value;
         intBuf[2] = to;
 
-        close(controller_socket); // verify ok
+        //close(controller_socket); // verify ok
         return bytes_received;
       }
       i = i + 1;
@@ -287,7 +287,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         intBuf[1] = initValue; // the initial value of this process HARDCODE 0 TODO change for other cases
         intBuf[2] = to;
 
-        close(controller_socket); // verify ok
+        //close(controller_socket); // verify ok
         return bytes_received;
       }
       i = i + 1;
