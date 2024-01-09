@@ -601,6 +601,7 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
   }
   */
 
+ // RECV1
   if (msgbuffer[recvIndex].numDelivered > 0) {
     recvDeliver = false;
   }
@@ -926,7 +927,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    if ( msgbuffer[sendIndex].from == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
@@ -1186,6 +1187,9 @@ int main()
             printf("[Controller] Number of states we went through : %d\n", numStates);
             printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
           }
+          // RECV1
+          close(connfd);
+          numOpenFd = numOpenFd - 1;
         }
 
         if (receivedMessage[0] == 0)
