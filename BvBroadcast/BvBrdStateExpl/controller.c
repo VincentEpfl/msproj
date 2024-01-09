@@ -88,6 +88,7 @@ int numStates = 1;
 int numStatesKilled = 0;
 
 int numOpenFd = 0;
+int fds[100];
 
 int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
 {
@@ -1130,6 +1131,7 @@ int main()
     else
     {
       printf("[Controller] NUM PROCESSES : %d\n", numProcesses);
+      fds[numOpenFd] = connfd;
       numOpenFd++;
       printf("[Controller] NUM FD : %d\n", numOpenFd);
 
@@ -1344,7 +1346,9 @@ int main()
   printf("[Controller] Number of states we went through : %d\n", numStates);
   printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
 
-  // accept is blocking so this is never reached
+  for (int f = 0; f < numOpenFd; f++) {
+    close(fds[f]);
+  }
 
   close(sockfd);
   unlink(CONTROLLER_PATH);
