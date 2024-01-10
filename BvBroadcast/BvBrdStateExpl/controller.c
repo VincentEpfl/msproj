@@ -1154,7 +1154,7 @@ int main()
         schedule_new_process();
         printf("[Controller] ACCEPT TIMEOUT. Try process %d of %d\n", current_process_index, numProcesses);
         noNewConnection = noNewConnection + 1;
-        if (noNewConnection > 300)
+        if (noNewConnection > 2*numProcesses)
         {
           break;
         }
