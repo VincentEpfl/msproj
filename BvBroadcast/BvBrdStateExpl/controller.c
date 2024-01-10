@@ -735,7 +735,7 @@ bool killStateAlreadyThere(int state, int numStates, int killHandle, bool forkid
 
       if (!forkid_killed_temp)
       {
-        kill(killHandle, SIGTERM); // TODO SIGTERM OR SIGKILL
+        kill(killHandle, SIGKILL); // TODO SIGTERM OR SIGKILL
         //waitpid(killHandle, NULL, 0); // necessary ?
         forkid_killed_temp = true;
       }
