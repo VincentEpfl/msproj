@@ -66,6 +66,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   
   if ((feedback_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
+    printf("[Intercept] socket error\n");
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
   }
@@ -78,6 +79,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   if (connect(feedback_socket, (struct sockaddr *)&address,
               sizeof(struct sockaddr_un)) == -1)
   {
+    printf("[Intercept] connect error\n");
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
@@ -108,6 +110,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   
   if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
+    printf("[Intercept] socket error\n");
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
   }
@@ -120,6 +123,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   if (connect(controller_socket, (struct sockaddr *)&address,
               sizeof(struct sockaddr_un)) == -1)
   {
+    printf("[Intercept] connect error\n");
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
@@ -184,6 +188,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
 
   if ((controller_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
   {
+    printf("[Intercept] socket error\n");
     perror("[Intercept] socket");
     exit(EXIT_FAILURE);
   }
@@ -195,6 +200,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   if (connect(controller_socket, (struct sockaddr *)&address,
               sizeof(struct sockaddr_un)) == -1)
   {
+    printf("[Intercept] connect error\n");
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
@@ -223,6 +229,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
   ssize_t bytes_sent = real_send(controller_socket, sendMessage, sizeof(sendMessage), 0);
 
   if (bytes_sent == -1) {
+    printf("[Intercept] send error\n");
     perror("ERROR sending message to controller");
     exit(EXIT_FAILURE);
   }
@@ -247,6 +254,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
     ssize_t bytes_received = real_recv(controller_socket, &receivedMessage, sizeof(receivedMessage), 0);
     if (bytes_received  < 0)
     {
+      printf("[Intercept] recv error\n");
       perror("Recv failure");
       exit(EXIT_FAILURE);
     }
@@ -273,6 +281,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       children[i] = fork();
       if (children[i] < 0)
       {
+        printf("[Intercept] fork error\n");
         perror("[Intercept] fork");
         exit(EXIT_FAILURE);
       }
@@ -298,6 +307,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       children[i] = fork();
       if (children[i] < 0)
       {
+        printf("[Intercept] fork error\n");
         perror("[Intercept] fork");
         exit(EXIT_FAILURE);
       }
@@ -327,6 +337,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       // Here I kill the last child (same because 2 and kill if =)
       if (kill(children[i - 1], SIGTERM) < 0) // TODO SIGTERM OR SIGKILL
       {
+        printf("[Intercept] kill error\n");
         perror("[Intercept] kill");
         exit(EXIT_FAILURE);
       }
