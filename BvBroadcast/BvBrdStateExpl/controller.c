@@ -1152,6 +1152,7 @@ int main()
         // printf("[Controller] No connections within the timeout period.\n");
         usleep(10000);
         schedule_new_process();
+        printf("[Controller] ACCEPT TIMEOUT. Try process %d of %d\n", current_process_index, numProcesses);
         noNewConnection = noNewConnection + 1;
         if (noNewConnection > 300)
         {
