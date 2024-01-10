@@ -201,7 +201,7 @@ int initSocket(bool feedback)
     tv.tv_usec = 10000; // 500000 microseconds
 
     // Set the timeout option
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv))
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0)
     {
       perror("setsockopt");
       exit(EXIT_FAILURE);
@@ -1172,10 +1172,52 @@ int main()
       numOpenFd++;
       printf("[Controller] NUM FD : %d\n", numOpenFd);
 
+      struct timeval tmv; // timeval structure to set the timeout
+
+      // Set the timeout value
+      tmv.tv_sec = 0;       // 1 seconds timeout
+      tmv.tv_usec = 10000; // 500000 microseconds
+
+      // Set the timeout option
+      if (setsockopt(connfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tmv, sizeof(tmv)) < 0)
+      {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+      }
+
 
       printf("[Controller] New connection\n");
       noNewConnection = 0;
-      ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+      //ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+
+      int nothingToRecv = 0;
+      while (1){ 
+        ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
+
+        if (len < 0) {
+          if (errno == EWOULDBLOCK || errno == EAGAIN)
+          {
+            schedule_new_process();
+            continue;
+          } else {
+            perror("[Controller] Recv failure");
+            exit(EXIT_FAILURE);
+          }
+        } else if (len == 0) {
+          printf("[Controller] NOTHING MORE TO RECV\n");
+          nothingToRecv = 1;
+          break;
+        } else {
+          break;
+        }
+      }
+
+      if (nothingToRecv == 1) {
+        break;
+      }
+      
+      
+      /*
       if (len == 0)
       {
         //perror("[Controller] Recv failure len == 0");
@@ -1190,6 +1232,7 @@ int main()
       }
       if (len > 0)
       {
+*/
         printf("[Controller] Something received : [t:%d, from:%d, to:%d, val:%d, forkid:%d]\n",
                receivedMessage[0], receivedMessage[1], receivedMessage[2], receivedMessage[3],
                receivedMessage[4]);
@@ -1275,7 +1318,7 @@ int main()
           //numOpenFd = numOpenFd - 1;
         }
         i++;
-      }
+      //}
     }
   }
 
