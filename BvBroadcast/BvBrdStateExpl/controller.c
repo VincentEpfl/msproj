@@ -1190,6 +1190,7 @@ int main()
       noNewConnection = 0;
       //ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
 
+
       int nothingToRecv = 0;
       while (1){ 
         ssize_t len = recv(connfd, &receivedMessage, sizeof(receivedMessage), 0);
