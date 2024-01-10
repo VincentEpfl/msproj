@@ -1198,8 +1198,8 @@ int main()
         if (len < 0) {
           if (errno == EWOULDBLOCK || errno == EAGAIN)
           {
-            printf("\n[Controller] RECV TIMEOUT\n");
             schedule_new_process();
+            printf("\n[Controller] RECV TIMEOUT. Try process %d of %d", current_process_index, numProcesses);
             continue;
           } else {
             perror("[Controller] Recv failure");
