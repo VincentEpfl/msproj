@@ -127,7 +127,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
     perror("[Intercept] connect");
     exit(EXIT_FAILURE);
   }
-  printf("[Intercept] connect\n");
+  //printf("[Intercept] connect\n");
 
   // Send (redirect) the message to the controller
   //printf("[Intercept] Send\n");
@@ -147,7 +147,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   }
 
   ssize_t bytes_sent = real_send(controller_socket, &sendMessage, sizeof(sendMessage), 0);
-  printf("[Intercept] send\n");
+  //printf("[Intercept] send\n");
 
   //close(controller_socket);
 
