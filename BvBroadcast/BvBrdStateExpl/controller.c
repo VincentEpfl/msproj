@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <time.h>
 
 // Controller that spawns processes, intercepts communications between
 // the processes, and explore the execution state
@@ -42,6 +43,7 @@ typedef struct
   int from;   // -1 for recv msg, because can recv from any process
   int to;     // for recv msg this is the process that wants to recv
   int msg;    // for recv put -1
+  int noAction;
   int forkId;
 } MessageTrace;
 
@@ -512,6 +514,23 @@ bool checkAllStates()
         }
         printf("}\n");
       }
+
+      printf("[Controller] messages exchanged: \n");
+      for (int f = 0; f < systemStates[s].len; f++)
+      {
+        for (int g = 0; g < nummsg; g++) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f]) {
+            printf("Message %d ", msghistory[g].msg);
+            printf("from %d ", msghistory[g].from);
+            printf("to %d ", msghistory[g].to);
+            if (msghistory[g].noAction == 1) {
+              printf("(not received)");
+            }
+            printf("\n");
+          }
+        }
+        
+      }
     }
   }
   if (!invalid)
@@ -782,7 +801,11 @@ void printControllerState(State *systemStates, int numStates)
         if (msghistory[g].forkId == systemStates[s].forkPath[f]) {
           printf("Message %d ", msghistory[g].msg);
           printf("from %d ", msghistory[g].from);
-          printf("to %d\n", msghistory[g].to);
+          printf("to %d ", msghistory[g].to);
+          if (msghistory[g].noAction == 1) {
+            printf("(not received)");
+          }
+          printf("\n");
         }
       }
       
@@ -790,11 +813,12 @@ void printControllerState(State *systemStates, int numStates)
   }
 }
 
-void addMsgToHistory(int forkid, int from, int to, int val) {
+void addMsgToHistory(int forkid, int from, int to, int val, int noAction) {
         msghistory[nummsg].forkId = forkid;
         msghistory[nummsg].from = from;
         msghistory[nummsg].to = to;
         msghistory[nummsg].msg = val;
+        msghistory[nummsg].noAction = noAction;
         nummsg = nummsg + 1;
 }
 
@@ -938,6 +962,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
 
+      addMsgToHistory(forkidNoAction, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg, 1);
+
       // Update the system states This doesnt act on the same state than the rest so should compose fine
       for (int s = 0; s < numStatesNoAction; s++)
       {
@@ -959,9 +985,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkid0_index = forkInfo[1];
 
     // add msg to history
-    addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
+    addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg, 0);
 
-    if (true) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
@@ -972,6 +998,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
       int forkid1_index = forkInfoOp[1];
+
+      // add op msg to history
+        addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue, 0);
 
       if (compareProcessState(newProcessState, newProcessStateOp))
       {
@@ -1017,9 +1046,6 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
       else
       {
-        // add op msg to history
-        addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue);
-
         // Copy sys state to update in 1 new state for each fork
         bool forkid0_killed = false;
         bool forkid1_killed = false;
@@ -1114,6 +1140,11 @@ return 0; // msg was not delivered
 int main()
 {
 
+    // Start the timer
+    clock_t start = clock();
+    clock_t nothDelTime;
+    clock_t noNewCoTime;
+
     struct sigaction sa;
     sa.sa_handler = signal_handler;
     sa.sa_flags = 0; // or SA_RESTART to restart system calls
@@ -1153,6 +1184,9 @@ int main()
         usleep(10000);
         schedule_new_process();
         printf("[Controller] ACCEPT TIMEOUT. Try process %d of %d\n", current_process_index, numProcesses);
+        if (noNewConnection == 0) {
+          noNewCoTime = clock();
+        }
         noNewConnection = noNewConnection + 1;
         if (noNewConnection > 2*numProcesses)
         {
@@ -1267,6 +1301,9 @@ int main()
           // if the recv message was not delivered, schedule another process
           if (!msg_was_delivered)
           {
+            if (nothingDelivered == 0) {
+              nothDelTime = clock();
+            }
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] recv msg was not delivered\n");
             schedule_new_process();
@@ -1306,6 +1343,9 @@ int main()
           // if the send message was not delivered, schedule another process
           if (!msg_was_delivered)
           {
+            if (nothingDelivered == 0) {
+              nothDelTime = clock();
+            }
             nothingDelivered = nothingDelivered + 1;
             printf("[Controller] send msg was not delivered\n");
             schedule_new_process();
@@ -1324,6 +1364,7 @@ int main()
       //}
     }
   }
+
 
   printControllerState(systemStates, numStates);
   checkAllStates();
@@ -1428,6 +1469,32 @@ int main()
   printf("[Controller] End of simulation\n");
   printf("[Controller] Number of states we went through : %d\n", numStates);
   printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
+  printf("[Controller] Number of states remaining : %d\n", numStates - numStatesKilled);
+
+  int numStatesRemaining = 0;
+  for (int s = 0; s < numStates; s++)
+  {
+    // Don't want to update a state that was killed
+    if (systemStates[s].killed == 1)
+    {
+      continue;
+    } else {
+      numStatesRemaining++;
+    }
+  }
+
+  printf("[Controller] Number of states remaining (verify ): %d\n", numStatesRemaining);
+
+  // Calculate the elapsed time
+  if (noNewConnection > 2*numProcesses) {
+    double elapsed_time = (double)(noNewCoTime - start) / CLOCKS_PER_SEC;
+    printf("Execution time: %.3f seconds\n", elapsed_time);
+  } else {
+    double elapsed_time = (double)(nothDelTime - start) / CLOCKS_PER_SEC;
+    printf("Execution time: %.3f seconds\n", elapsed_time);
+  }
+  
+
 
   for (int f = 0; f < numOpenFd; f++) {
     close(fds[f]);
