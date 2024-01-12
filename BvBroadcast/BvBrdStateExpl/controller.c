@@ -1558,6 +1558,11 @@ int main()
   }
 
   printf("[Controller] Number of states remaining (verify ): %d\n", numStatesRemaining);
+  // TODO this is sometimes different
+  // numstatesremaining is correct with printing ofc
+  // but correct correct ?
+  // we count all the kills, do we count all the states (killed seems ok so what is numstates ?)
+  // maybe numstates not incremented somewhere, or maybe decrement somewhere cause need array index or something
 
   // Calculate the elapsed time
   if (noNewConnection > 2*numProcesses) {
