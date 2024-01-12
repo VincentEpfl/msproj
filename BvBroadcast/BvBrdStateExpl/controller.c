@@ -441,7 +441,7 @@ bool checkStateValid(int state[N][2])
   bool valid = true;
   if (committed_values[0][0] == 0)
   {
-    for (int i = 1; i < N; i++)
+    for (int i = 1; i < N - 1; i++) // byz process = p3
     {
       if (committed_values[i][0] != 0)
       {
@@ -451,7 +451,7 @@ bool checkStateValid(int state[N][2])
   }
   else
   {
-    for (int i = 1; i < N; i++)
+    for (int i = 1; i < N - 1; i++) // byz process = p3
     {
       if (committed_values[i][0] != 1)
       {
@@ -461,7 +461,7 @@ bool checkStateValid(int state[N][2])
   }
   if (committed_values[0][1] == 0)
   {
-    for (int i = 1; i < N; i++)
+    for (int i = 1; i < N - 1; i++) // byz process = p3
     {
       if (committed_values[i][1] != 0)
       {
@@ -471,7 +471,7 @@ bool checkStateValid(int state[N][2])
   }
   else
   {
-    for (int i = 1; i < N; i++)
+    for (int i = 1; i < N - 1; i++) // byz process = p3
     {
       if (committed_values[i][1] != 1)
       {
@@ -629,7 +629,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 {
   bool recvDeliver = true;
-  
+  /*
   if (msgbuffer[recvIndex].numDelivered > 0)
   {
     for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
@@ -644,14 +644,15 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
       }
     }
   }
+  */
   
 
  // RECV1
- /*
+ 
   if (msgbuffer[recvIndex].numDelivered > 0) {
     recvDeliver = false;
   }
-  */
+  
 
   return recvDeliver;
 }
