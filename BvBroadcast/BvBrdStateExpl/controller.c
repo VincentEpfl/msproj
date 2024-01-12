@@ -428,7 +428,7 @@ bool checkStateValid(int state[N][2])
   {
     for (int j = 0; j < 2; j++)
     {
-      if (state[i][j] > 2 * T - 1)
+      if (state[i][j] > 2 * T)
       { // Have to modify for bug
         committed_values[i][j] = 1;
       }
