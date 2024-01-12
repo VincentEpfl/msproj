@@ -629,7 +629,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
 bool canDeliverRecvState(int stateToUpdate, int recvIndex)
 {
   bool recvDeliver = true;
-  /*
+  
   if (msgbuffer[recvIndex].numDelivered > 0)
   {
     for (int f = 0; f < msgbuffer[recvIndex].numDelivered; f++)
@@ -644,14 +644,16 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
       }
     }
   }
-  */
+  
   
 
  // RECV1
  
+ /*
   if (msgbuffer[recvIndex].numDelivered > 0) {
     recvDeliver = false;
   }
+  */
   
 
   return recvDeliver;
