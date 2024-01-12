@@ -249,13 +249,13 @@ void spawnProcesses()
     {
       char processIdStr[10], initialValueStr[10];
       sprintf(processIdStr, "%d", i);
-      if (i < 2)
+      if (i < 3)
       {
         sprintf(initialValueStr, "%d", 0);
       }
       else
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
 
       // Replace child process with BV-broadcast process
