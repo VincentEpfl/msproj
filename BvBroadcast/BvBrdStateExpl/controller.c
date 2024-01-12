@@ -545,6 +545,12 @@ void deliver_message(int delivered, int to)
   msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
 }
 
+void deliver_message_forkid(int delivered, int forkid)
+{
+  msgbuffer[delivered].delivered[msgbuffer[delivered].numDelivered] = forkid;
+  msgbuffer[delivered].numDelivered = msgbuffer[delivered].numDelivered + 1;
+}
+
 void printMessage(int index)
 {
   printf("msg:[t:%d, from:%d, to:%d, value:%d, connfd:%d, forkId:%d, numDelivered:%d]\n",
@@ -566,6 +572,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   //  Check if the message comes from a parallel execution/state,
   //  in this case we don't want it
   bool forkOk = true;
+  // TODO est-ce que toute cette merde serait pas inutile de base en fait ?
   if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
   {
     // if fork id of send msg is before (or same as) the forkid of recv msg, ok
@@ -911,10 +918,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // TODO try with fork ids 
 
     // recv msg always need to be delivered only once TODO not necessarily
-    deliver_message(recvIndex, sendIndex);
+    //deliver_message(recvIndex, sendIndex);
 
     // send msg might need to be sent to different states
-    deliver_message(sendIndex, recvIndex);
+    //deliver_message(sendIndex, recvIndex);
 
     // schedule the process that sent the recv message and is waiting for controller instructions
 
@@ -978,6 +985,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       }
 
       // here no need to update msghistory because for this id no message was received
+
+      deliver_message_forkid(recvIndex, forkidNoAction);
+      deliver_message_forkid(sendIndex, forkidNoAction);
+      
     }
 
     // Try to send the message
@@ -991,6 +1002,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg, 0);
+
+    deliver_message_forkid(recvIndex, forkid0);
+    deliver_message_forkid(sendIndex, forkid0);
 
     if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
@@ -1006,6 +1020,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
       // add op msg to history
         addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue, 0);
+
+      deliver_message_forkid(recvIndex, forkid1);
+      deliver_message_forkid(sendIndex, forkid1);
 
       if (compareProcessState(newProcessState, newProcessStateOp))
       {
