@@ -183,10 +183,6 @@ int main(int argc, char *argv[])
     printf("Process %d done waiting for sockets init\n", processId);
     sem_close(sem);
 
-    if (processId == 3) { // just so the "problematic" messages arrive last, remove after
-        sleep(5);
-    }
-
     // Broadcast the initial value
     BV_broadcast(initialValue);
 
