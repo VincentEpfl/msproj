@@ -535,7 +535,7 @@ bool checkAllStates()
       printf("[Controller] messages sent by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p && msghistory[g].noAction == 0) {
             printf("value %d to process %d, ", msghistory[g].msg, msghistory[g].to);
             }
           }
@@ -547,7 +547,7 @@ bool checkAllStates()
       printf("[Controller] messages received by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p && msghistory[g].noAction == 0) {
             printf("value %d from process %d, ", msghistory[g].msg, msghistory[g].from);
             }
           }
@@ -847,7 +847,7 @@ void printControllerState(State *systemStates, int numStates)
       printf("[Controller] messages sent by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p && msghistory[g].noAction == 0) {
             printf("value %d to process %d, ", msghistory[g].msg, msghistory[g].to);
           }
         }
@@ -859,7 +859,7 @@ void printControllerState(State *systemStates, int numStates)
       printf("[Controller] messages received by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p && msghistory[g].noAction == 0) {
             printf("value %d from process %d, ", msghistory[g].msg, msghistory[g].from);
           }
         }
