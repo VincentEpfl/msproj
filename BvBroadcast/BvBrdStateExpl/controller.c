@@ -906,7 +906,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
     kill(current_process, SIGSTOP); // it's possible the current process didn't send this recv msg
 
-    //msg_was_delivered = true; TODO handle with return value
+    //msg_was_delivered = true; 
+    
+    // TODO try with fork ids 
 
     // recv msg always need to be delivered only once TODO not necessarily
     deliver_message(recvIndex, sendIndex);
@@ -972,7 +974,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       {
         // just update forkpath and len
         updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to);
-        // actual state should not change so no need to kill
+        // actual state should not change so no need to kill TODO maybe ???
       }
 
       // here no need to update msghistory because for this id no message was received
@@ -1009,6 +1011,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       {
         // Here I consider that I kill forkid1 by default
 
+        // TODO forkid1 need flag kill smth ???????
+
         //printf("[Controller] Same result: kill a child\n");
         int killMessage[4] = {2, -1, -1, -1};
         if (send(connfd, &killMessage, sizeof(killMessage), 0) == -1)
@@ -1019,12 +1023,25 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
         bool forkid0_killed = false;
         // Update the system states
-        for (int s = 0; s < numStatesToUpdate; s++)
+        /*
+        for (int s = 0; s < numStatesToUpdate; s++) 
         {
           updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
           // probablement ajouter kill state... si kill forkid0 just schedule un autre...
           forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
         }
+        */
+
+        // TODO update all first, then kill all after ? legit pas impossible !!!!
+        for (int s = 0; s < numStatesToUpdate; s++) 
+        {
+          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+        }
+        for (int s = 0; s < numStatesToUpdate; s++) 
+        {
+          forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+        }
+
 
         // stop the current one ? it loops waiting for controller instructions anyway
         numProcesses = numProcesses - 1;
@@ -1052,6 +1069,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         // Copy sys state to update in 1 new state for each fork
         bool forkid0_killed = false;
         bool forkid1_killed = false;
+        /*
         for (int s = 0; s < numStatesToUpdate; s++)
         {
 
@@ -1068,6 +1086,29 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
           forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
         }
+        */
+
+        // TODO update all first, then kill all after ? legit pas impossible !!!!
+        for (int s = 0; s < numStatesToUpdate; s++)
+        {
+
+          // Copies the state to update into a new state object in the array of states
+          duplicateState(statesToUpdate[s], numStates);
+
+          // Update the states
+          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+          updateState(numStates, forkid1, newProcessStateOp, msgbuffer[recvIndex].to);
+
+          numStates = numStates + 1;
+        }
+        for (int s = 0; s < numStatesToUpdate; s++)
+        {
+          // If the new system states are the same as some that are already stored, kill the new ones
+          forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+          forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
+        }
+
+
         if (forkid0_killed && forkid1_killed)
         {
           numProcesses = numProcesses - 1;
@@ -1118,9 +1159,22 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       // In this case we only transmit the message with its actual value
       // Update the system states
       bool forkid0_killed = false;
+      /*
       for (int s = 0; s < numStatesToUpdate; s++)
       {
         updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+        forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+      }
+      */
+
+      // TODO update all first, then kill all after ? legit pas impossible !!!!
+      for (int s = 0; s < numStatesToUpdate; s++)
+      {
+        updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+      }
+
+      for (int s = 0; s < numStatesToUpdate; s++)
+      {
         forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
       }
 
