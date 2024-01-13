@@ -1054,7 +1054,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(recvIndex, forkid0);
     deliver_message_forkid(sendIndex, forkid0);
 
-    if (msgbuffer[sendIndex].from == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 2 || msgbuffer[sendIndex].from == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
