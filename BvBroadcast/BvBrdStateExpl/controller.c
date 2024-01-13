@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 4 // Total number of processes
-#define T 1 // Maximum number of Byzantine processes
+#define N 3 // Total number of processes
+#define T 0 // Maximum number of Byzantine processes
 
 // Message struct
 typedef struct
@@ -596,6 +596,7 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   //  in this case we don't want it
   bool forkOk = true;
   // TODO est-ce que toute cette merde serait pas inutile de base en fait ?
+  // pas impossible que ca soit la version imparfaite du no action ...
   if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
   {
     // if fork id of send msg is before (or same as) the forkid of recv msg, ok
@@ -1053,7 +1054,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(recvIndex, forkid0);
     deliver_message_forkid(sendIndex, forkid0);
 
-    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
