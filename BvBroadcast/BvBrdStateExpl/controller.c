@@ -255,7 +255,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
       // Replace child process with BV-broadcast process
@@ -536,7 +536,7 @@ bool checkAllStates()
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
           if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p && msghistory[g].noAction == 0) {
-            printf("value %d to process %d, ", msghistory[g].msg, msghistory[g].to);
+            printf("value %d to process %d\n", msghistory[g].msg, msghistory[g].to);
             }
           }
         }
@@ -548,7 +548,7 @@ bool checkAllStates()
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
           if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p && msghistory[g].noAction == 0) {
-            printf("value %d from process %d, ", msghistory[g].msg, msghistory[g].from);
+            printf("value %d from process %d\n", msghistory[g].msg, msghistory[g].from);
             }
           }
         }
@@ -849,7 +849,7 @@ void printControllerState(State *systemStates, int numStates)
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
           if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p && msghistory[g].noAction == 0) {
-            printf("value %d to process %d, ", msghistory[g].msg, msghistory[g].to);
+            printf("value %d to process %d\n", msghistory[g].msg, msghistory[g].to);
           }
         }
       }
@@ -861,7 +861,7 @@ void printControllerState(State *systemStates, int numStates)
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
           if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p && msghistory[g].noAction == 0) {
-            printf("value %d from process %d, ", msghistory[g].msg, msghistory[g].from);
+            printf("value %d from process %d\n", msghistory[g].msg, msghistory[g].from);
           }
         }
       }
@@ -1054,7 +1054,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(recvIndex, forkid0);
     deliver_message_forkid(sendIndex, forkid0);
 
-    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
