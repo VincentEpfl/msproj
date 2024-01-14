@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 4 // Total number of processes
-#define T 1 // Maximum number of Byzantine processes
+#define N 3 // Total number of processes
+#define T 0 // Maximum number of Byzantine processes
 
 // Message struct
 typedef struct
@@ -654,7 +654,33 @@ bool canDeliverState(int posInForkPath, int stateToUpdate, int sendIndex, int re
   */
   //}
   // return recvDeliverOk && ...
-  return sendDeliverOk && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to && forkOk;
+  // && msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to
+  return sendDeliverOk && forkOk;
+}
+
+bool canDeliverForkState(int stateToUpdate, int sendIndex)
+{
+  //  Check if the message comes from a parallel execution/state,
+  //  in this case we don't want it
+  bool forkOk = true;
+  // TODO est-ce que toute cette merde serait pas inutile de base en fait ?
+  // pas impossible que ca soit la version imparfaite du no action ...
+  if (numStates > 1) // Possible que ca soit le cas mais que ca se voit pas car ordre msg exec ok...
+  {
+    // if fork id of send msg is before (or same as) the forkid of recv msg, ok
+    forkOk = false;
+    for (int f = 0; f < systemStates[stateToUpdate].len; f++) // TODO f < posinforkpath + 1 -> all
+    {
+      // printf("[CONTROLLER TEST] state fork %d / send msg fork %d\n", systemStates[statesToUpdate[0]].forkPath[f], msgbuffer[sendIndex].forkId);
+      if (systemStates[stateToUpdate].forkPath[f] == msgbuffer[sendIndex].forkId)
+      {
+        forkOk = true;
+        break;
+      }
+    }
+  }
+
+  return forkOk;
 }
 
 bool canDeliverRecvState(int stateToUpdate, int recvIndex)
@@ -688,6 +714,28 @@ bool canDeliverRecvState(int stateToUpdate, int recvIndex)
   
 
   return recvDeliver;
+}
+
+bool canDeliverSendState(int stateToUpdate, int sendIndex)
+{
+  bool sendDeliver = true;
+  
+  if (msgbuffer[sendIndex].numDelivered > 0)
+  {
+    for (int f = 0; f < msgbuffer[sendIndex].numDelivered; f++)
+    {
+      for (int g = 0; g < systemStates[stateToUpdate].len; g++) // TODO < pos in fork path OR just all ? (then maybe no need forkpath...)
+      {
+        if (msgbuffer[sendIndex].delivered[f] == systemStates[stateToUpdate].forkPath[g])
+        {
+          sendDeliver = false;
+          break;
+        }
+      }
+    }
+  }
+  
+  return sendDeliver;
 }
 
 void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg, int recmsglen)
@@ -892,6 +940,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
   // Look through the message array if the message it wants is
   // already there
 
+  if (!(msgbuffer[sendIndex].type == 0 && msgbuffer[recvIndex].type == 1 && msgbuffer[sendIndex].to == msgbuffer[recvIndex].to)) {
+    return -1; // continue
+  }
+
   // Get the system states to update
 
   int statesToUpdateTemp[numStates];
@@ -903,20 +955,33 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
   int numStatesToUpdateTemp = res[0];
   int posInForkPath = res[1];
 
-  int statesToUpdateTemp2[numStatesToUpdateTemp];
-  int numStatesToUpdateTemp2 = 0;
+  /*
+  int statesToUpdateTemp1[numStatesToUpdateTemp];
+  int numStatesToUpdateTemp1 = 0;
   for (int s = 0; s < numStatesToUpdateTemp; s++)
   {
     if (canDeliverRecvState(statesToUpdateTemp[s], recvIndex))
     {
-      statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp[s];
+      statesToUpdateTemp1[numStatesToUpdateTemp1++] = statesToUpdateTemp[s];
+    }
+  }
+
+  int statesToUpdateTemp2[numStatesToUpdateTemp1];
+  int numStatesToUpdateTemp2 = 0;
+  for (int s = 0; s < numStatesToUpdateTemp1; s++)
+  {
+    if (canDeliverSendState(statesToUpdateTemp1[s], sendIndex))
+    {
+      statesToUpdateTemp2[numStatesToUpdateTemp2++] = statesToUpdateTemp1[s];
     }
   }
 
   int statesToUpdate[numStatesToUpdateTemp2];
   int numStatesToUpdate = 0;
+
   int statesNoAction[numStatesToUpdateTemp2];
   int numStatesNoAction = 0;
+  
   for (int s = 0; s < numStatesToUpdateTemp2; s++)
   {
     if (canDeliverState(systemStates[statesToUpdateTemp2[s]].len - 1, statesToUpdateTemp2[s], sendIndex, recvIndex)) // 1 posinforkpath attention len - 1 to compensate pos+1 in fct
@@ -928,10 +993,35 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       statesNoAction[numStatesNoAction++] = statesToUpdateTemp2[s];
     }
   }
+  */
 
-  if (numStatesToUpdate != 0)
-  // if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
+  int statesToUpdate[numStatesToUpdateTemp];
+  int numStatesToUpdate = 0;
+
+  int statesNoAction[numStatesToUpdateTemp];
+  int numStatesNoAction = 0;
+
+  for (int s = 0; s < numStatesToUpdateTemp; s++)
   {
+    if (canDeliverRecvState(statesToUpdateTemp[s], recvIndex) && canDeliverSendState(statesToUpdateTemp[s], sendIndex) && canDeliverForkState(statesToUpdateTemp[s], sendIndex)) 
+    {
+      statesToUpdate[numStatesToUpdate++] = statesToUpdateTemp[s];
+    }
+    else
+    { // verify that this includes the right states (I checked once seems ok)
+      statesNoAction[numStatesNoAction++] = statesToUpdateTemp[s];
+    }
+  }
+
+  if (numStatesToUpdate == 0) {
+    return -1; // continue
+  }
+
+  deliver_message(recvIndex, sendIndex); // deliver send fork id in recv msg
+
+  //if (numStatesToUpdate != 0)
+  // if (canDeliver(statesToUpdate, numStatesToUpdate, j, i))
+  //{
     /*
     printf("[Controller] send msg to receiver\n");
     printMessage(sendIndex);
@@ -1034,8 +1124,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
       // here no need to update msghistory because for this id no message was received
 
-      deliver_message_forkid(recvIndex, forkidNoAction);
-      deliver_message_forkid(sendIndex, forkidNoAction);
+      //deliver_message_forkid(recvIndex, forkidNoAction);
+      deliver_message_forkid(sendIndex, forkidNoAction); // deliver forkids in send msg
       
     }
 
@@ -1051,10 +1141,10 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg, 0);
 
-    deliver_message_forkid(recvIndex, forkid0);
-    deliver_message_forkid(sendIndex, forkid0);
+    //deliver_message_forkid(recvIndex, forkid0);
+    deliver_message_forkid(sendIndex, forkid0); // deliver forkids in send msg
 
-    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
@@ -1069,8 +1159,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       // add op msg to history
         addMsgToHistory(forkid1, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, opValue, 0);
 
-      deliver_message_forkid(recvIndex, forkid1);
-      deliver_message_forkid(sendIndex, forkid1);
+      //deliver_message_forkid(recvIndex, forkid1);
+      deliver_message_forkid(sendIndex, forkid1); // deliver forkids in send msg
 
       if (compareProcessState(newProcessState, newProcessStateOp))
       {
@@ -1255,8 +1345,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // close(connfd); // We might need it later since several send can be sent to one deliver
     // break; // In fact can have several send delivered to one recv...
     return 1; // msg was delivered 
-  }
-return 0; // msg was not delivered
+  //}
+//return 0; // msg was not delivered
 }
 
 int main()
