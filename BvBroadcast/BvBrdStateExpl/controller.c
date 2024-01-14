@@ -249,7 +249,7 @@ void spawnProcesses()
     {
       char processIdStr[10], initialValueStr[10];
       sprintf(processIdStr, "%d", i);
-      if (i < 3)
+      if (i < 2)
       {
         sprintf(initialValueStr, "%d", 0);
       }
