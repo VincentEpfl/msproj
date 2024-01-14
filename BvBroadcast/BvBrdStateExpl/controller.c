@@ -1095,7 +1095,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
-    if (msgbuffer[sendIndex].echo == 1 && numStatesNoAction > 0)
+    if (false) // msgbuffer[sendIndex].echo == 1 && numStatesNoAction > 0
     {
       /*
       printf("[Controller] Received an echo message, try this\n");
