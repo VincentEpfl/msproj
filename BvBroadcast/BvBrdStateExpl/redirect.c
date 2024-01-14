@@ -293,6 +293,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         // received by the controller
 
         forkId = getpid();
+        printf("[Intercept in p%d] in forkid %d\n", processId, forkId);
 
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;
@@ -319,6 +320,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
         // received by the controller
 
         forkId = getpid();
+        printf("[Intercept in p%d] in forkid %d\n", processId, forkId);
 
         // Unwrap message from controller and transmit data to process
         int *intBuf = (int *)buf;

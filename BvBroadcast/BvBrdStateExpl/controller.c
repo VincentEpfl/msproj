@@ -1260,6 +1260,13 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         {
           // If the new system states are the same as some that are already stored, kill the new ones
           forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
+          //forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
+        }
+
+        for (int s = 0; s < numStatesToUpdate; s++)
+        {
+          // If the new system states are the same as some that are already stored, kill the new ones
+          //forkid0_killed = killStateAlreadyThere(statesToUpdate[s], numStates, forkid0, forkid0_killed);
           forkid1_killed = killStateAlreadyThere(numStates - 1, numStates, forkid1, forkid1_killed);
         }
 
@@ -1580,6 +1587,7 @@ int main()
 
   printControllerState(systemStates, numStates);
   checkAllStates();
+  /*
   for (int m1 = 0; m1 < i; m1++)
   {
     for (int m2 = 0; m2 < i; m2++)
@@ -1678,6 +1686,7 @@ int main()
       }
     }
   }
+  */
   printf("[Controller] End of simulation\n");
   printf("[Controller] Number of states we went through : %d\n", numStates);
   printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
