@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 3 // Total number of processes
-#define T 0 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 // Message struct
 typedef struct
@@ -1144,7 +1144,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     //deliver_message_forkid(recvIndex, forkid0);
     deliver_message_forkid(sendIndex, forkid0); // deliver forkids in send msg
 
-    if (msgbuffer[sendIndex].from == 2 || msgbuffer[sendIndex].from == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+// STATE EXPL COND
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");

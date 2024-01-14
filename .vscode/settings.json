@@ -3,6 +3,8 @@
         "dlfcn.h": "c",
         "types.h": "c",
         "socket.h": "c",
-        "semaphore.h": "c"
+        "semaphore.h": "c",
+        "fcntl.h": "c",
+        "signal.h": "c"
     }
 }
