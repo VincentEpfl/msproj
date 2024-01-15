@@ -56,7 +56,7 @@ void BV_broadcast(int value)
             int distinctCount = countDistinctProcessesForValue(value);
             //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // Introduce bug 2T -> 2T - 1
-            if (distinctCount > 2 * T && !committedValues[value])
+            if (distinctCount > 2 * T - 1 && !committedValues[value])
             {
                 //printf("Process %d commits value %d\n", processId, value);
                 committedValues[value] = 1; // Mark the value as committed
@@ -100,7 +100,7 @@ void processMessages(int value, int fromProcess)
     int distinctCount = countDistinctProcessesForValue(value);
     //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // Introduce bug 2T -> 2T - 1
-    if (distinctCount > 2 * T && !committedValues[value])
+    if (distinctCount > 2 * T - 1 && !committedValues[value])
     {
         //printf("Process %d commits value %d\n", processId, value);
         committedValues[value] = 1; // Mark the value as committed
