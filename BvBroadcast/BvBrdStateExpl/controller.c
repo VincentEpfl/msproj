@@ -836,14 +836,15 @@ bool killStateAlreadyThere(int state, int numStates, int killHandle, bool forkid
 
       if (!forkid_killed_temp)
       {
-        kill(killHandle, SIGKILL); // TODO SIGTERM OR SIGKILL
+        //kill(killHandle, SIGKILL); // TODO SIGTERM OR SIGKILL
         //waitpid(killHandle, NULL, 0); // necessary ?
         forkid_killed_temp = true;
       }
       //printf("[Controller] kill state %d on forkid %d\n", state, killHandle);
 
       // there I could send(connfd, kill msg with forkid0) instead of SIGKILL
-      systemStates[state].killed = 1;
+      //systemStates[state].killed = 1;
+      systemStates[z].killed = 1;
       numStatesKilled = numStatesKilled + 1;
     }
   }
@@ -1205,8 +1206,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
         if (forkid0_killed)
         {
-          numProcesses = numProcesses - 1;
-          processes[numProcesses] = -1; // "delete" forkid0
+          //numProcesses = numProcesses - 1;
+          //processes[numProcesses] = -1; // "delete" forkid0
           schedule_new_process();
         }
         else
@@ -1272,12 +1273,14 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         }
 
 
-        if (forkid0_killed && forkid1_killed)
+        if (true) // forkid0_killed && forkid1_killed
         {
+          /*
           numProcesses = numProcesses - 1;
           processes[numProcesses] = -1;
           numProcesses = numProcesses - 1;
           processes[numProcesses] = -1;
+          */
           schedule_new_process();
         }
         else if (forkid0_killed)
@@ -1343,8 +1346,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
 
       if (forkid0_killed)
       {
-        numProcesses = numProcesses - 1;
-        processes[numProcesses] = -1; // "delete" forkid0
+        //numProcesses = numProcesses - 1;
+        //processes[numProcesses] = -1; // "delete" forkid0
       }
       schedule_new_process();
     }
