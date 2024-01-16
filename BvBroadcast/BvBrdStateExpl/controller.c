@@ -470,7 +470,7 @@ bool checkStateValid(int state[N][2])
   {
     for (int j = 0; j < 2; j++)
     {
-      if (state[i][j] > 2 * T - 1) // BUG 2*T -> 2*T - 1
+      if (state[i][j] > 2 * T) // BUG 2*T -> 2*T - 1
       { 
         committed_values[i][j] = 1;
       }
@@ -1440,6 +1440,8 @@ int main()
 
   // Print states
   printControllerState(systemStates, numStates);
+
+  printf("\n#######################################################################################\n");
 
   // Check validity
   checkAllStates();
