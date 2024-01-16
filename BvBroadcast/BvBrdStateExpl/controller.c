@@ -33,6 +33,7 @@
 
 #define PROCESS_MESSAGE_SIZE 6
 #define INSTRUCTION_MESSAGE_SIZE 4
+#define SOCKET_QUEUE_CAPACITY 1000
 
 #define SLEEP_DURATION_MS 10000
 #define TIMEOUT_DURATION_S 0
@@ -73,7 +74,7 @@ typedef struct
 typedef struct
 {
   int len;             // len of forkPath
-  pid_t forkPath[SIZE_STATE_FORK_PATH]; // what should be max length ?
+  pid_t forkPath[SIZE_STATE_FORK_PATH]; 
 
   // received value format :
   // { process i :
@@ -157,7 +158,7 @@ int get_states_to_update(int *res, int *statesToUpdate, int recv_msg_index)
     }
 
     if (systemStates[s].len == 0)
-    { // init le 1 elem de forkpath devrait etre 0
+    { 
       systemStates[s].len = 1;
       systemStates[s].forkPath[0] = 0;
     }
@@ -232,7 +233,7 @@ int initSocket(bool feedback)
     struct timeval tv; // timeval structure to set the timeout
 
     // Set the timeout value
-    tv.tv_sec = TIMEOUT_DURATION_S;       // 0 seconds timeout
+    tv.tv_sec = TIMEOUT_DURATION_S;       // 0 seconds 
     tv.tv_usec = TIMEOUT_DURATION_MS; // 10000 microseconds
 
     // Set the timeout option
@@ -264,7 +265,7 @@ int initSocket(bool feedback)
     exit(EXIT_FAILURE);
   }
 
-  if (listen(sockfd, 1000) == -1) // max queue capacity might be an issue ?
+  if (listen(sockfd, SOCKET_QUEUE_CAPACITY) == -1) 
   {
     perror("[Controller] listen");
     close(sockfd);
@@ -1047,6 +1048,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
 
+      // here no need to update msghistory because for this id no message was received ?
       addMsgToHistory(forkidNoAction, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg, 1);
 
       // Update the system states This doesnt act on the same state than the rest so should compose fine
@@ -1056,8 +1058,6 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to);
         // actual state should not change so no need to kill TODO maybe ???
       }
-
-      // here no need to update msghistory because for this id no message was received
 
       deliver_message_forkid(sendIndex, forkidNoAction); // deliver forkids in send msg
       
@@ -1081,7 +1081,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // STATE EXPLORATION CONDITION
     if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
-      // Try to send the message with the opposite value
+      // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
       int messageOp[INSTRUCTION_MESSAGE_SIZE] = {1, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
       int newProcessStateOp[2];
@@ -1286,7 +1286,7 @@ int main()
       struct timeval tmv; // timeval structure to set the timeout
 
       // Set the timeout value
-      tmv.tv_sec = TIMEOUT_DURATION_S;       // 0 seconds timeout
+      tmv.tv_sec = TIMEOUT_DURATION_S;       // 0 seconds 
       tmv.tv_usec = TIMEOUT_DURATION_MS; // 10000 microseconds
 
       // Set the timeout option
