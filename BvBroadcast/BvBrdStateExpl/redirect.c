@@ -24,7 +24,7 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
 
-#define N 4 // Total number of processes
+#define N 3 // Total number of processes
 
 int forkId = 0; // Only 0 at first for each process
 
@@ -307,7 +307,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
       }
       i = i + 1;
     }
-    else if (instruction == 3) {
+    else if (instruction == 3) { 
       children[i] = fork();
       if (children[i] < 0)
       {
