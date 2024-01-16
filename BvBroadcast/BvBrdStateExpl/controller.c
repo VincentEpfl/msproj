@@ -287,7 +287,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
 
       // Process value
-      if (i < 3)
+      if (i < 2)
       {
         sprintf(initialValueStr, "%d", 0);
       }
