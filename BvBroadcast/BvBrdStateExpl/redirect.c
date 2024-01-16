@@ -178,7 +178,7 @@ recv(int sockfd, void *buf, size_t len, int flags)
     sa.sa_flags = 0; // or SA_RESTART to restart system calls
     sigemptyset(&sa.sa_mask);
 
-    if (sigaction(SIGINT, &sa, NULL) == -1) {
+    if (sigaction(SIGINT, &sa, NULL) == -1) { // TODO SIGINT -> SIGTERM ?
         perror("sigaction");
         return EXIT_FAILURE;
     }
