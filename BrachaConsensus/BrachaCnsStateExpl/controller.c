@@ -24,12 +24,12 @@
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
-#define SIZE_STATE_FORK_PATH 500
-#define SIZE_MSG_BUF 1000
+#define SIZE_STATE_FORK_PATH 5000
+#define SIZE_MSG_BUF 10000
 
 #define MAX_NUM_PROCESSES 10000
 #define MAX_NUM_SYS_STATES 1000
-#define MAX_FILE_DESCRIPTORS 1000
+#define MAX_FILE_DESCRIPTORS 10000
 
 #define PROCESS_MESSAGE_SIZE 10
 #define INSTRUCTION_MESSAGE_SIZE 8
@@ -872,6 +872,8 @@ void printControllerState(State *systemStates, int numStates)
         }
         printf("}\n");
       }
+
+    /*
     printf("[Controller] messages exchanged: \n");
     for (int f = 0; f < systemStates[s].len; f++)
     {
@@ -908,6 +910,7 @@ void printControllerState(State *systemStates, int numStates)
       }
       printf("}\n");
     }
+    */
   }
 }
 
