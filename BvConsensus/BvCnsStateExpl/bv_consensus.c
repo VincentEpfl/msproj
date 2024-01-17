@@ -122,11 +122,11 @@ bool waitcondition(int * values, int roundNumber) {
     //printf("committed value 1 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[1]);
     bool cond = false;
     // BUG N - T -> N - T - 1 
-    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[0] == 1) {
+    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[0] == 1) {
         values[0] = 1;
         cond = true;
     }
-    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[1] == 1) {
+    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[1] == 1) {
         values[1] = 1;
         cond = true;
     }
@@ -207,7 +207,7 @@ void BV_broadcast(int value, int roundNumber)
             int distinctCount = countDistinctProcessesForValue(value, roundNumber);
             //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // BUG Introduce bug 2T -> 2T - 1
-            if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[value])
+            if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
             {
                 //printf("Process %d commits value %d\n", processId, value);
                 roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
@@ -255,7 +255,7 @@ void BVprocessMessages(int value, int fromProcess, int roundNumber)
     int distinctCount = countDistinctProcessesForValue(value, roundNumber);
     //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // BUG Introduce bug 2T -> 2T - 1
-    if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[value])
+    if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
     {
         //printf("Process %d commits value %d\n", processId, value);
         roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
