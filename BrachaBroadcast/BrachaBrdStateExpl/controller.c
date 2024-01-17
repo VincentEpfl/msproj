@@ -300,11 +300,11 @@ void spawnProcesses()
       // Process value
       if (i < 1)
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
       else
       {
-        sprintf(initialValueStr, "%d", -1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
 // ALGO CHG
