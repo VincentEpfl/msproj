@@ -24,12 +24,12 @@
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
-#define SIZE_STATE_FORK_PATH 5000
+#define SIZE_STATE_FORK_PATH 500
 #define SIZE_MSG_BUF 1000
 
 #define MAX_NUM_PROCESSES 10000
 #define MAX_NUM_SYS_STATES 1000
-#define MAX_FILE_DESCRIPTORS 10000
+#define MAX_FILE_DESCRIPTORS 1000
 
 #define PROCESS_MESSAGE_SIZE 8
 #define INSTRUCTION_MESSAGE_SIZE 6
@@ -75,7 +75,7 @@ typedef struct
 typedef struct
 {
   int len;             // len of forkPath
-  pid_t forkPath[SIZE_STATE_FORK_PATH]; // what should be max length ?
+  pid_t forkPath[SIZE_STATE_FORK_PATH]; 
 
 // ALGO CHG
   // received value format :

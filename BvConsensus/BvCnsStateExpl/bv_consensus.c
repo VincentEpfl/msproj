@@ -167,9 +167,9 @@ void broadcast(int value, int roundNumber) {
        sockfd = 1;
         
         // TO HELP TRIGGER BUG
-        if (processId != 3) {
-            usleep(100000);
-        }
+        //if (processId != 1) {
+           //usleep(100000);
+        //}
         send(sockfd, &message, sizeof(message), 0);
         //printf("Process %d, Round %d : Value %d sent to process %d with tag AUX\n", processId, rnd, value, i);
         //close(sockfd);
@@ -234,7 +234,7 @@ void BV_broadcast(int value, int roundNumber)
         
         
         // TO HELP TRIGGER BUG
-        usleep(100000);
+        //usleep(100000);
         send(sockfd, &message, sizeof(message), 0);
 
         //printf("Process %d, Round %d : Value %d sent to process %d with tag EST\n", processId, rnd, value, i);
