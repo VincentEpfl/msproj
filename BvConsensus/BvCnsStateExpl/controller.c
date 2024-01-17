@@ -549,6 +549,7 @@ bool checkAllStates()
     {
       continue;
     }
+    printf("Check state %d\n", s);
 
     if (!checkStateValid(systemStates[s].valuesCount))
     {
