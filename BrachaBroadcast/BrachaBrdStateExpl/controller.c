@@ -858,7 +858,7 @@ void printControllerState(State *systemStates, int numStates)
         printf("}\n");
       }
 
-/*
+
     printf("[Controller] messages exchanged: \n");
     for (int f = 0; f < systemStates[s].len; f++)
     {
@@ -875,7 +875,7 @@ void printControllerState(State *systemStates, int numStates)
       printf("[Controller] messages sent by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p && msghistory[g].noAction == 0) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].from == p) {
             printf("value %d to process %d\n", msghistory[g].msg, msghistory[g].to);
           }
         }
@@ -887,14 +887,14 @@ void printControllerState(State *systemStates, int numStates)
       printf("[Controller] messages received by process %d : { \n", p);
       for (int f = 0; f < systemStates[s].len; f++) {
         for (int g = 0; g < nummsg; g++) {
-          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p && msghistory[g].noAction == 0) {
+          if (msghistory[g].forkId == systemStates[s].forkPath[f] && msghistory[g].to == p) {
             printf("value %d from process %d\n", msghistory[g].msg, msghistory[g].from);
           }
         }
       }
       printf("}\n");
     }
-    */
+    
     
   }
 }
