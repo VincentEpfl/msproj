@@ -1060,7 +1060,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].originProcess == 1 && msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
