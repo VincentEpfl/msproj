@@ -26,6 +26,8 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define N 4 // Total number of processes
 
+#define NUM_ROUNDS 3
+
 int forkId = 0; // Only 0 at first for each process
 
 int sendMsgCounter = 0;
@@ -86,7 +88,7 @@ send(int sockfd, const void *buf, size_t len, int flags)
   //printf("[Intercept] Send feedback\n");
 
   // ALGO CHG
-  int message[2][2][2];
+  int message[NUM_ROUNDS][2][2];
   int decided_value;
   char feedbackMessage[sizeof(forkId) + sizeof(decided_value) + sizeof(message)];
   memcpy(feedbackMessage, &forkId, sizeof(forkId));

@@ -12,6 +12,8 @@
 #define T 1 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
+#define NUM_ROUNDS 3
+
 sem_t *sem;
 sem_t *sem_init_brd;
 
@@ -39,7 +41,7 @@ Message msgbuffer[10]; // Buffer of messages for this round that have arrived at
 } RoundInfo;
 
 // State of all the rounds
-RoundInfo roundsInfo[10] = {
+RoundInfo roundsInfo[NUM_ROUNDS] = {
     {
         {{0, 0}},
         {0, 0},
@@ -361,7 +363,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (rnd > 1) {
+        if (rnd > NUM_ROUNDS - 1) {
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             //break;
             while (1) {
@@ -377,8 +379,8 @@ int main(int argc, char *argv[])
                 // TODO maybe should still processs message dans tous les cas ca ferait pas plus de broadcast
                 // mais le state renvoye juste apres serait + correct
 
-                int valuesCount[2][2][2]; 
-                for (int r = 0; r < 2; r++) { 
+                int valuesCount[NUM_ROUNDS][2][2]; 
+                for (int r = 0; r < NUM_ROUNDS; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -465,8 +467,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[2][2][2]; 
-                for (int r = 0; r < 2; r++) { 
+                int valuesCount[NUM_ROUNDS][2][2]; 
+                for (int r = 0; r < NUM_ROUNDS; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -559,8 +561,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[2][2][2]; 
-                for (int r = 0; r < 2; r++) { 
+                int valuesCount[NUM_ROUNDS][2][2]; 
+                for (int r = 0; r < NUM_ROUNDS; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 

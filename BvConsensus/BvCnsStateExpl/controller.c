@@ -22,6 +22,7 @@
 
 #define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
+#define NUM_ROUNDS 3
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
@@ -86,7 +87,7 @@ typedef struct
   //    },
   //  },
   // }
-  int valuesCount[N][2][2][2];
+  int valuesCount[N][NUM_ROUNDS][2][2];
   int decided_values[N];
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
@@ -446,10 +447,10 @@ void schedule_new_process()
 
 // ALGO CHG
 // Compares 2 states of the algorithm
-bool compareState(int state1[N][2][2][2], int state2[N][2][2][2])
+bool compareState(int state1[N][NUM_ROUNDS][2][2], int state2[N][NUM_ROUNDS][2][2])
 {
   for (int p = 0; p < N; p++) {
-    for (int r = 0; r < 2; r++) { 
+    for (int r = 0; r < NUM_ROUNDS; r++) { 
       for (int t = 0; t < 2; t++) {
           for (int v = 0; v < 2; v++)
           {
@@ -467,9 +468,9 @@ bool compareState(int state1[N][2][2][2], int state2[N][2][2][2])
 
 // ALGO CHG
 // Compares the state of 2 processes
-bool compareProcessState(int processState1[2][2][2], int processState2[2][2][2])
+bool compareProcessState(int processState1[NUM_ROUNDS][2][2], int processState2[NUM_ROUNDS][2][2])
 {
-  for (int r = 0; r < 2; r++) { 
+  for (int r = 0; r < NUM_ROUNDS; r++) { 
     for (int t = 0; t < 2; t++) {
         for (int v = 0; v < 2; v++)
         {
@@ -496,7 +497,7 @@ int randomBit(int r) {
 // ALGO CHG
 // TODO check properties
 // Checks if the state of the algorithm is valid
-bool checkStateValid(int state[N][2][2][2], int decided_values[N])
+bool checkStateValid(int state[N][NUM_ROUNDS][2][2], int decided_values[N])
 {
   /*
   bool valid = true;
@@ -596,7 +597,7 @@ bool checkAllStates()
       for (int p = 0; p < N; p++)
       {
         printf("process %d : {\n", p);
-        for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
+        for (int r = 0; r < NUM_ROUNDS; r++) { 
           printf("round %d : {\n", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);
@@ -800,7 +801,7 @@ int sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_ms
 {
   int forkId;
   int decided_value;
-  int msg[2][2][2];
+  int msg[NUM_ROUNDS][2][2];
   char recmsg[sizeof(forkId) + sizeof(decided_value) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
@@ -833,7 +834,7 @@ void duplicateState(int originState, int destState)
 {
   for (int p = 0; p < N; p++)
   {
-    for (int r = 0; r < 2; r++) {
+    for (int r = 0; r < NUM_ROUNDS; r++) {
       for (int t = 0; t < 2; t++) {
           for (int v = 0; v < 2; v++)
           {
@@ -849,6 +850,11 @@ void duplicateState(int originState, int destState)
   }
 
   systemStates[destState].len = systemStates[originState].len;
+
+  for (int p = 0; p < N; p++) {
+    systemStates[destState].decided_values[p] = systemStates[originState].decided_values[p];
+  }
+  
 }
 
 // AGLO CHG
@@ -857,7 +863,7 @@ void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
-  for (int r = 0; r < 2; r++) { 
+  for (int r = 0; r < NUM_ROUNDS; r++) { 
     for (int t = 0; t < 2; t++) {
         for (int v = 0; v < 2; v++)
         {
@@ -918,7 +924,7 @@ void printControllerState(State *systemStates, int numStates)
     for (int p = 0; p < N; p++)
       {
         printf("process %d : {\n", p);
-        for (int r = 0; r < 2; r++) { 
+        for (int r = 0; r < NUM_ROUNDS; r++) { 
           printf("round %d : {\n", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);
@@ -1068,7 +1074,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // #############################################################################################################################
     // Only keep because similar if I want a byz process to not send any message
     // But I dont use it now
-    int newProcessStateNoAction[2][2][2]; // ALGO CHG
+    int newProcessStateNoAction[NUM_ROUNDS][2][2]; // ALGO CHG
     int forkInfoNoAction[2];
     int forkidNoAction;
     int forkidNoAction_index;
@@ -1096,7 +1102,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // #############################################################################################################################
 
     // Send the message
-    int newProcessState[2][2][2]; // ALGO CHG
+    int newProcessState[NUM_ROUNDS][2][2]; // ALGO CHG
     int forkInfo[2];
     // ALGO CHG
     int message[INSTRUCTION_MESSAGE_SIZE] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
@@ -1118,7 +1124,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       int opValue = 1 - msgbuffer[sendIndex].msg;
       // ALGO CHG TODO
       int messageOp[INSTRUCTION_MESSAGE_SIZE] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
-      int newProcessStateOp[2][2][2]; // ALGO CHG
+      int newProcessStateOp[NUM_ROUNDS][2][2]; // ALGO CHG
       int forkInfoOp[2];
       int decided_value_op = sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
