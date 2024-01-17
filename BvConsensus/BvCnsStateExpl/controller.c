@@ -24,12 +24,12 @@
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
-#define SIZE_STATE_FORK_PATH 500
+#define SIZE_STATE_FORK_PATH 5000
 #define SIZE_MSG_BUF 1000
 
 #define MAX_NUM_PROCESSES 10000
 #define MAX_NUM_SYS_STATES 1000
-#define MAX_FILE_DESCRIPTORS 1000
+#define MAX_FILE_DESCRIPTORS 10000
 
 #define PROCESS_MESSAGE_SIZE 8
 #define INSTRUCTION_MESSAGE_SIZE 6
@@ -202,7 +202,7 @@ void put_msg_in_buffer(int index, int *receivedMessage)
 {
   msgbuffer[index].type = receivedMessage[0];
   msgbuffer[index].round = receivedMessage[2];
-  msgbuffer[index].tag = receivedMessage[1]; // TODO attention index
+  msgbuffer[index].tag = receivedMessage[1]; 
   msgbuffer[index].from = receivedMessage[3];
   msgbuffer[index].to = receivedMessage[5];
   msgbuffer[index].msg = receivedMessage[4];
