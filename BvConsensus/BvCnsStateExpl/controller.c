@@ -303,7 +303,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
       // Replace child process with bv_consensus process
@@ -482,12 +482,62 @@ bool compareProcessState(int processState1[2][2][2], int processState2[2][2][2])
   return true;
 }
 
+// Common "random" number generator
+int randomBit(int r) {
+    if (r % 2 == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 // ALGO CHG
 // TODO check properties
 // Checks if the state of the algorithm is valid
 bool checkStateValid(int state[N][2][2][2])
 {
-  return true;
+  bool valid = true;
+  int decided_values[N];
+  for (int p = 0; p < N; p++) {
+    decided_values[p] = -1;
+  }
+  for (int p = 0; p < N; p++) {
+    bool decided = false;
+    for (int r = 0; r < 2; r++) {
+      int values[2] = {0, 0};
+      if (state[0][r][1][0] >= N - T - 1 && state[0][r][0][0] > 2*T - 1) {
+        values[0] = 1;
+      }
+      if (state[0][r][1][1] >= N - T - 1 && state[0][r][0][1] > 2*T - 1) {
+        values[1] = 1;
+      }
+
+      int s = randomBit(r);
+      if (values[s]) {
+        if (!decided) {
+          decided = true;
+          decided_values[p] = s;
+          printf("Process %d decided value %d\n", p, s);
+        }
+      }
+    }
+  }
+
+  if (!(decided_values[0] == 0 || decided_values[0] == 1)) {
+    printf("Process 0 didn't decide\n");
+    valid = false;
+  }
+  
+  for (int p = 1; p < N; p++) { 
+    if (p == 1) { // p1 byzantine
+      continue;
+    }
+    if (decided_values[p] != decided_values[0]) {
+      valid = false;
+    }
+  }
+
+  return valid;
 }
 
 bool checkAllStates()
@@ -1026,7 +1076,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 0) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");

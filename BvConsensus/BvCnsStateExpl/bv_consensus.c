@@ -119,11 +119,11 @@ bool waitcondition(int * values, int roundNumber) {
     //printf("committed value 1 ? %d (YES = 1)\n", roundsInfo[roundNumber].committedValues[1]);
     bool cond = false;
     // BUG N - T -> N - T - 1 
-    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[0] == 1) {
+    if (countDistinctProcessesForValueAux(0, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[0] == 1) {
         values[0] = 1;
         cond = true;
     }
-    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T && roundsInfo[roundNumber].committedValues[1] == 1) {
+    if (countDistinctProcessesForValueAux(1, roundNumber) >= N - T - 1 && roundsInfo[roundNumber].committedValues[1] == 1) {
         values[1] = 1;
         cond = true;
     }
@@ -166,7 +166,9 @@ void broadcast(int value, int roundNumber) {
        sockfd = 1;
         
         // TO HELP TRIGGER BUG
-        usleep(100000);
+        if (processId != 3) {
+            usleep(100000);
+        }
         send(sockfd, &message, sizeof(message), 0);
         //printf("Process %d, Round %d : Value %d sent to process %d with tag AUX\n", processId, rnd, value, i);
         //close(sockfd);
@@ -202,7 +204,7 @@ void BV_broadcast(int value, int roundNumber)
             int distinctCount = countDistinctProcessesForValue(value, roundNumber);
             //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
             // BUG Introduce bug 2T -> 2T - 1
-            if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
+            if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[value])
             {
                 //printf("Process %d commits value %d\n", processId, value);
                 roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
@@ -247,7 +249,7 @@ void BVprocessMessages(int value, int fromProcess, int roundNumber)
     int distinctCount = countDistinctProcessesForValue(value, roundNumber);
     //printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // BUG Introduce bug 2T -> 2T - 1
-    if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
+    if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[value])
     {
         //printf("Process %d commits value %d\n", processId, value);
         roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
@@ -358,7 +360,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (rnd > 0) {
+        if (rnd > 1) {
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             //break;
             while (1) {
@@ -374,8 +376,8 @@ int main(int argc, char *argv[])
                 // TODO maybe should still processs message dans tous les cas ca ferait pas plus de broadcast
                 // mais le state renvoye juste apres serait + correct
 
-                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; 
+                for (int r = 0; r < 2; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -457,8 +459,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; 
+                for (int r = 0; r < 2; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 
@@ -547,8 +549,8 @@ int main(int argc, char *argv[])
 
                 // This is where it registers its state to the controller 
                 // TODO check if ok to do it here 
-                int valuesCount[2][2][2]; // TODO maybe flatten array, but then again maybe it does that by default
-                for (int r = 0; r < 2; r++) { // TODO ATTENTION I THINK ROUNDS START AT 1 !!
+                int valuesCount[2][2][2]; 
+                for (int r = 0; r < 2; r++) { 
                     valuesCount[r][0][0] = countDistinctProcessesForValue(0, r);
                     valuesCount[r][0][1] = countDistinctProcessesForValue(1, r);
 

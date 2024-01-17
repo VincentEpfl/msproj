@@ -208,7 +208,7 @@ void BV_broadcast(int value, int roundNumber)
             int distinctCount = countDistinctProcessesForValue(byz_val, roundNumber);
             printf("Process %d Byz Value %d distinct count: %d\n", processId, byz_val, distinctCount);
             // BUG Introduce bug 2T -> 2T - 1
-            if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[byz_val])
+            if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[byz_val])
             {
                 printf("Process %d commits byz value %d\n", processId, byz_val);
                 roundsInfo[roundNumber].committedValues[byz_val] = 1; // Mark the value as committed
@@ -250,7 +250,7 @@ void BVprocessMessages(int value, int fromProcess, int roundNumber)
     int distinctCount = countDistinctProcessesForValue(value, roundNumber);
     printf("Process %d Value %d distinct count: %d\n", processId, value, distinctCount);
     // BUG Introduce bug 2T -> 2T - 1
-    if (distinctCount > 2 * T && !roundsInfo[roundNumber].committedValues[value])
+    if (distinctCount > 2 * T - 1 && !roundsInfo[roundNumber].committedValues[value])
     {
         printf("Process %d commits value %d\n", processId, value);
         roundsInfo[roundNumber].committedValues[value] = 1; // Mark the value as committed
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
 
     while(1) {
 
-        if (rnd > 5) {
+        if (rnd > 2) {
             printf("END : SHOULD BE ENOUGH ROUNDS\n");
             break;
         }
