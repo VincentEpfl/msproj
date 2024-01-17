@@ -801,7 +801,7 @@ int sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_ms
   int forkId;
   int decided_value;
   int msg[2][2][2];
-  char recmsg[sizeof(forkId) + sizeof(msg)];
+  char recmsg[sizeof(forkId) + sizeof(decided_value) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
 
   //printf("[Controller] state recovered\n");
