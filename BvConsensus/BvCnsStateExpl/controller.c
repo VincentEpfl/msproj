@@ -75,7 +75,7 @@ typedef struct
 typedef struct
 {
   int len;             // len of forkPath
-  pid_t forkPath[500]; // what should be max length ?
+  pid_t forkPath[SIZE_STATE_FORK_PATH]; // what should be max length ?
 
 // ALGO CHG
   // received value format :
@@ -87,6 +87,7 @@ typedef struct
   //  },
   // }
   int valuesCount[N][2][2][2];
+  int decided_values[N];
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
 
@@ -104,11 +105,12 @@ int current_process_index; // Index of the process currently running in the proc
 
 // State of the system: all the states of the different executions of the algorithm as it is 
 // at one point 
-State systemStates[1000] = {
+State systemStates[MAX_NUM_SYS_STATES] = {
     {
         0,
         {0},
         {{{{0, 0}}}},
+        {0},
         0},
 };
 
@@ -494,8 +496,9 @@ int randomBit(int r) {
 // ALGO CHG
 // TODO check properties
 // Checks if the state of the algorithm is valid
-bool checkStateValid(int state[N][2][2][2])
+bool checkStateValid(int state[N][2][2][2], int decided_values[N])
 {
+  /*
   bool valid = true;
   int decided_values[N];
   for (int p = 0; p < N; p++) {
@@ -538,6 +541,31 @@ bool checkStateValid(int state[N][2][2][2])
   }
 
   return valid;
+  */
+
+ bool valid = true;
+
+for (int p = 0; p < N; p++) {
+    printf("Process %d decided %d\n", p, decided_values[p]);
+  }
+
+ if (!(decided_values[0] == 0 || decided_values[0] == 1)) {
+    printf("Process 0 didn't decide\n");
+    valid = false;
+  }
+
+ for (int p = 1; p < N; p++) { 
+    if (p == 1) { // p1 byzantine
+      continue;
+    }
+    if (decided_values[p] != decided_values[0]) {
+      valid = false;
+    }
+  }
+
+  return valid;
+
+
 }
 
 bool checkAllStates()
@@ -551,7 +579,7 @@ bool checkAllStates()
     }
     printf("Check state %d\n", s);
 
-    if (!checkStateValid(systemStates[s].valuesCount))
+    if (!checkStateValid(systemStates[s].valuesCount, systemStates[s].decided_values))
     {
       invalid = true;
       // maybe shut down everything, every process etc
@@ -768,9 +796,10 @@ void sendMsgToProcess(int connfd, const void *message, int msglen, void *recmsg,
 // ALGO CHG
 // Send controller instruction to a process
 // Recover the state of this process resulting from this instruction
-void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
+int sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_msg_index, void *newProcessState, void *forkInfo)
 {
   int forkId;
+  int decided_value;
   int msg[2][2][2];
   char recmsg[sizeof(forkId) + sizeof(msg)];
   sendMsgToProcess(connfd, message, msglen, &recmsg, sizeof(recmsg));
@@ -779,7 +808,8 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
 
   // Recover state
   memcpy(&forkId, recmsg, sizeof(int));
-  memcpy(newProcessState, recmsg + sizeof(int), sizeof(msg));
+  memcpy(&decided_value, recmsg + sizeof(int), sizeof(int));
+  memcpy(newProcessState, recmsg + sizeof(int) + sizeof(int), sizeof(msg));
   
   // Controller instruction spawns a new process
   // Recover process id and index in processes[]
@@ -791,6 +821,8 @@ void sendMsgAndRecvState(int connfd, const void *message, int msglen, int send_m
   processes[numProcesses++] = forkInfoInt[0];
 
   kill(forkInfoInt[0], SIGSTOP);
+
+  return decided_value;
 
   //printf("[Controller] process %d state is now {%d, %d} in forkid %d\n", msgbuffer[send_msg_index].to, newProcessStateInt[0], newProcessStateInt[1], forkInfoInt[0]);
 }
@@ -821,7 +853,7 @@ void duplicateState(int originState, int destState)
 
 // AGLO CHG
 // Update a state with the new state of a process
-void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int updatedProcess)
+void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int updatedProcess, int decided_value)
 {
   systemStates[stateToUpdate].forkPath[systemStates[stateToUpdate].len] = forkid;
   systemStates[stateToUpdate].len = systemStates[stateToUpdate].len + 1;
@@ -833,6 +865,8 @@ void updateState(int stateToUpdate, int forkid, int newProcessState[][2][2], int
         }
     }
   }
+
+  systemStates[stateToUpdate].decided_values[updatedProcess] = decided_value;
 }
 
 // Kill redundant states: all states equal to a reference state
@@ -1042,7 +1076,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     {
      // ALGO CHG
       int messageNoAction[INSTRUCTION_MESSAGE_SIZE] = {3, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
-      sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
+      int decided_value = sendMsgAndRecvState(connfd, &messageNoAction, sizeof(messageNoAction), sendIndex, &newProcessStateNoAction, &forkInfoNoAction);
       forkidNoAction = forkInfoNoAction[0];
       forkidNoAction_index = forkInfoNoAction[1];
 
@@ -1053,7 +1087,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       for (int s = 0; s < numStatesNoAction; s++)
       {
         // just update forkpath and len
-        updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to);
+        updateState(statesNoAction[s], forkidNoAction, newProcessStateNoAction, msgbuffer[recvIndex].to, decided_value);
         // actual state should not change so no need to kill
       }
 
@@ -1066,7 +1100,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     int forkInfo[2];
     // ALGO CHG
     int message[INSTRUCTION_MESSAGE_SIZE] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, msgbuffer[sendIndex].msg, msgbuffer[sendIndex].to};
-    sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
+    int decided_value = sendMsgAndRecvState(connfd, &message, sizeof(message), sendIndex, &newProcessState, &forkInfo);
     int forkid0 = forkInfo[0];
     int forkid0_index = forkInfo[1];
 
@@ -1086,7 +1120,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       int messageOp[INSTRUCTION_MESSAGE_SIZE] = {1, msgbuffer[sendIndex].tag, msgbuffer[sendIndex].round, msgbuffer[sendIndex].from, opValue, msgbuffer[sendIndex].to};
       int newProcessStateOp[2][2][2]; // ALGO CHG
       int forkInfoOp[2];
-      sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
+      int decided_value_op = sendMsgAndRecvState(connfd, &messageOp, sizeof(messageOp), sendIndex, &newProcessStateOp, &forkInfoOp);
       int forkid1 = forkInfoOp[0];
       int forkid1_index = forkInfoOp[1];
 
@@ -1115,7 +1149,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
         // Update the system states
         for (int s = 0; s < numStatesToUpdate; s++)
         {
-          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to, decided_value);
         }
 
         // Kill redundant states
@@ -1153,8 +1187,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
           duplicateState(statesToUpdate[s], numStates);
 
           // Update the states
-          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
-          updateState(numStates, forkid1, newProcessStateOp, msgbuffer[recvIndex].to);
+          updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to, decided_value);
+          updateState(numStates, forkid1, newProcessStateOp, msgbuffer[recvIndex].to, decided_value_op);
 
           numStates = numStates + 1;
         }
@@ -1182,7 +1216,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
       // Update the system states
       for (int s = 0; s < numStatesToUpdate; s++)
       {
-        updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to);
+        updateState(statesToUpdate[s], forkid0, newProcessState, msgbuffer[recvIndex].to, decided_value);
       }
 
       // Kill redundant states
@@ -1203,6 +1237,13 @@ int main()
 {
 
   // TODO put that in init
+
+  for (int s = 0; s < MAX_NUM_SYS_STATES; s++) {
+    for (int p = 0; p < N; p++) {
+      systemStates[s].decided_values[p] = -1;
+    }
+    
+  }
 
     // Start timer to measure execution time
     clock_t start = clock();

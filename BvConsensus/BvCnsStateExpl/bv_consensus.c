@@ -66,6 +66,7 @@ int rnd = 0; // Current round number
 
 // This process has reached a decision
 bool decided = false;
+int decided_value = -1;
 
 int seed = 0;
 
@@ -384,7 +385,12 @@ int main(int argc, char *argv[])
                     valuesCount[r][1][0] = countDistinctProcessesForValueAux(0, r);
                     valuesCount[r][1][1] = countDistinctProcessesForValueAux(1, r);
                 }
-                send(-1, &valuesCount, sizeof(valuesCount), 0);
+                
+                char feedbackMessage[sizeof(decided_value) + sizeof(valuesCount)];
+                memcpy(feedbackMessage, &decided_value, sizeof(decided_value));
+                memcpy(feedbackMessage + sizeof(decided_value), valuesCount, sizeof(valuesCount));
+
+                send(-1, &feedbackMessage, sizeof(feedbackMessage), 0);
 
             }
         }
@@ -468,7 +474,11 @@ int main(int argc, char *argv[])
                     valuesCount[r][1][0] = countDistinctProcessesForValueAux(0, r);
                     valuesCount[r][1][1] = countDistinctProcessesForValueAux(1, r);
                 }
-                send(-1, &valuesCount, sizeof(valuesCount), 0);
+                char feedbackMessage[sizeof(decided_value) + sizeof(valuesCount)];
+                memcpy(feedbackMessage, &decided_value, sizeof(decided_value));
+                memcpy(feedbackMessage + sizeof(decided_value), valuesCount, sizeof(valuesCount));
+
+                send(-1, &feedbackMessage, sizeof(feedbackMessage), 0);
 
                 if (err == -1) { // TODO make sure its not better to just process the msg and who cares 
                     //close(connfd);
@@ -557,7 +567,11 @@ int main(int argc, char *argv[])
                     valuesCount[r][1][0] = countDistinctProcessesForValueAux(0, r);
                     valuesCount[r][1][1] = countDistinctProcessesForValueAux(1, r);
                 }
-                send(-1, &valuesCount, sizeof(valuesCount), 0);
+                char feedbackMessage[sizeof(decided_value) + sizeof(valuesCount)];
+                memcpy(feedbackMessage, &decided_value, sizeof(decided_value));
+                memcpy(feedbackMessage + sizeof(decided_value), valuesCount, sizeof(valuesCount));
+
+                send(-1, &feedbackMessage, sizeof(feedbackMessage), 0);
 
                 if (err == -1) { // TODO make sure its not better to just process the msg and who cares 
                     //close(connfd);
@@ -581,6 +595,7 @@ int main(int argc, char *argv[])
             if (!decided) {
                 // Decide on the value if it matches the common coin
                 decided = true;
+                decided_value = s;
                 //printf("#############################################\n");
                 printf("Process %d decides on value %d\n", processId, s);
                 //printf("#############################################\n");

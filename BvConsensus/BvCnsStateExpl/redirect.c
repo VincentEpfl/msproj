@@ -87,9 +87,11 @@ send(int sockfd, const void *buf, size_t len, int flags)
 
   // ALGO CHG
   int message[2][2][2];
-  char feedbackMessage[sizeof(forkId) + sizeof(message)];
+  int decided_value;
+  char feedbackMessage[sizeof(forkId) + sizeof(decided_value) + sizeof(message)];
   memcpy(feedbackMessage, &forkId, sizeof(forkId));
-  memcpy(feedbackMessage + sizeof(forkId), buf, sizeof(message));
+  memcpy(feedbackMessage + sizeof(forkId), buf, sizeof(decided_value));
+  memcpy(feedbackMessage + sizeof(forkId) + sizeof(decided_value), buf, sizeof(message));
 
   ssize_t bytes_sent = real_send(feedback_socket, &feedbackMessage, sizeof(feedbackMessage), 0);
 
