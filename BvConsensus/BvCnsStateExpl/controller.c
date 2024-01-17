@@ -516,16 +516,16 @@ bool checkAllStates()
       printf("values count: \n");
       for (int p = 0; p < N; p++)
       {
-        printf("process %d : {", p);
+        printf("process %d : {\n", p);
         for (int r = 0; r < 2; r++) { // TODO ATTENTION ROUNDS START AT 1 ?? 
-          printf("round %d : {", r);
+          printf("round %d : {\n", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);
               for (int v = 0; v < 2; v++)
               {
                 printf("%d, ", systemStates[s].valuesCount[p][r][t][v]);
               }
-            printf("}");
+            printf("}\n");
           }
           printf("}\n");
         }
@@ -832,16 +832,16 @@ void printControllerState(State *systemStates, int numStates)
     // ALGO CHG
     for (int p = 0; p < N; p++)
       {
-        printf("process %d : {", p);
+        printf("process %d : {\n", p);
         for (int r = 0; r < 2; r++) { 
-          printf("round %d : {", r);
+          printf("round %d : {\n", r);
           for (int t = 0; t < 2; t++) {
             printf("tag %d : {", t);
               for (int v = 0; v < 2; v++)
               {
                 printf("%d, ", systemStates[s].valuesCount[p][r][t][v]);
               }
-            printf("}");
+            printf("}\n");
           }
           printf("}\n");
         }
