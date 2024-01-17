@@ -486,7 +486,27 @@ bool compareProcessState(int processState1[3][N][2], int processState2[3][N][2])
 // Checks if the state of the algorithm is valid
 bool checkStateValid(int state[N][3][N][2])
 {
-  return true;
+  bool valid = true;
+  for (int op = 0; op < N; op++) {
+    if (op == 1) { // p1 byzantine
+      continue;
+    }
+    for (int v = 0; v < 2; v++) {
+      if (state[0][2][op][v] >= 2*T+1) {
+        for (int p = 1; p < N; p++) {
+          if (p == 1) { // p1 byzantine
+            continue;
+          }
+          if (state[p][2][op][v] < 2*T+1) {
+            valid = false;
+            break;
+          }
+        }
+      }
+  }
+  }
+  
+  return valid;
 }
 
 // Check if all the states represented in the controller are valid
@@ -1040,7 +1060,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 3 && msgbuffer[sendIndex].tag == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
