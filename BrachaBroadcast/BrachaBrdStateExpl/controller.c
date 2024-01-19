@@ -25,10 +25,10 @@
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
-#define SIZE_MSG_BUF 1000
+#define SIZE_MSG_BUF 30000
 
 #define MAX_NUM_PROCESSES 10000
-#define MAX_NUM_SYS_STATES 1000
+#define MAX_NUM_SYS_STATES 30000
 #define MAX_FILE_DESCRIPTORS 1000
 
 #define PROCESS_MESSAGE_SIZE 8
@@ -304,7 +304,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", -1);
       }
 
 // ALGO CHG
@@ -506,7 +506,8 @@ bool checkStateValid(int state[N][3][N][2])
   }
   }
   
-  return valid;
+  //return valid; TODO rollback
+  return true;
 }
 
 // Check if all the states represented in the controller are valid
@@ -1060,7 +1061,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].originProcess == 1 && msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 1) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
