@@ -20,7 +20,7 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 5 // Total number of processes
+#define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
@@ -506,8 +506,7 @@ bool checkStateValid(int state[N][3][N][2])
   }
   }
   
-  //return valid; TODO rollback
-  return true;
+  return valid; 
 }
 
 // Check if all the states represented in the controller are valid

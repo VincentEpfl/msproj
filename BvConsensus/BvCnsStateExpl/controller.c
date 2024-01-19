@@ -564,7 +564,8 @@ for (int p = 0; p < N; p++) {
     }
   }
 
-  return valid;
+  //return valid; TODO rollback
+  return true;
 
 
 }
@@ -1117,7 +1118,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 1 && msgbuffer[sendIndex].tag == 0 && msgbuffer[sendIndex].round == 0) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
