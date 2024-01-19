@@ -1050,6 +1050,9 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
+    // deliver id of process resulting from instruction in send msg
+    deliver_message_forkid(sendIndex, forkid0); 
+
     // STATE EXPLORATION CONDITION msgbuffer[sendIndex].originProcess == 3 && msgbuffer[sendIndex].from == 3 && msgbuffer[sendIndex].tag == 2 && msgbuffer[sendIndex].round == 2
     if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
