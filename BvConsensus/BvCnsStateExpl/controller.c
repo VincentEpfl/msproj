@@ -88,7 +88,7 @@ typedef struct
   //  },
   // }
   int valuesCount[N][NUM_ROUNDS][2][2];
-  int decided_values[N];
+  int decided_values[N]; // TODO need add a dimension for the rounds to check one shot property (trivial)
   int killed; // 1 if state was killed because redundant, 0 if not
 } State;
 

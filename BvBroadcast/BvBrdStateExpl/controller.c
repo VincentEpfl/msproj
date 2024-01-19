@@ -294,7 +294,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 1);
+        sprintf(initialValueStr, "%d", 0);
       }
 
       // Replace child process with BV-broadcast process
@@ -1079,7 +1079,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
@@ -1448,7 +1448,7 @@ int main()
   
   printf("\n#######################################################################################\n");
 
-  // Print performance metrics
+  // Print performance metrics and context informations
   printf("[Controller] Number of states we went through : %d\n", numStates);
   printf("[Controller] Number of states we killed : %d\n", numStatesKilled);
   printf("[Controller] Number of states remaining : %d\n", numStates - numStatesKilled);
