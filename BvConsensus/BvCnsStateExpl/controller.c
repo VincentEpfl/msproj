@@ -20,16 +20,16 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 4 // Total number of processes
+#define N 5 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 #define NUM_ROUNDS 3
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
-#define SIZE_MSG_BUF 1000
+#define SIZE_MSG_BUF 30000
 
 #define MAX_NUM_PROCESSES 10000
-#define MAX_NUM_SYS_STATES 1000
+#define MAX_NUM_SYS_STATES 30000
 #define MAX_FILE_DESCRIPTORS 1000
 
 #define PROCESS_MESSAGE_SIZE 8
