@@ -6,8 +6,8 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#define N 9 // Total number of processes
-#define T 2 // Maximum number of Byzantine processes
+#define N 10 // Total number of processes
+#define T 3 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
 int received_values[N][2] = {{0, 0}}; // Values received by each process
