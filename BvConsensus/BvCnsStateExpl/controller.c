@@ -20,7 +20,7 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 5 // Total number of processes
+#define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 #define NUM_ROUNDS 3
 
@@ -1118,7 +1118,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");
