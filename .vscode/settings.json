@@ -5,6 +5,7 @@
         "socket.h": "c",
         "semaphore.h": "c",
         "fcntl.h": "c",
-        "signal.h": "c"
+        "signal.h": "c",
+        "inet.h": "c"
     }
 }

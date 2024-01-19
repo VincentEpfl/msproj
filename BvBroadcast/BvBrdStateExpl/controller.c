@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 6 // Total number of processes
-#define T 1 // Maximum number of Byzantine processes
+#define N 7 // Total number of processes
+#define T 2 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
