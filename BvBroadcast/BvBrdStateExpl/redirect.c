@@ -24,7 +24,7 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define CONTROLLER_FEEDBACK_PATH "./controller_feedback_socket"
 
-#define N 8 // Total number of processes
+#define N 9 // Total number of processes
 
 int forkId = 0; // Only 0 at first for each process
 
