@@ -20,7 +20,7 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 6 // Total number of processes
+#define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
@@ -288,7 +288,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
 
       // Process value
-      if (i < 3)
+      if (i < 2)
       {
         sprintf(initialValueStr, "%d", 0);
       }
@@ -1080,7 +1080,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
