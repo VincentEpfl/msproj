@@ -25,10 +25,10 @@
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 5000
-#define SIZE_MSG_BUF 10000
+#define SIZE_MSG_BUF 30000
 
 #define MAX_NUM_PROCESSES 10000
-#define MAX_NUM_SYS_STATES 1000
+#define MAX_NUM_SYS_STATES 30000
 #define MAX_FILE_DESCRIPTORS 10000
 
 #define PROCESS_MESSAGE_SIZE 10
@@ -1050,8 +1050,8 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     // add msg to history
     addMsgToHistory(forkid0, msgbuffer[sendIndex].from, msgbuffer[sendIndex].to, msgbuffer[sendIndex].msg);
 
-    // STATE EXPLORATION CONDITION
-    if (msgbuffer[sendIndex].originProcess == 3 && msgbuffer[sendIndex].from == 3 && msgbuffer[sendIndex].tag == 2 && msgbuffer[sendIndex].round == 2) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    // STATE EXPLORATION CONDITION msgbuffer[sendIndex].originProcess == 3 && msgbuffer[sendIndex].from == 3 && msgbuffer[sendIndex].tag == 2 && msgbuffer[sendIndex].round == 2
+    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Try to send the message with the opposite value
       //printf("[Controller] send opposite msg to receiver\n");

@@ -564,8 +564,7 @@ for (int p = 0; p < N; p++) {
     }
   }
 
-  //return valid; TODO rollback
-  return true;
+  return valid; 
 
 
 }
