@@ -20,7 +20,7 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 5 // Total number of processes
+#define N 6 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
@@ -288,7 +288,7 @@ void spawnProcesses()
       sprintf(processIdStr, "%d", i);
 
       // Process value
-      if (i < 2)
+      if (i < 3)
       {
         sprintf(initialValueStr, "%d", 0);
       }
