@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#define N 4 // Total number of processes
+#define N 5 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
