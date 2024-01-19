@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 10 // Total number of processes
-#define T 3 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
@@ -294,7 +294,7 @@ void spawnProcesses()
       }
       else
       {
-        sprintf(initialValueStr, "%d", 0);
+        sprintf(initialValueStr, "%d", 1);
       }
 
       // Replace child process with BV-broadcast process
