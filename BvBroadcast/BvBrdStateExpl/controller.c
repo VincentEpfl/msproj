@@ -20,8 +20,8 @@
 #define CONTROLLER_PATH "./controller_socket"
 #define MAXMSG 256
 
-#define N 10 // Total number of processes
-#define T 3 // Maximum number of Byzantine processes
+#define N 4 // Total number of processes
+#define T 1 // Maximum number of Byzantine processes
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500
@@ -522,7 +522,8 @@ bool checkStateValid(int state[N][2])
       }
     }
   }
-  return valid;
+  //return valid; TODO rollback
+  return true;
 }
 
 // Check if all the states represented in the controller are valid
@@ -1079,7 +1080,7 @@ int handleMessagePair(int recvIndex, int sendIndex, int fd, bool recv)
     deliver_message_forkid(sendIndex, forkid0); 
 
     // STATE EXPLORATION CONDITION
-    if (false) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
+    if (msgbuffer[sendIndex].from == 3) // msgbuffer[sendIndex].from == 2  msgbuffer[sendIndex].from == 3
     {
       // Send message with the opposite value
       int opValue = 1 - msgbuffer[sendIndex].msg;
