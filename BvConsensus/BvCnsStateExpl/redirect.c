@@ -26,7 +26,7 @@ static ssize_t (*real_recv)(int sockfd, void *buf, size_t len, int flags) =
 
 #define N 4 // Total number of processes
 
-#define NUM_ROUNDS 3
+#define NUM_ROUNDS 1
 
 int forkId = 0; // Only 0 at first for each process
 

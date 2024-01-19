@@ -22,7 +22,7 @@
 
 #define N 4 // Total number of processes
 #define T 1 // Maximum number of Byzantine processes
-#define NUM_ROUNDS 3
+#define NUM_ROUNDS 1
 
 #define SIZE_MSG_DELIVERED_BUF 500
 #define SIZE_STATE_FORK_PATH 500

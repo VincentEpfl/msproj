@@ -12,7 +12,7 @@
 #define T 1 // Maximum number of Byzantine processes
 #define PORT_BASE 8080
 
-#define NUM_ROUNDS 3
+#define NUM_ROUNDS 1
 
 sem_t *sem;
 sem_t *sem_init_brd;
